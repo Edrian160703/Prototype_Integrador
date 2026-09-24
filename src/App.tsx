@@ -9,6 +9,8 @@ import ComoFunciona from './pages/ComoFunciona'
 import Impacto from './pages/Impacto'
 import ParaNegocios from './pages/ParaNegocios'
 import RegistroNegocio from './pages/RegistroNegocio'
+import Onboarding from './pages/Onboarding'
+import SignUpForm from './components/SignUpForm'
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false)
@@ -25,6 +27,8 @@ export default function App() {
           <Route path="/impacto" element={<Impacto />} />
           <Route path="/para-negocios" element={<ParaNegocios />} />
           <Route path="/registro-negocio" element={<RegistroNegocio />} />
+          <Route path="/registro" element={<SignUpForm />} />
+          <Route path="/onboarding/:role" element={<Onboarding />} />
         </Routes>
       </main>
 

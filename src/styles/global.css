@@ -237,11 +237,31 @@ img{max-width:100%;display:block}
 /* ---------- login ---------- */
 .modal-overlay{position:fixed;inset:0;background:rgba(20,30,25,.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
 .modal-box{width:min(400px,100%);background:#fff;border-radius:18px;padding:26px;box-shadow:var(--shadow-lg)}
+.onboarding-overlay{align-items:flex-start;overflow-y:auto;padding:38px 16px}
+.onboarding-modal{width:min(620px,100%);padding:30px}
+.onboarding-modal h1{font-size:22px;margin:6px 0 0}
+.onboarding-modal .modal-head{align-items:flex-start;margin-bottom:8px}
+.onboarding-step{background:var(--green-soft);color:var(--green-primary);border-radius:20px;padding:6px 10px;font-size:11px;font-weight:800}
+.onboarding-intro{color:var(--text-gray);font-size:13px;line-height:1.5;margin:0 0 22px}
+.onboarding-preferences,.onboarding-schedule{border:0;padding:0;margin:22px 0}
+.onboarding-preferences legend,.onboarding-schedule legend{font-size:12.5px;font-weight:700;margin-bottom:10px}
+.onboarding-preferences legend span{font-weight:400;color:var(--text-muted)}
+.preference-list{display:flex;flex-wrap:wrap;gap:8px}
+.preference-option{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:20px;padding:8px 11px;color:var(--text-gray);font-size:11.5px;cursor:pointer}
+.preference-option.selected{border-color:#70b77d;background:#f3faed;color:var(--green-dark);font-weight:700}
+.preference-option input{accent-color:var(--green-primary);margin:0}
+.schedule-row{display:grid;grid-template-columns:1.2fr 1fr auto 1fr auto;align-items:center;gap:8px;margin-bottom:10px}
+.schedule-row input,.schedule-row select{width:100%;padding:10px 9px;border:1px solid var(--line);border-radius:var(--radius-sm);font:inherit;font-size:12px;color:var(--text-dark);background:#fff}
+.schedule-row input:focus,.schedule-row select:focus{outline:0;border-color:var(--green-primary);box-shadow:0 0 0 3px #e8f6ea}
+.schedule-row span{font-size:12px;color:var(--text-muted)}
+.schedule-remove{border:0;background:transparent;color:#c53f3f;font-size:20px;cursor:pointer;line-height:1;padding:2px 5px}
+.schedule-add{font-size:12px;padding:5px 0;color:var(--green-primary)}
+.onboarding-error{margin:0 0 14px;text-align:left}
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .modal-close{font-size:22px;color:#999;background:none;border:0;cursor:pointer;line-height:1}
 .modal-close:hover{color:#333}
 .tabs{display:grid;grid-template-columns:1fr 1fr;background:#f4f5f4;border-radius:10px;padding:3px;margin-bottom:18px}
-.tab{padding:10px;text-align:center;font-size:12.5px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--text-gray)}
+.tab{padding:10px;text-align:center;font-size:12.5px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--text-gray);border:0;background:transparent;font-family:inherit}
 .tab.active{background:#fff;font-weight:700;color:var(--text-dark);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .password-field{position:relative}
 .password-field input{padding-right:44px}
@@ -253,6 +273,12 @@ img{max-width:100%;display:block}
 .google-btn:hover{background:#fafafa}
 .register-line{font-size:12px;text-align:center;color:#89958f;margin-top:16px}
 .register-line b{color:var(--green-primary);cursor:pointer}
+
+/* ---------- registro inicial ---------- */
+.signup-page{min-height:calc(100vh - 156px);padding:48px 20px;background:linear-gradient(135deg,#f7f4e6 0%,#f2f8ed 100%);display:flex;justify-content:center;align-items:center}
+.signup-card{width:min(520px,100%);padding:34px 38px;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg)}
+.signup-intro{text-align:center;margin-bottom:24px}.signup-kicker{color:var(--green-primary);font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}.signup-intro h1{font-size:29px;margin:8px 0}.signup-intro p{color:var(--text-gray);font-size:13px;line-height:1.55;margin:0 auto;max-width:390px}
+.role-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}.role-card{position:relative;display:flex;align-items:center;gap:10px;text-align:left;padding:13px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text-dark);cursor:pointer}.role-card:hover,.role-card.selected{border-color:#70b77d;background:#f3faed}.role-icon{font-size:22px}.role-card strong,.role-card small{display:block}.role-card strong{font-size:12px}.role-card small{color:var(--text-muted);font-size:10px;line-height:1.3;margin-top:3px}.role-check{position:absolute;right:8px;top:7px;color:var(--green-primary);font-weight:800;font-size:12px}.signup-card .field{margin:16px 0}.signup-card .field label{font-size:12px}.signup-card input[aria-invalid=true]{border-color:#d95656}.field-error{display:block;color:#c53f3f;font-size:11px;margin-top:5px}.password-hint{color:var(--text-muted);font-size:10px}.strength{display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:10px;margin-top:7px}.strength-bar{height:5px;display:flex;flex:1;background:#edf0ec;border-radius:6px;overflow:hidden}.strength-bar i{display:block;width:0;background:#d95656;transition:width .2s ease}.strength-1 .strength-bar i{width:25%}.strength-2 .strength-bar i{width:50%;background:#d9a43b}.strength-3 .strength-bar i{width:75%;background:#8bbb4f}.strength-4 .strength-bar i{width:100%;background:var(--green-primary)}.signup-submit{margin-top:24px}.signup-terms{color:var(--text-muted);font-size:10px;line-height:1.5;text-align:center;margin:16px 0 0}.onboarding-box{margin-top:0}.google-btn:disabled{opacity:.6;cursor:not-allowed}
 
 /* ---------- footer ---------- */
 .footer{background:var(--green-dark);color:#cfe9d9;padding:38px 0 20px;margin-top:20px}
@@ -315,4 +341,6 @@ img{max-width:100%;display:block}
   .field-row{grid-template-columns:1fr}
   .footer-grid{grid-template-columns:1fr;gap:20px}
   .form-actions{flex-direction:column}
+  .signup-page{padding:28px 14px}.signup-card{padding:28px 20px}.role-selector{grid-template-columns:1fr}
+  .onboarding-overlay{padding:18px 10px}.onboarding-modal{padding:24px 20px}.schedule-row{grid-template-columns:1fr 1fr auto 1fr auto}.schedule-row select{grid-column:1/-1}
 }
