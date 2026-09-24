@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 interface LoginModalProps {
   open: boolean
@@ -8,6 +9,7 @@ interface LoginModalProps {
 type Tab = 'login' | 'register'
 
 export default function LoginModal({ open, onClose }: LoginModalProps) {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('login')
   const [showPass, setShowPass] = useState(false)
 
@@ -43,19 +45,24 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
           <button className="modal-close" aria-label="Cerrar" onClick={onClose}>×</button>
         </div>
 
-        <div className="tabs">
-          <div
+        <div className="tabs" role="tablist">
+          <button
+            type="button"
             className={`tab${tab === 'login' ? ' active' : ''}`}
             onClick={() => setTab('login')}
           >
             Iniciar sesión
-          </div>
-          <div
-            className={`tab${tab === 'register' ? ' active' : ''}`}
-            onClick={() => setTab('register')}
+          </button>
+          <button
+            type="button"
+            className="tab"
+            onClick={() => {
+              navigate('/registro')
+              onClose()
+            }}
           >
             Registrarse
-          </div>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -92,7 +99,7 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
 
         <div className="register-line">
           {tab === 'login' ? (
-            <>¿No tienes cuenta? <b onClick={() => setTab('register')}>Regístrate gratis</b></>
+            <>¿No tienes cuenta? <b onClick={() => { onClose(); navigate('/registro') }}>Regístrate gratis</b></>
           ) : (
             <>¿Ya tienes cuenta? <b onClick={() => setTab('login')}>Inicia sesión</b></>
           )}
