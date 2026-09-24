@@ -164,7 +164,6 @@ export function getFirebaseAuth() {
   return getFirebaseServices().auth
 }
 
-/** Inicio de sesión con correo/contraseña para usuarios ya registrados. */
 export async function signInWithEmail(email: string, password: string): Promise<UserCredential> {
   const { auth } = getFirebaseServices()
   return signInWithEmailAndPassword(auth, email, password)
