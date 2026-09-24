@@ -139,7 +139,7 @@ export default function ProfileStoreForm({ profile, onSaved }: ProfileStoreFormP
     setErrorMessage('')
 
     try {
-      await saveProfileChanges(profile.uid, values, values.businessName)
+      await saveProfileChanges(profile.uid, profile.role, values, values.businessName)
       setBaseline(values)
       setForm(values)
       setStatus('saved')

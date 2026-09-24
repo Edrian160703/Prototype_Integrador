@@ -96,7 +96,7 @@ export default function OnboardingModal() {
 
     try {
       const profile = role === 'consumer' ? consumerForm : storeForm
-      await updateUserProfile(currentUser.uid, profile)
+      await updateUserProfile(currentUser.uid, role, profile)
       navigate(role === 'store' ? '/registro-negocio' : '/')
     } catch (submissionError) {
       setError(getErrorMessage(submissionError))

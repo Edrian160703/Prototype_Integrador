@@ -20,6 +20,7 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore'
+import { getUserCollectionName } from '../types/user'
 import type { InitialUserData, InitialUserProfile, UserDocument, UserRole } from '../types/user'
 
 function requiredFirebaseEnv(name: string): string {
@@ -55,7 +56,7 @@ export async function createInitialUserDocument(
   data: Omit<InitialUserData, 'uid' | 'email'>,
 ): Promise<void> {
   const { db } = getFirebaseServices()
-  const userReference = doc(collection(db, 'users'), user.uid)
+  const userReference = doc(collection(db, getUserCollectionName(data.role)), user.uid)
   const existingUser = await getDoc(userReference)
 
   if (existingUser.exists()) {
@@ -122,10 +123,11 @@ export async function signInWithGoogle(
 
 export async function updateUserProfile(
   uid: string,
+  role: UserRole,
   profile: InitialUserProfile,
 ): Promise<void> {
   const { db } = getFirebaseServices()
-  const userReference = doc(collection(db, 'users'), uid)
+  const userReference = doc(collection(db, getUserCollectionName(role)), uid)
 
   await updateDoc(userReference, {
     ...profile,
@@ -137,11 +139,12 @@ export async function updateUserProfile(
 
 export async function saveProfileChanges(
   uid: string,
+  role: UserRole,
   profile: InitialUserProfile,
   displayName: string | null,
 ): Promise<void> {
   const { auth, db } = getFirebaseServices()
-  const userReference = doc(collection(db, 'users'), uid)
+  const userReference = doc(collection(db, getUserCollectionName(role)), uid)
 
   await updateDoc(userReference, {
     ...profile,
@@ -184,11 +187,26 @@ export async function signOutUser(): Promise<void> {
   await signOut(auth)
 }
 
-/** Trae el documento de perfil de Firestore para un usuario autenticado. */
+/**
+ * Trae el documento de perfil de Firestore para un usuario autenticado.
+ * Como ahora hay 2 colecciones separadas (consumidores / comercios) y en este
+ * punto todavía no sabemos el rol del usuario, se busca primero en
+ * "consumidores" y, si no aparece, en "comercios".
+ */
 export async function getUserDocument(uid: string): Promise<UserDocument | null> {
   const { db } = getFirebaseServices()
-  const snapshot = await getDoc(doc(collection(db, 'users'), uid))
-  return snapshot.exists() ? (snapshot.data() as UserDocument) : null
+
+  const consumerSnapshot = await getDoc(doc(collection(db, 'consumidores'), uid))
+  if (consumerSnapshot.exists()) {
+    return consumerSnapshot.data() as UserDocument
+  }
+
+  const storeSnapshot = await getDoc(doc(collection(db, 'comercios'), uid))
+  if (storeSnapshot.exists()) {
+    return storeSnapshot.data() as UserDocument
+  }
+
+  return null
 }
 
 export type { UserDocument }

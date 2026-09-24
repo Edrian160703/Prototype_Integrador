@@ -114,7 +114,7 @@ export default function ProfileConsumerForm({ profile, onSaved }: ProfileConsume
 
     try {
       const displayName = [values.firstName, values.lastName].filter(Boolean).join(' ')
-      await saveProfileChanges(profile.uid, values, displayName)
+      await saveProfileChanges(profile.uid, profile.role, values, displayName)
       setBaseline(values)
       setForm(values)
       setStatus('saved')
