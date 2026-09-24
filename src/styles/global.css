@@ -15,6 +15,10 @@
   --radius-lg: 18px;
   --radius-md: 14px;
   --radius-sm: 8px;
+  --page-bg: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f4f7f2;
+  --input-bg: #ffffff;
 }
 
 * {
@@ -27,7 +31,10 @@ body {
   margin: 0;
   font-family: "Poppins", "Segoe UI", Arial, Helvetica, sans-serif;
   color: var(--text-dark);
-  background: #fff;
+  background: var(--page-bg);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 a {
   text-decoration: none;
@@ -199,6 +206,7 @@ img {
   display: flex;
   align-items: center;
   gap: 16px;
+  padding-right: 54px;
   flex-shrink: 0;
 }
 
@@ -232,6 +240,44 @@ img {
   font-size: 22px;
   cursor: pointer;
   color: var(--green-dark);
+}
+.theme-toggle {
+  position: fixed;
+  top: 17px;
+  right: 24px;
+  width: 42px;
+  height: 42px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 5px 16px rgba(20, 60, 45, 0.14);
+  cursor: pointer;
+  z-index: 1100;
+  transition:
+    transform 0.25s ease,
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+.theme-toggle:hover {
+  transform: translateY(-2px) rotate(8deg);
+  border-color: var(--green-primary);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--green-primary);
+  outline-offset: 3px;
+}
+.theme-toggle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 0.3s ease;
+}
+.theme-toggle.is-dark img {
+  transform: rotate(180deg) scale(0.9);
+  filter: brightness(1.15) saturate(0.9);
 }
 /* ---------- hero ---------- */
 .hero {
@@ -1808,6 +1854,183 @@ img {
 }
 .user-dropdown-item-danger .user-dropdown-item-icon {
   color: #c0392b;
+}
+
+/* ---------- tema oscuro ---------- */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --page-bg: #101815;
+  --surface: #18231e;
+  --surface-muted: #202e28;
+  --input-bg: #121c18;
+  --cream: #1b2922;
+  --lime: #253821;
+  --green-soft: #29442c;
+  --text-dark: #edf5ed;
+  --text-gray: #b2c2b8;
+  --text-muted: #8fa398;
+  --line: #314138;
+  --white: #18231e;
+  --shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+}
+
+html[data-theme="dark"] body {
+  background: var(--page-bg);
+}
+
+html[data-theme="dark"] .header,
+html[data-theme="dark"] .nav,
+html[data-theme="dark"] .nav.open,
+html[data-theme="dark"] .search-box,
+html[data-theme="dark"] .btn-outline,
+html[data-theme="dark"] .float-card,
+html[data-theme="dark"] .badge-round,
+html[data-theme="dark"] .chip,
+html[data-theme="dark"] .offer-card,
+html[data-theme="dark"] .step-icon,
+html[data-theme="dark"] .testimonial-card,
+html[data-theme="dark"] .benefit-card,
+html[data-theme="dark"] .form-card,
+html[data-theme="dark"] .modal-box,
+html[data-theme="dark"] .signup-card,
+html[data-theme="dark"] .role-card,
+html[data-theme="dark"] .google-btn,
+html[data-theme="dark"] .user-dropdown,
+html[data-theme="dark"] .profile-section {
+  background: var(--surface);
+  color: var(--text-dark);
+}
+
+html[data-theme="dark"] .hero,
+html[data-theme="dark"] .search-hero,
+html[data-theme="dark"] .impact-hero,
+html[data-theme="dark"] .business-hero,
+html[data-theme="dark"] .testimonials {
+  background: var(--cream);
+}
+
+html[data-theme="dark"] .hero-art-circle {
+  background: #2b4529;
+  box-shadow: 0 0 0 22px #203322;
+}
+
+html[data-theme="dark"] .eyebrow,
+html[data-theme="dark"] .chip.active,
+html[data-theme="dark"] .preference-option.selected,
+html[data-theme="dark"] .role-card:hover,
+html[data-theme="dark"] .role-card.selected {
+  background: #29442c;
+  color: #d9f0bd;
+}
+
+html[data-theme="dark"] .how-strip,
+html[data-theme="dark"] .metrics-box,
+html[data-theme="dark"] .process {
+  background: #243722;
+  border-color: #3d5931;
+}
+
+html[data-theme="dark"] .how-strip > div {
+  border-color: #3d5931;
+  color: #c2d5bd;
+}
+
+html[data-theme="dark"] .step:nth-child(1),
+html[data-theme="dark"] .step:nth-child(4) {
+  background: #263a28;
+}
+html[data-theme="dark"] .step:nth-child(2) {
+  background: #253542;
+}
+html[data-theme="dark"] .step:nth-child(3) {
+  background: #403525;
+}
+
+html[data-theme="dark"] .stat-card:nth-child(1),
+html[data-theme="dark"] .stat-card:nth-child(4) {
+  background: #263a28;
+}
+html[data-theme="dark"] .stat-card:nth-child(2) {
+  background: #253542;
+}
+html[data-theme="dark"] .stat-card:nth-child(3) {
+  background: #403525;
+}
+
+html[data-theme="dark"] .cta-strip {
+  background: #29442c;
+}
+
+html[data-theme="dark"] .field input,
+html[data-theme="dark"] .field select,
+html[data-theme="dark"] .field textarea,
+html[data-theme="dark"] .schedule-row input,
+html[data-theme="dark"] .schedule-row select,
+html[data-theme="dark"] .tabs {
+  background: var(--input-bg);
+  color: var(--text-dark);
+}
+
+html[data-theme="dark"] .btn-outline {
+  color: #a8d989;
+}
+
+html[data-theme="dark"] .search-box input {
+  color: var(--text-dark);
+}
+
+html[data-theme="dark"] .tab.active {
+  background: var(--surface-muted);
+  color: var(--text-dark);
+}
+
+html[data-theme="dark"] .signup-page {
+  background: linear-gradient(135deg, #17251e 0%, #1f3024 100%);
+}
+
+html[data-theme="dark"] .modal-close:hover {
+  color: #fff;
+}
+
+html[data-theme="dark"] .google-btn:hover,
+html[data-theme="dark"] .user-dropdown-item:hover {
+  background: var(--surface-muted);
+}
+
+html[data-theme="dark"] .img-placeholder {
+  background: repeating-linear-gradient(
+    45deg,
+    #202c26,
+    #202c26 10px,
+    #293831 10px,
+    #293831 20px
+  );
+}
+
+html[data-theme="dark"] .theme-toggle {
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 760px) {
+  .header-right {
+    padding-right: 48px;
+  }
+  .theme-toggle {
+    top: 13px;
+    right: 60px;
+    width: 38px;
+    height: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 /* ---------- header responsive ---------- */
 
