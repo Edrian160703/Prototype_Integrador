@@ -59,3 +59,11 @@ export interface InitialUserData {
   photoURL?: string | null
   profile?: InitialUserProfile
 }
+
+/** Nombre de la colección de Firestore donde vive cada rol. */
+export type UserCollectionName = 'consumidores' | 'comercios'
+
+/** Mapea el rol de un usuario a su colección de Firestore (2 apartados separados). */
+export function getUserCollectionName(role: UserRole): UserCollectionName {
+  return role === 'store' ? 'comercios' : 'consumidores'
+}
