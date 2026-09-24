@@ -2,7 +2,10 @@ import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   getAuth,
+  signInWithEmailAndPassword,
   signInWithPopup,
+  signOut,
+
   updateProfile,
   type User,
   type UserCredential,
@@ -131,8 +134,62 @@ export async function updateUserProfile(
   })
 }
 
+
+export async function saveProfileChanges(
+  uid: string,
+  profile: InitialUserProfile,
+  displayName: string | null,
+): Promise<void> {
+  const { auth, db } = getFirebaseServices()
+  const userReference = doc(collection(db, 'users'), uid)
+
+  await updateDoc(userReference, {
+    ...profile,
+    displayName,
+    updatedAt: serverTimestamp(),
+  })
+
+  const currentUser = auth.currentUser
+  if (currentUser && currentUser.uid === uid && displayName) {
+    await updateProfile(currentUser, { displayName })
+  }
+}
+
 export function getCurrentUser(): User | null {
   return getFirebaseServices().auth.currentUser
+}
+
+
+export function getFirebaseAuth() {
+  return getFirebaseServices().auth
+}
+
+/** Inicio de sesión con correo/contraseña para usuarios ya registrados. */
+export async function signInWithEmail(email: string, password: string): Promise<UserCredential> {
+  const { auth } = getFirebaseServices()
+  return signInWithEmailAndPassword(auth, email, password)
+}
+
+
+export async function loginWithGoogle(): Promise<UserCredential> {
+  const { auth } = getFirebaseServices()
+  const googleProvider = new GoogleAuthProvider()
+  const credential = await signInWithPopup(auth, googleProvider)
+  await createInitialUserDocument(credential.user, { role: 'consumer' })
+  return credential
+}
+
+/** Cierra la sesión activa. */
+export async function signOutUser(): Promise<void> {
+  const { auth } = getFirebaseServices()
+  await signOut(auth)
+}
+
+/** Trae el documento de perfil de Firestore para un usuario autenticado. */
+export async function getUserDocument(uid: string): Promise<UserDocument | null> {
+  const { db } = getFirebaseServices()
+  const snapshot = await getDoc(doc(collection(db, 'users'), uid))
+  return snapshot.exists() ? (snapshot.data() as UserDocument) : null
 }
 
 export type { UserDocument }
