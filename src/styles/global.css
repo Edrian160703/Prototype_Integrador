@@ -1879,6 +1879,7 @@ html[data-theme="dark"] body {
 }
 
 html[data-theme="dark"] .header,
+html[data-theme="dark"] .footer,
 html[data-theme="dark"] .nav,
 html[data-theme="dark"] .nav.open,
 html[data-theme="dark"] .search-box,
@@ -1887,6 +1888,7 @@ html[data-theme="dark"] .float-card,
 html[data-theme="dark"] .badge-round,
 html[data-theme="dark"] .chip,
 html[data-theme="dark"] .offer-card,
+html[data-theme="dark"] .offer-card-price,
 html[data-theme="dark"] .step-icon,
 html[data-theme="dark"] .testimonial-card,
 html[data-theme="dark"] .benefit-card,
@@ -1896,12 +1898,15 @@ html[data-theme="dark"] .signup-card,
 html[data-theme="dark"] .role-card,
 html[data-theme="dark"] .google-btn,
 html[data-theme="dark"] .user-dropdown,
+html[data-theme="dark"] .account-type-badge,
+html[data-theme="dark"] .profile-actions,
 html[data-theme="dark"] .profile-section {
   background: var(--surface);
   color: var(--text-dark);
 }
 
 html[data-theme="dark"] .hero,
+html[data-theme="dark"] .dark-banner,
 html[data-theme="dark"] .search-hero,
 html[data-theme="dark"] .impact-hero,
 html[data-theme="dark"] .business-hero,
@@ -1933,6 +1938,11 @@ html[data-theme="dark"] .process {
 html[data-theme="dark"] .how-strip > div {
   border-color: #3d5931;
   color: #c2d5bd;
+}
+
+html[data-theme="dark"] .how-strip > div > strong {
+  border-color: #3d5931;
+  color: var(--text-dark);
 }
 
 html[data-theme="dark"] .step:nth-child(1),
