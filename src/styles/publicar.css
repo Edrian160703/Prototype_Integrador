@@ -1,0 +1,139 @@
+/* ---------- Publicar nueva oferta ---------- */
+.publicar-page {
+  width: min(820px, calc(100% - 40px));
+  padding: 40px 0 64px;
+}
+
+.oferta-form {
+  display: grid;
+  gap: 18px;
+}
+
+.oferta-form .profile-section {
+  padding: 24px 26px;
+}
+
+/* Descuento calculado */
+.oferta-descuento-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* Badge de estado (solo lectura) */
+.oferta-estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  color: var(--text-dark);
+  font-size: 14px;
+  font-weight: 600;
+}
+.oferta-estado-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green-primary);
+  box-shadow: 0 0 0 3px var(--green-soft);
+  flex: none;
+}
+
+/* Tabs de imagen (subir / URL) */
+.oferta-image-tabs {
+  max-width: 320px;
+}
+
+.oferta-image-field {
+  margin-top: 0;
+}
+.oferta-image-field input[type="file"] {
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.oferta-image-field input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--green-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.oferta-image-preview {
+  position: relative;
+  margin-top: 16px;
+  width: 100%;
+  max-width: 320px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.oferta-image-preview img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+.oferta-image-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(15, 30, 22, 0.65);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.oferta-image-remove:hover {
+  background: rgba(15, 30, 22, 0.85);
+}
+
+.field-hint.is-low {
+  color: #c17a1f;
+  font-weight: 600;
+}
+
+.oferta-actions {
+  bottom: 14px;
+}
+
+@media (max-width: 620px) {
+  .publicar-page {
+    padding: 24px 0 48px;
+  }
+  .oferta-form .profile-section {
+    padding: 20px 16px;
+  }
+}
+
+/* ---------- tema oscuro ---------- */
+html[data-theme="dark"] .oferta-estado-badge {
+  background: var(--input-bg);
+  border-color: var(--line);
+}
+html[data-theme="dark"] .oferta-actions {
+  background: var(--surface);
+}
