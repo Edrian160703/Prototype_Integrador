@@ -11,6 +11,7 @@ import ParaNegocios from './pages/ParaNegocios'
 import RegistroNegocio from './pages/RegistroNegocio'
 import Onboarding from './pages/Onboarding'
 import Perfil from './pages/Perfil'
+import Publicar from './pages/Publicar'
 import SignUpForm from './components/SignUpForm'
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/registro" element={<SignUpForm />} />
           <Route path="/onboarding/:role" element={<Onboarding />} />
           <Route path="/perfil" element={<Perfil />} />
+          <Route path="/publicar" element={<Publicar />} />
         </Routes>
       </main>
 
