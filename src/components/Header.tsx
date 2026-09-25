@@ -1,5 +1,8 @@
 import { NavLink, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import UserMenu from './UserMenu'
+import darkModeIcon from '../assets/images/dark-mode-icon.png'
 
 interface HeaderProps {
   onOpenLogin: () => void
@@ -13,6 +16,17 @@ interface NavLinkItem {
 
 export default function Header({ onOpenLogin }: HeaderProps) {
   const [navOpen, setNavOpen] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('foodback-theme')
+    if (savedTheme) return savedTheme === 'dark'
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
+  const { user, loading } = useAuth()
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light'
+    localStorage.setItem('foodback-theme', darkMode ? 'dark' : 'light')
+  }, [darkMode])
 
   const links: NavLinkItem[] = [
     { to: '/', label: 'Inicio', end: true },
@@ -48,7 +62,17 @@ export default function Header({ onOpenLogin }: HeaderProps) {
       <div className="header-right">
         <span className="location-pill"> Lima, Perú</span>
         <button className="icon-btn" aria-label="Favoritos">♡</button>
-        <button className="btn btn-primary" onClick={onOpenLogin}>Iniciar sesión</button>
+        <button
+          className={`theme-toggle${darkMode ? ' is-dark' : ''}`}
+          type="button"
+          aria-label={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          aria-pressed={darkMode}
+          title={darkMode ? 'Modo claro' : 'Modo oscuro'}
+          onClick={() => setDarkMode((value) => !value)}
+        >
+          <img src={darkModeIcon} alt="" aria-hidden="true" />
+        </button>
+        {!loading && (user ? <UserMenu /> : <button className="btn btn-primary" onClick={onOpenLogin}>Iniciar sesión</button>)}
         <button
           className="nav-toggle"
           aria-label="Abrir menú"
