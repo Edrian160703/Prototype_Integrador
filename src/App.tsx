@@ -1,20 +1,21 @@
-import { useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import Header from './components/Header'
-import Footer from './components/Footer'
-import LoginModal from './components/LoginModal'
-import Home from './pages/Home'
-import Explorar from './pages/Explorar'
-import ComoFunciona from './pages/ComoFunciona'
-import Impacto from './pages/Impacto'
-import ParaNegocios from './pages/ParaNegocios'
-import RegistroNegocio from './pages/RegistroNegocio'
-import Onboarding from './pages/Onboarding'
-import Perfil from './pages/Perfil'
-import SignUpForm from './components/SignUpForm'
+import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import LoginModal from "./components/LoginModal";
+import Home from "./pages/Home";
+import Explorar from "./pages/Explorar";
+import ComoFunciona from "./pages/ComoFunciona";
+import Impacto from "./pages/Impacto";
+import ParaNegocios from "./pages/ParaNegocios";
+import RegistroNegocio from "./pages/RegistroNegocio";
+import Onboarding from "./pages/Onboarding";
+import Perfil from "./pages/Perfil";
+import SignUpForm from "./components/SignUpForm";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
-  const [loginOpen, setLoginOpen] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false);
 
   return (
     <>
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/registro" element={<SignUpForm />} />
           <Route path="/onboarding/:role" element={<Onboarding />} />
           <Route path="/perfil" element={<Perfil />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </main>
 
@@ -38,5 +40,5 @@ export default function App() {
 
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </>
-  )
+  );
 }
