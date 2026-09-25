@@ -21,7 +21,8 @@ export default function Header({ onOpenLogin }: HeaderProps) {
     if (savedTheme) return savedTheme === 'dark'
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
+  const isComercio = profile?.role === 'store'
 
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? 'dark' : 'light'
@@ -60,6 +61,11 @@ export default function Header({ onOpenLogin }: HeaderProps) {
       </nav>
 
       <div className="header-right">
+        {!loading && isComercio && (
+          <Link to="/publicar" className="btn btn-publish">
+            + Publicar
+          </Link>
+        )}
         <span className="location-pill"> Lima, Perú</span>
         <button className="icon-btn" aria-label="Favoritos">♡</button>
         <button

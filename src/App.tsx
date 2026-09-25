@@ -11,6 +11,7 @@ import ParaNegocios from "./pages/ParaNegocios";
 import RegistroNegocio from "./pages/RegistroNegocio";
 import Onboarding from "./pages/Onboarding";
 import Perfil from "./pages/Perfil";
+import Publicar from './pages/Publicar';
 import SignUpForm from "./components/SignUpForm";
 import AdminDashboard from "./pages/AdminDashboard";
 
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/onboarding/:role" element={<Onboarding />} />
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/publicar" element={<Publicar />} />
         </Routes>
       </main>
 
