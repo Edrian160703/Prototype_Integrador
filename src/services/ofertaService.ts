@@ -9,12 +9,8 @@ import {
   orderBy,
   query,
   setDoc,
-  updateDoc,
-  where,
-  deleteDoc,
 } from 'firebase/firestore'
 import { CATEGORIAS, type OfertaDocument, type OfertaPayload } from '../types/oferta'
-import { getFirebaseAuth } from './authService'
 
 function requiredFirebaseEnv(name: string): string {
   const value = import.meta.env[name]
@@ -86,58 +82,6 @@ export interface OfferCardData {
   categoriaChip: string
 }
 
-export interface OwnedOferta {
-  id: string
-  data: OfertaDocument
-}
-
-export type UpdateOfertaPayload = Omit<OfertaPayload, 'estado'>
-
-function assertCurrentUser(uid: string): void {
-  if (!uid || getFirebaseAuth().currentUser?.uid !== uid) {
-    throw new Error('Debes iniciar sesión con la cuenta propietaria de esta publicación.')
-  }
-}
-
-async function assertOfertaOwner(id: string, uid: string) {
-  assertCurrentUser(uid)
-  const ofertaRef = doc(getDb(), 'ofertas', id)
-  const snapshot = await getDoc(ofertaRef)
-  if (!snapshot.exists() || (snapshot.data() as OfertaDocument).id_comercio !== uid) {
-    throw new Error('No tienes permiso para modificar esta publicación.')
-  }
-  return ofertaRef
-}
-
-export async function getOfertasByOwner(uid: string): Promise<OwnedOferta[]> {
-  assertCurrentUser(uid)
-  const snapshot = await getDocs(query(collection(getDb(), 'ofertas'), where('id_comercio', '==', uid)))
-  return snapshot.docs.map((docSnap) => ({
-    id: docSnap.id,
-    data: docSnap.data() as OfertaDocument,
-  }))
-}
-
-export async function updateOferta(id: string, uid: string, payload: UpdateOfertaPayload): Promise<void> {
-  const ofertaRef = await assertOfertaOwner(id, uid)
-  await updateDoc(ofertaRef, {
-    id_categoria: payload.id_categoria,
-    nombre_producto: payload.nombre_producto,
-    descripcion: payload.descripcion,
-    precio_original: payload.precio_original,
-    precio_oferta: payload.precio_oferta,
-    cantidad_disponible: payload.cantidad_disponible,
-    horario_recojo: payload.horario_recojo,
-    fecha_limite: Timestamp.fromDate(new Date(payload.fecha_limite)),
-    imagen_url: payload.imagen_url.trim() ? payload.imagen_url : null,
-  })
-}
-
-export async function deleteOferta(id: string, uid: string): Promise<void> {
-  const ofertaRef = await assertOfertaOwner(id, uid)
-  await deleteDoc(ofertaRef)
-}
-
 function calcularDescuento(original: number, oferta: number): string {
   if (!original || original <= 0 || oferta >= original) return ''
   const pct = Math.round((1 - oferta / original) * 100)
@@ -163,6 +107,21 @@ function crearResolverComercio(db: ReturnType<typeof getDb>) {
   }
 }
 
+function mapOfertaDoc(data: OfertaDocument, comercio: ComercioInfo | null): OfferCardData {
+  const categoria = CATEGORIAS.find((c) => c.id === data.id_categoria)
+
+  return {
+    id: data.id_producto,
+    image: data.imagen_url ?? '',
+    discount: calcularDescuento(data.precio_original, data.precio_oferta),
+    title: data.nombre_producto,
+    place: comercio?.businessName || 'Comercio FoodBack',
+    distance: comercio?.district || 'Lima, Perú',
+    price: data.precio_oferta.toFixed(2),
+    categoriaChip: categoria?.chip ?? 'Todos',
+  }
+}
+
 export async function getOfertas(): Promise<OfferCardData[]> {
   const db = getDb()
   const ofertasQuery = query(collection(db, 'ofertas'), orderBy('fecha_limite', 'asc'))
@@ -173,18 +132,48 @@ export async function getOfertas(): Promise<OfferCardData[]> {
     snapshot.docs.map(async (docSnap) => {
       const data = docSnap.data() as OfertaDocument
       const comercio = await resolverComercio(data.id_comercio)
-      const categoria = CATEGORIAS.find((c) => c.id === data.id_categoria)
-
-      return {
-        id: data.id_producto,
-        image: data.imagen_url ?? '',
-        discount: calcularDescuento(data.precio_original, data.precio_oferta),
-        title: data.nombre_producto,
-        place: comercio?.businessName || 'Comercio FoodBack',
-        distance: comercio?.district || 'Lima, Perú',
-        price: data.precio_oferta.toFixed(2),
-        categoriaChip: categoria?.chip ?? 'Todos',
-      }
+      return mapOfertaDoc(data, comercio)
     }),
   )
+}
+
+export interface OfertaDetalle extends OfferCardData {
+  descripcion: string
+  categoriaLabel: string
+  cantidadDisponible: number
+  horarioRecojo: string
+  fechaLimite: string
+  precioOriginal: number
+  precioOfertaNum: number
+}
+
+function formatearFechaLimite(fechaLimite: Timestamp): string {
+  return fechaLimite.toDate().toLocaleString('es-PE', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+export async function getOfertaById(idProducto: string): Promise<OfertaDetalle | null> {
+  const db = getDb()
+  const snap = await getDoc(doc(db, 'ofertas', idProducto))
+  if (!snap.exists()) return null
+
+  const data = snap.data() as OfertaDocument
+  const comercioSnap = await getDoc(doc(db, 'comercios', data.id_comercio))
+  const comercio = comercioSnap.exists() ? (comercioSnap.data() as ComercioInfo) : null
+  const categoria = CATEGORIAS.find((c) => c.id === data.id_categoria)
+
+  return {
+    ...mapOfertaDoc(data, comercio),
+    descripcion: data.descripcion,
+    categoriaLabel: categoria?.label ?? 'Otros',
+    cantidadDisponible: data.cantidad_disponible,
+    horarioRecojo: data.horario_recojo,
+    fechaLimite: formatearFechaLimite(data.fecha_limite),
+    precioOriginal: data.precio_original,
+    precioOfertaNum: data.precio_oferta,
+  }
 }

@@ -1,4 +1,5 @@
 :root {
+  --header-height: 76px;
   --green-dark: #0b4a3a;
   --green: #0c6b3c;
   --green-primary: #0c7a3f;
@@ -26,12 +27,16 @@
 }
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
 }
 body {
   margin: 0;
   font-family: "Poppins", "Segoe UI", Arial, Helvetica, sans-serif;
   color: var(--text-dark);
   background: var(--page-bg);
+  overflow-x: hidden;
+  width: 100%;
   transition:
     background-color 0.3s ease,
     color 0.3s ease;
@@ -117,8 +122,8 @@ img {
 
 .header {
   width: 100%;
-  height: 76px;
-  min-height: 76px;
+  height: var(--header-height);
+  min-height: var(--header-height);
   box-sizing: border-box;
 
   display: flex;
@@ -231,6 +236,180 @@ img {
 
 .icon-btn:hover {
   color: #e05353;
+}
+.cart-icon-btn {
+  position: relative;
+}
+.cart-icon-btn:hover {
+  color: var(--green-primary);
+}
+.cart-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--green-primary);
+  color: #fff;
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(12, 106, 60, 0.35);
+  z-index: 90;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.cart-fab:hover {
+  background: var(--green-dark);
+  transform: translateY(-2px);
+}
+.cart-fab .cart-count {
+  top: -4px;
+  right: -4px;
+}
+.cart-count {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: var(--green-primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  padding: 0 3px;
+}
+.cart-overlay {
+  position: fixed;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(20, 30, 25, 0.4);
+  z-index: 110;
+  display: flex;
+  justify-content: flex-end;
+}
+.cart-panel {
+  width: min(340px, 100%);
+  height: 100%;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.cart-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.cart-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.cart-items {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+.cart-item {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+}
+.cart-item-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--cream);
+}
+.cart-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cart-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.cart-item-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cart-item-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cart-item-stepper button {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.cart-item-stepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.cart-item-stepper span {
+  min-width: 14px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+.cart-item-price {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--green-dark);
+  white-space: nowrap;
+}
+.cart-item-remove {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+  color: #c53f3f;
+}
+.cart-panel-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  margin-top: auto;
+  font-weight: 700;
+}
+.cart-checkout-btn {
+  margin-top: 14px;
+}
+.cart-error {
+  color: #c53f3f;
+  font-size: 12.5px;
+  margin: 10px 0 0;
 }
 
 .btn-publish {
@@ -633,6 +812,11 @@ img {
   font-size: 19px;
   font-weight: 800;
   color: var(--green-dark);
+}
+.offer-card-reserve {
+  margin-top: 12px;
+  padding: 10px;
+  font-size: 13px;
 }
 
 /* ---------- how (home) ---------- */
@@ -1316,6 +1500,212 @@ img {
 .modal-close:hover {
   color: #333;
 }
+.reserva-hero {
+  background: var(--cream);
+  padding: 26px 0 30px;
+}
+.reserva-hero h1 {
+  margin: 0;
+  font-size: 26px;
+}
+.reserva-exclusiva-page {
+  padding-top: 32px;
+  padding-bottom: 48px;
+}
+.reserva-exclusiva-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.reserva-exclusiva-media {
+  min-height: 360px;
+  background: var(--cream);
+}
+.reserva-exclusiva-media img,
+.reserva-exclusiva-media-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  object-fit: cover;
+  display: block;
+  background: var(--cream);
+}
+.reserva-exclusiva-info {
+  display: flex;
+  flex-direction: column;
+  padding: 36px 32px 32px 0;
+}
+.reserva-exclusiva-back {
+  color: var(--green-primary);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+.reserva-exclusiva-info h2 {
+  margin: 0 0 10px;
+  font-size: 26px;
+}
+.reserva-exclusiva-chip {
+  align-self: flex-start;
+  margin-bottom: 10px;
+}
+.reserva-exclusiva-place {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.reserva-exclusiva-price-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.reserva-exclusiva-price {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--green-dark);
+}
+.reserva-exclusiva-price-old {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+.reserva-exclusiva-body {
+  flex: 1;
+  min-height: 180px;
+  padding: 20px 0;
+}
+.reserva-exclusiva-desc {
+  color: var(--text-gray);
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+.reserva-exclusiva-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.reserva-exclusiva-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-dark);
+}
+.reserva-exclusiva-meta-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+.reserva-exclusiva-stock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface-muted);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+.reserva-exclusiva-stock-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.reserva-exclusiva-stock-count {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.qty-stepper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 6px;
+}
+.qty-stepper button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.qty-stepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.qty-stepper span {
+  min-width: 18px;
+  text-align: center;
+  font-weight: 700;
+}
+.reserva-exclusiva-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.reserva-exclusiva-total {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.reserva-exclusiva-total strong {
+  font-size: 20px;
+  color: var(--text-dark);
+}
+.reserva-exclusiva-footer .btn {
+  width: auto;
+  min-width: 200px;
+}
+@media (max-width: 760px) {
+  .reserva-exclusiva-card {
+    grid-template-columns: 1fr;
+  }
+  .reserva-exclusiva-media,
+  .reserva-exclusiva-media img,
+  .reserva-exclusiva-media-placeholder {
+    min-height: 220px;
+  }
+  .reserva-exclusiva-info {
+    padding: 24px;
+  }
+  .reserva-exclusiva-meta {
+    grid-template-columns: 1fr;
+  }
+  .reserva-exclusiva-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .reserva-exclusiva-footer .btn {
+    width: 100%;
+  }
+}
 .tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1928,7 +2318,6 @@ html[data-theme="dark"] body {
 }
 
 html[data-theme="dark"] .header,
-html[data-theme="dark"] .footer,
 html[data-theme="dark"] .nav,
 html[data-theme="dark"] .nav.open,
 html[data-theme="dark"] .search-box,
@@ -1937,7 +2326,6 @@ html[data-theme="dark"] .float-card,
 html[data-theme="dark"] .badge-round,
 html[data-theme="dark"] .chip,
 html[data-theme="dark"] .offer-card,
-html[data-theme="dark"] .offer-card-price,
 html[data-theme="dark"] .step-icon,
 html[data-theme="dark"] .testimonial-card,
 html[data-theme="dark"] .benefit-card,
@@ -1947,15 +2335,12 @@ html[data-theme="dark"] .signup-card,
 html[data-theme="dark"] .role-card,
 html[data-theme="dark"] .google-btn,
 html[data-theme="dark"] .user-dropdown,
-html[data-theme="dark"] .account-type-badge,
-html[data-theme="dark"] .profile-actions,
 html[data-theme="dark"] .profile-section {
   background: var(--surface);
   color: var(--text-dark);
 }
 
 html[data-theme="dark"] .hero,
-html[data-theme="dark"] .dark-banner,
 html[data-theme="dark"] .search-hero,
 html[data-theme="dark"] .impact-hero,
 html[data-theme="dark"] .business-hero,
@@ -1987,11 +2372,6 @@ html[data-theme="dark"] .process {
 html[data-theme="dark"] .how-strip > div {
   border-color: #3d5931;
   color: #c2d5bd;
-}
-
-html[data-theme="dark"] .how-strip > div > strong {
-  border-color: #3d5931;
-  color: var(--text-dark);
 }
 
 html[data-theme="dark"] .step:nth-child(1),
@@ -2113,6 +2493,9 @@ html[data-theme="dark"] .theme-toggle {
 }
 
 @media (max-width: 760px) {
+  :root {
+    --header-height: 68px;
+  }
   .header {
     height: 68px;
     min-height: 68px;

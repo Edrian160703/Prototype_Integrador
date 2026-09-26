@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import OfferCard from '../components/OfferCard'
 import heroBowl from '../assets/images/hero-bowl.jpg'
-import useOfertas from '../hooks/useOfertas'
+import { getOfertas, type OfferCardData } from '../services/ofertaService'
 
 interface Category {
   label: string
@@ -20,8 +21,36 @@ const categories: Category[] = [
   { label: 'Ver todas', icon: '⊞' },
 ]
 
+const MAX_FEATURED = 3
+
 export default function Home() {
-  const { offers, loading, error } = useOfertas()
+  const [featuredOffers, setFeaturedOffers] = useState<OfferCardData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadOfertas() {
+      setLoading(true)
+      setLoadError('')
+      try {
+        const data = await getOfertas()
+        if (!cancelled) setFeaturedOffers(data.slice(0, MAX_FEATURED))
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : 'No pudimos cargar las ofertas.')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadOfertas()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <>
@@ -86,14 +115,16 @@ export default function Home() {
           <h2>Ofertas Destacadas</h2>
           <Link to="/explorar">Ver todas las ofertas →</Link>
         </div>
+
         {loading && <p className="explore-status">Cargando ofertas...</p>}
-        {!loading && error && <p className="explore-status is-error">{error}</p>}
-        {!loading && !error && offers.length === 0 && (
+        {!loading && loadError && <p className="explore-status is-error">{loadError}</p>}
+        {!loading && !loadError && featuredOffers.length === 0 && (
           <p className="explore-status">Todavía no hay ofertas publicadas.</p>
         )}
+
         <div className="cards-grid">
-          {offers.map((offer) => (
-            <OfferCard key={offer.id} {...offer} />
+          {featuredOffers.map((o) => (
+            <OfferCard key={o.id} {...o} />
           ))}
         </div>
 
