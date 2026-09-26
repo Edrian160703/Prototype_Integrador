@@ -9,8 +9,12 @@ import {
   orderBy,
   query,
   setDoc,
+  updateDoc,
+  where,
+  deleteDoc,
 } from 'firebase/firestore'
 import { CATEGORIAS, type OfertaDocument, type OfertaPayload } from '../types/oferta'
+import { getFirebaseAuth } from './authService'
 
 function requiredFirebaseEnv(name: string): string {
   const value = import.meta.env[name]
@@ -80,6 +84,58 @@ export interface OfferCardData {
   distance: string
   price: string
   categoriaChip: string
+}
+
+export interface OwnedOferta {
+  id: string
+  data: OfertaDocument
+}
+
+export type UpdateOfertaPayload = Omit<OfertaPayload, 'estado'>
+
+function assertCurrentUser(uid: string): void {
+  if (!uid || getFirebaseAuth().currentUser?.uid !== uid) {
+    throw new Error('Debes iniciar sesión con la cuenta propietaria de esta publicación.')
+  }
+}
+
+async function assertOfertaOwner(id: string, uid: string) {
+  assertCurrentUser(uid)
+  const ofertaRef = doc(getDb(), 'ofertas', id)
+  const snapshot = await getDoc(ofertaRef)
+  if (!snapshot.exists() || (snapshot.data() as OfertaDocument).id_comercio !== uid) {
+    throw new Error('No tienes permiso para modificar esta publicación.')
+  }
+  return ofertaRef
+}
+
+export async function getOfertasByOwner(uid: string): Promise<OwnedOferta[]> {
+  assertCurrentUser(uid)
+  const snapshot = await getDocs(query(collection(getDb(), 'ofertas'), where('id_comercio', '==', uid)))
+  return snapshot.docs.map((docSnap) => ({
+    id: docSnap.id,
+    data: docSnap.data() as OfertaDocument,
+  }))
+}
+
+export async function updateOferta(id: string, uid: string, payload: UpdateOfertaPayload): Promise<void> {
+  const ofertaRef = await assertOfertaOwner(id, uid)
+  await updateDoc(ofertaRef, {
+    id_categoria: payload.id_categoria,
+    nombre_producto: payload.nombre_producto,
+    descripcion: payload.descripcion,
+    precio_original: payload.precio_original,
+    precio_oferta: payload.precio_oferta,
+    cantidad_disponible: payload.cantidad_disponible,
+    horario_recojo: payload.horario_recojo,
+    fecha_limite: Timestamp.fromDate(new Date(payload.fecha_limite)),
+    imagen_url: payload.imagen_url.trim() ? payload.imagen_url : null,
+  })
+}
+
+export async function deleteOferta(id: string, uid: string): Promise<void> {
+  const ofertaRef = await assertOfertaOwner(id, uid)
+  await deleteDoc(ofertaRef)
 }
 
 function calcularDescuento(original: number, oferta: number): string {

@@ -40,10 +40,36 @@
 .profile-empty h1{margin:0 0 8px;font-size:20px}
 .profile-empty p{margin:0;color:var(--text-gray);font-size:13px}
 
+.my-publications{margin-top:20px}
+.profile-publications-empty{margin:16px 0 0;color:var(--text-muted);font-size:13px}
+.profile-publication-list{display:grid;gap:12px;margin-top:18px}
+.profile-publication-card{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface)}
+.profile-publication-image{flex:none;width:88px;height:88px;object-fit:cover;border-radius:var(--radius-sm);background:var(--surface-muted)}
+.profile-publication-copy{min-width:0;flex:1}
+.profile-publication-category{font-size:11px;color:var(--text-muted)}
+.profile-publication-copy h3{margin:2px 0 4px;font-size:14px;overflow-wrap:anywhere}
+.profile-publication-copy p{margin:0 0 6px;font-size:12px;color:var(--text-gray);overflow-wrap:anywhere}
+.profile-publication-copy strong{font-size:13px;color:var(--green-primary)}
+.profile-publication-actions{display:flex;flex:none;gap:8px}
+.profile-publication-actions .btn,.profile-publication-editor-head .btn,.profile-publication-editor-actions .btn{padding:9px 12px;font-size:12px}
+.profile-delete-button{color:#b33d3d;border-color:#e8caca}
+.profile-publication-editor{display:grid;gap:14px;margin-top:20px;padding:18px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-muted)}
+.profile-publication-editor-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.profile-publication-editor-head h3{margin:0;font-size:15px}
+.profile-publication-editor .field{margin:0}
+.profile-publication-editor-actions{display:flex;gap:10px}
+.profile-section .profile-status{margin-top:14px}
+
 @media(max-width:620px){
   .profile-page{padding:24px 0 48px}
   .profile-hero{flex-direction:column;text-align:center;padding:22px 18px}
   .profile-section{padding:20px 16px}
   .profile-actions{flex-direction:column;align-items:stretch;text-align:center}
   .profile-actions-buttons{flex-direction:column-reverse}
+  .profile-publication-card{align-items:flex-start;flex-wrap:wrap}
+  .profile-publication-image{width:68px;height:68px}
+  .profile-publication-copy{width:calc(100% - 82px);flex:none}
+  .profile-publication-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}
+  .profile-publication-editor-head{align-items:flex-start}
+  .profile-publication-editor-actions{flex-direction:column}
 }

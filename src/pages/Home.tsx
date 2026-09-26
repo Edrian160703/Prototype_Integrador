@@ -1,23 +1,12 @@
 import { Link } from 'react-router-dom'
 import OfferCard from '../components/OfferCard'
 import heroBowl from '../assets/images/hero-bowl.jpg'
-import cake from '../assets/images/cake.jpg'
+import useOfertas from '../hooks/useOfertas'
 
 interface Category {
   label: string
   icon: string
   active?: boolean
-}
-
-interface FeaturedOffer {
-  image: string
-  discount: string
-  title: string
-  place: string
-  rating: string
-  reviews: number
-  distance: string
-  price: string
 }
 
 const categories: Category[] = [
@@ -31,13 +20,9 @@ const categories: Category[] = [
   { label: 'Ver todas', icon: '⊞' },
 ]
 
-const featuredOffers: FeaturedOffer[] = [
-  { image: cake, discount: '-99%', title: 'Título', place: 'Lugar', rating: '4.5', reviews: 120, distance: '99.9 km', price: '99.90' },
-  { image: cake, discount: '-99%', title: 'Título', place: 'Lugar', rating: '4.5', reviews: 120, distance: '99.9 km', price: '99.90' },
-  { image: cake, discount: '-99%', title: 'Título', place: 'Lugar', rating: '4.5', reviews: 120, distance: '99.9 km', price: '99.90' },
-]
-
 export default function Home() {
+  const { offers, loading, error } = useOfertas()
+
   return (
     <>
       <section className="hero">
@@ -101,9 +86,14 @@ export default function Home() {
           <h2>Ofertas Destacadas</h2>
           <Link to="/explorar">Ver todas las ofertas →</Link>
         </div>
+        {loading && <p className="explore-status">Cargando ofertas...</p>}
+        {!loading && error && <p className="explore-status is-error">{error}</p>}
+        {!loading && !error && offers.length === 0 && (
+          <p className="explore-status">Todavía no hay ofertas publicadas.</p>
+        )}
         <div className="cards-grid">
-          {featuredOffers.map((o, i) => (
-            <OfferCard key={i} {...o} />
+          {offers.map((offer) => (
+            <OfferCard key={offer.id} {...offer} />
           ))}
         </div>
 
