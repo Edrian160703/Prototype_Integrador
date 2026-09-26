@@ -2,6 +2,7 @@ import { getApps, initializeApp } from 'firebase/app'
 import {
   Timestamp,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -9,6 +10,8 @@ import {
   orderBy,
   query,
   setDoc,
+  updateDoc,
+  where,
 } from 'firebase/firestore'
 import { CATEGORIAS, type OfertaDocument, type OfertaPayload } from '../types/oferta'
 
@@ -176,4 +179,60 @@ export async function getOfertaById(idProducto: string): Promise<OfertaDetalle |
     precioOriginal: data.precio_original,
     precioOfertaNum: data.precio_oferta,
   }
+}
+
+export interface OwnedOferta {
+  id: string
+  data: OfertaDocument
+}
+
+/** Trae todas las publicaciones (ofertas) creadas por un comercio, más recientes primero. */
+export async function getOfertasByOwner(uid: string): Promise<OwnedOferta[]> {
+  const db = getDb()
+  const ofertasQuery = query(collection(db, 'ofertas'), where('id_comercio', '==', uid))
+  const snapshot = await getDocs(ofertasQuery)
+
+  return snapshot.docs
+    .map((docSnap) => ({ id: docSnap.id, data: docSnap.data() as OfertaDocument }))
+    .sort((a, b) => (b.data.fecha_limite?.toMillis?.() ?? 0) - (a.data.fecha_limite?.toMillis?.() ?? 0))
+}
+
+/** Actualiza los datos editables de una publicación existente. Solo el dueño puede modificarla. */
+export async function updateOferta(
+  idProducto: string,
+  uid: string,
+  payload: Omit<OfertaPayload, 'estado'>,
+): Promise<void> {
+  const db = getDb()
+  const ofertaRef = doc(db, 'ofertas', idProducto)
+  const snap = await getDoc(ofertaRef)
+
+  if (!snap.exists() || (snap.data() as OfertaDocument).id_comercio !== uid) {
+    throw new Error('No tienes permiso para modificar esta publicación.')
+  }
+
+  await updateDoc(ofertaRef, {
+    nombre_producto: payload.nombre_producto,
+    id_categoria: payload.id_categoria,
+    descripcion: payload.descripcion,
+    precio_original: payload.precio_original,
+    precio_oferta: payload.precio_oferta,
+    cantidad_disponible: payload.cantidad_disponible,
+    horario_recojo: payload.horario_recojo,
+    fecha_limite: Timestamp.fromDate(new Date(payload.fecha_limite)),
+    imagen_url: payload.imagen_url.trim() ? payload.imagen_url : null,
+  })
+}
+
+/** Elimina una publicación. Solo el dueño puede eliminarla. */
+export async function deleteOferta(idProducto: string, uid: string): Promise<void> {
+  const db = getDb()
+  const ofertaRef = doc(db, 'ofertas', idProducto)
+  const snap = await getDoc(ofertaRef)
+
+  if (!snap.exists() || (snap.data() as OfertaDocument).id_comercio !== uid) {
+    throw new Error('No tienes permiso para eliminar esta publicación.')
+  }
+
+  await deleteDoc(ofertaRef)
 }
