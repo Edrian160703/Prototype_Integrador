@@ -2160,3 +2160,31 @@ html[data-theme="dark"] .theme-toggle {
     display: none;
   }
 }
+
+.toast {
+  position: fixed;
+  top: 88px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  padding: 14px 22px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.toast-success {
+  background: var(--green-primary);
+  color: #fff;
+}
+
+.explore-status {
+  padding: 28px 0;
+  color: var(--text-gray);
+  font-size: 14.5px;
+}
+
+.explore-status.is-error {
+  color: #b3261e;
+}

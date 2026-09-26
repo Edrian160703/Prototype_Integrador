@@ -1,39 +1,68 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import OfferCard from '../components/OfferCard'
-import bakery from '../assets/images/bakery.jpg'
-import bowl from '../assets/images/bowl.jpg'
-import coffee from '../assets/images/coffee.jpg'
-import cake2 from '../assets/images/cake2.jpg'
-import seafood from '../assets/images/seafood.jpg'
-import bakery2 from '../assets/images/bakery2.jpg'
-
-interface Offer {
-  image: string
-  discount: string
-  title: string
-  place: string
-  rating: string
-  reviews: number
-  distance: string
-  price: string
-}
+import { getOfertas, type OfferCardData } from '../services/ofertaService'
 
 const filters: string[] = ['Todos', '🥐 Panaderías', '🍽 Restaurantes', '☕ Cafeterías', '🍰 Pastelerías', '🏬 Tiendas', '🌿 Saludable', '🌱 Vegano']
 
-const offers: Offer[] = [
-  { image: bakery, discount: '-60%', title: 'Pack Panadería Mixto', place: 'Bonpan Miraflores', rating: '4.8', reviews: 234, distance: '1.2 km', price: '9.90' },
-  { image: bowl, discount: '-61%', title: 'Bowl Proteico del Chef', place: 'Wok Fusión San Isidro', rating: '4.6', reviews: 142, distance: '2.4 km', price: '14.90' },
-  { image: coffee, discount: '-58%', title: 'Pack Café + Medialunas', place: 'Café Lima Barranco', rating: '4.7', reviews: 98, distance: '0.8 km', price: '8.50' },
-  { image: cake2, discount: '-65%', title: 'Torta del Día Dulcería', place: 'Dulcería Lima Centro', rating: '4.5', reviews: 390, distance: '3.1 km', price: '12.90' },
-  { image: seafood, discount: '-46%', title: 'Box Mariscos Sorpresa', place: 'Cevichería El Puerto', rating: '4.9', reviews: 87, distance: '1.7 km', price: '18.90' },
-  { image: bakery2, discount: '-52%', title: 'Pack Integral + Semillas', place: 'Panadería Vital', rating: '4.4', reviews: 55, distance: '2.0 km', price: '7.90' },
-]
-
 export default function Explorar() {
+  const location = useLocation()
+  const navigate = useNavigate()
+
   const [active, setActive] = useState<string>('Todos')
+  const [offers, setOffers] = useState<OfferCardData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [toastMessage, setToastMessage] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadOfertas() {
+      setLoading(true)
+      setLoadError('')
+      try {
+        const data = await getOfertas()
+        if (!cancelled) setOffers(data)
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : 'No pudimos cargar las ofertas.')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadOfertas()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    const state = location.state as { toastMessage?: string } | null
+    if (state?.toastMessage) {
+      setToastMessage(state.toastMessage)
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location, navigate])
+
+  useEffect(() => {
+    if (!toastMessage) return
+    const timer = setTimeout(() => setToastMessage(''), 4000)
+    return () => clearTimeout(timer)
+  }, [toastMessage])
+
+  const visibleOffers = active === 'Todos' ? offers : offers.filter((o) => o.categoriaChip === active)
 
   return (
     <>
+      {toastMessage && (
+        <div className="toast toast-success" role="status" aria-live="polite">
+          ✓ {toastMessage}
+        </div>
+      )}
+
       <section className="search-hero">
         <div className="container">
           <h1>Explorar ofertas cerca de ti 📍</h1>
@@ -58,16 +87,18 @@ export default function Explorar() {
           <span className="chip">Más cercano ⌄</span>
         </div>
 
-        <div className="results-line"><b>186 resultados</b> cerca de Lima, Perú</div>
+        <div className="results-line"><b>{visibleOffers.length} resultados</b> cerca de Lima, Perú</div>
+
+        {loading && <p className="explore-status">Cargando ofertas...</p>}
+        {!loading && loadError && <p className="explore-status is-error">{loadError}</p>}
+        {!loading && !loadError && visibleOffers.length === 0 && (
+          <p className="explore-status">Todavía no hay ofertas publicadas en esta categoría.</p>
+        )}
 
         <div className="cards-grid">
-          {offers.map((o, i) => (
-            <OfferCard key={i} {...o} />
+          {visibleOffers.map((o) => (
+            <OfferCard key={o.id} {...o} />
           ))}
-        </div>
-
-        <div className="explore-more">
-          <button className="btn btn-primary">Ver más ofertas</button>
         </div>
       </section>
     </>

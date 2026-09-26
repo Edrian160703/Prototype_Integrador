@@ -1,18 +1,13 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-
-/* ---------- Catálogo de categorías ---------- */
-const CATEGORIAS = [
-  { id: '1', label: 'Panadería' },
-  { id: '2', label: 'Restaurantes' },
-  { id: '3', label: 'Cafeterías' },
-  { id: '4', label: 'Supermercado' },
-  { id: '5', label: 'Pastelería' },
-  { id: '6', label: 'Comida rápida' },
-  { id: '7', label: 'Otros' },
-]
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { createOferta } from '../services/ofertaService'
+import { CATEGORIAS } from '../types/oferta'
 
 const NOMBRE_MAX = 150
 const DESCRIPCION_MAX = 255
+const HORARIO_MAX = 100
+const IMAGEN_URL_MAX = 255
 
 interface OfertaFormValues {
   nombre_producto: string
@@ -41,6 +36,26 @@ const INITIAL_VALUES: OfertaFormValues = {
 type FieldErrors = Partial<Record<keyof OfertaFormValues, string>>
 type SubmitStatus = 'idle' | 'saving' | 'saved' | 'error'
 
+function combinarHorario(inicio: string, fin: string): string {
+  if (!inicio || !fin) return ''
+  return `${inicio} - ${fin} hs`
+}
+
+function esFechaValida(dia: string, mes: string, anio: string): boolean {
+  const d = Number(dia)
+  const m = Number(mes)
+  const y = Number(anio)
+  if (!d || !m || !y || anio.length !== 4) return false
+  if (m < 1 || m > 12) return false
+  const diasEnMes = new Date(y, m, 0).getDate()
+  return d >= 1 && d <= diasEnMes
+}
+
+function combinarFechaHora(dia: string, mes: string, anio: string, hora: string): string {
+  if (!dia || !mes || !anio || !hora || !esFechaValida(dia, mes, anio)) return ''
+  return `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}T${hora}`
+}
+
 /** Convierte un archivo local en un data URL para previsualizarlo (y guardarlo como imagen_url). */
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -68,7 +83,15 @@ function normalizeDecimalOnBlur(value: string): string {
 }
 
 export default function PublicarOfertaForm() {
+  const navigate = useNavigate()
+  const { user, profile } = useAuth()
   const [form, setForm] = useState<OfertaFormValues>(INITIAL_VALUES)
+  const [horarioInicio, setHorarioInicio] = useState('')
+  const [horarioFin, setHorarioFin] = useState('')
+  const [fechaDia, setFechaDia] = useState('')
+  const [fechaMes, setFechaMes] = useState('')
+  const [fechaAnio, setFechaAnio] = useState('')
+  const [fechaHora, setFechaHora] = useState('')
   const [errors, setErrors] = useState<FieldErrors>({})
   const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload')
   const [imagePreview, setImagePreview] = useState<string>('')
@@ -88,6 +111,30 @@ export default function PublicarOfertaForm() {
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
     touch()
+  }
+
+  const handleHorarioInicioChange = (value: string) => {
+    setHorarioInicio(value)
+    updateField('horario_recojo', combinarHorario(value, horarioFin))
+  }
+
+  const handleHorarioFinChange = (value: string) => {
+    setHorarioFin(value)
+    updateField('horario_recojo', combinarHorario(horarioInicio, value))
+  }
+
+  const handleFechaChange = (parte: 'dia' | 'mes' | 'anio' | 'hora', value: string) => {
+    const siguiente = {
+      dia: parte === 'dia' ? value : fechaDia,
+      mes: parte === 'mes' ? value : fechaMes,
+      anio: parte === 'anio' ? value : fechaAnio,
+      hora: parte === 'hora' ? value : fechaHora,
+    }
+    if (parte === 'dia') setFechaDia(value)
+    if (parte === 'mes') setFechaMes(value)
+    if (parte === 'anio') setFechaAnio(value)
+    if (parte === 'hora') setFechaHora(value)
+    updateField('fecha_limite', combinarFechaHora(siguiente.dia, siguiente.mes, siguiente.anio, siguiente.hora))
   }
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -177,12 +224,22 @@ export default function PublicarOfertaForm() {
       nextErrors.cantidad_disponible = 'Ingresa un número entero mayor a 0.'
     }
 
-    if (!values.horario_recojo.trim()) {
-      nextErrors.horario_recojo = 'Indica el horario de recojo (ej. 18:00 - 20:00 hs).'
+    if (!horarioInicio || !horarioFin) {
+      nextErrors.horario_recojo = 'Selecciona la hora de inicio y fin del recojo.'
+    } else if (horarioInicio >= horarioFin) {
+      nextErrors.horario_recojo = 'La hora de fin debe ser posterior a la de inicio.'
+    } else if (values.horario_recojo.length > HORARIO_MAX) {
+      nextErrors.horario_recojo = `Máximo ${HORARIO_MAX} caracteres.`
     }
 
-    if (!values.fecha_limite) {
-      nextErrors.fecha_limite = 'Selecciona la fecha y hora límite.'
+    if (imageMode === 'url' && values.imagen_url.length > IMAGEN_URL_MAX) {
+      nextErrors.imagen_url = `La URL no debe superar los ${IMAGEN_URL_MAX} caracteres.`
+    }
+
+    if (!fechaDia || !fechaMes || !fechaAnio || !fechaHora) {
+      nextErrors.fecha_limite = 'Completa la fecha y hora límite.'
+    } else if (!esFechaValida(fechaDia, fechaMes, fechaAnio)) {
+      nextErrors.fecha_limite = 'Ingresa una fecha válida.'
     } else if (values.fecha_limite < ahoraLocal) {
       nextErrors.fecha_limite = 'La fecha límite debe ser posterior al momento actual.'
     }
@@ -193,6 +250,12 @@ export default function PublicarOfertaForm() {
   const handleReset = () => {
     setForm(INITIAL_VALUES)
     setErrors({})
+    setHorarioInicio('')
+    setHorarioFin('')
+    setFechaDia('')
+    setFechaMes('')
+    setFechaAnio('')
+    setFechaHora('')
     setImagePreview('')
     setImageError('')
     setStatus('idle')
@@ -219,11 +282,16 @@ export default function PublicarOfertaForm() {
       return
     }
 
+    if (!user || !profile || profile.role !== 'store') {
+      setStatus('error')
+      setStatusMessage('Debes iniciar sesión como comercio para publicar una oferta.')
+      return
+    }
+
     setStatus('saving')
     setStatusMessage('')
 
     try {
-      // Payload listo para conectarse al servicio de publicación de ofertas.
       const payload = {
         ...values,
         precio_original: Number(values.precio_original),
@@ -231,16 +299,25 @@ export default function PublicarOfertaForm() {
         cantidad_disponible: Number(values.cantidad_disponible),
         estado: 'disponible' as const,
       }
-      console.info('Nueva oferta lista para publicar:', payload)
 
-      // Simula la latencia de guardado mientras no exista un backend conectado.
-      await new Promise((resolve) => setTimeout(resolve, 700))
+      await createOferta({
+        uid: user.uid,
+        payload,
+      })
 
       setForm(INITIAL_VALUES)
+      setHorarioInicio('')
+      setHorarioFin('')
+      setFechaDia('')
+      setFechaMes('')
+      setFechaAnio('')
+      setFechaHora('')
       setImagePreview('')
       if (fileInputRef.current) fileInputRef.current.value = ''
       setStatus('saved')
       setStatusMessage('✓ Tu oferta fue publicada correctamente.')
+
+      navigate('/explorar', { state: { toastMessage: '¡Oferta publicada exitosamente!' } })
     } catch (error) {
       setStatus('error')
       setStatusMessage(error instanceof Error ? error.message : 'No pudimos publicar tu oferta. Inténtalo de nuevo.')
@@ -400,26 +477,76 @@ export default function PublicarOfertaForm() {
 
         <div className="field-row">
           <div className="field">
-            <label htmlFor="oferta-horario">Horario de recojo</label>
-            <input
-              id="oferta-horario"
-              value={form.horario_recojo}
-              onChange={(event) => updateField('horario_recojo', event.target.value)}
-              placeholder="Ej. 18:00 - 20:00 hs"
-              aria-invalid={Boolean(errors.horario_recojo)}
-            />
+            <label htmlFor="oferta-horario-inicio">Horario de recojo</label>
+            <div className="oferta-horario-row">
+              <input
+                id="oferta-horario-inicio"
+                type="time"
+                value={horarioInicio}
+                onChange={(event) => handleHorarioInicioChange(event.target.value)}
+                aria-label="Hora de inicio del recojo"
+                aria-invalid={Boolean(errors.horario_recojo)}
+              />
+              <span className="oferta-horario-separador">a</span>
+              <input
+                id="oferta-horario-fin"
+                type="time"
+                value={horarioFin}
+                onChange={(event) => handleHorarioFinChange(event.target.value)}
+                aria-label="Hora de fin del recojo"
+                aria-invalid={Boolean(errors.horario_recojo)}
+              />
+            </div>
             {errors.horario_recojo && <span className="field-error">{errors.horario_recojo}</span>}
           </div>
           <div className="field">
-            <label htmlFor="oferta-fecha-limite">Fecha y hora límite</label>
-            <input
-              id="oferta-fecha-limite"
-              type="datetime-local"
-              min={ahoraLocal}
-              value={form.fecha_limite}
-              onChange={(event) => updateField('fecha_limite', event.target.value)}
-              aria-invalid={Boolean(errors.fecha_limite)}
-            />
+            <label htmlFor="oferta-fecha-dia">Fecha y hora límite</label>
+            <div className="oferta-fecha-row">
+              <input
+                id="oferta-fecha-dia"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={31}
+                placeholder="DD"
+                value={fechaDia}
+                onChange={(event) => handleFechaChange('dia', event.target.value.replace(/[^\d]/g, '').slice(0, 2))}
+                aria-label="Día"
+                aria-invalid={Boolean(errors.fecha_limite)}
+              />
+              <span className="oferta-fecha-separador">/</span>
+              <input
+                id="oferta-fecha-mes"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={12}
+                placeholder="MM"
+                value={fechaMes}
+                onChange={(event) => handleFechaChange('mes', event.target.value.replace(/[^\d]/g, '').slice(0, 2))}
+                aria-label="Mes"
+                aria-invalid={Boolean(errors.fecha_limite)}
+              />
+              <span className="oferta-fecha-separador">/</span>
+              <input
+                id="oferta-fecha-anio"
+                type="number"
+                inputMode="numeric"
+                placeholder="AAAA"
+                value={fechaAnio}
+                onChange={(event) => handleFechaChange('anio', event.target.value.replace(/[^\d]/g, '').slice(0, 4))}
+                aria-label="Año"
+                aria-invalid={Boolean(errors.fecha_limite)}
+              />
+              <input
+                id="oferta-fecha-hora"
+                type="time"
+                value={fechaHora}
+                onChange={(event) => handleFechaChange('hora', event.target.value)}
+                aria-label="Hora límite"
+                aria-invalid={Boolean(errors.fecha_limite)}
+              />
+            </div>
             {errors.fecha_limite && <span className="field-error">{errors.fecha_limite}</span>}
           </div>
         </div>
@@ -473,10 +600,13 @@ export default function PublicarOfertaForm() {
             <input
               id="oferta-imagen-url"
               type="url"
+              maxLength={IMAGEN_URL_MAX}
               value={form.imagen_url}
               onChange={(event) => handleUrlChange(event.target.value)}
               placeholder="https://misitio.com/imagenes/producto.jpg"
+              aria-invalid={Boolean(errors.imagen_url)}
             />
+            {errors.imagen_url && <span className="field-error">{errors.imagen_url}</span>}
           </div>
         )}
 
