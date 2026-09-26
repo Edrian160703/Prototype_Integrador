@@ -1,7 +1,9 @@
 import { NavLink, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 import UserMenu from './UserMenu'
+import CartPanel from './CartPanel'
 import darkModeIcon from '../assets/images/dark-mode-icon.png'
 
 interface HeaderProps {
@@ -23,6 +25,8 @@ export default function Header({ onOpenLogin }: HeaderProps) {
   })
   const { user, profile, loading } = useAuth()
   const isComercio = profile?.role === 'store'
+  const { totalItems } = useCart()
+  const [cartOpen, setCartOpen] = useState(false)
 
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? 'dark' : 'light'
@@ -38,7 +42,8 @@ export default function Header({ onOpenLogin }: HeaderProps) {
   ]
 
   return (
-    <header className="header container">
+    <>
+      <header className="header container">
       <Link className="logo" to="/" onClick={() => setNavOpen(false)}>
         <span className="logo-mark" aria-hidden="true">♻</span>
         <span>
@@ -88,5 +93,19 @@ export default function Header({ onOpenLogin }: HeaderProps) {
         </button>
       </div>
     </header>
+
+    {!isComercio && (
+      <button
+        className="cart-fab"
+        aria-label="Carrito de compras"
+        onClick={() => setCartOpen(true)}
+      >
+        🛒
+        {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
+      </button>
+    )}
+
+    <CartPanel open={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
   )
 }

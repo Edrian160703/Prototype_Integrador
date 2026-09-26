@@ -33,7 +33,7 @@ function requiredFirebaseEnv(name: string): string {
   return value
 }
 
-export function getFirebaseServices() {
+function getFirebaseServices() {
   const firebaseConfig = {
     apiKey: requiredFirebaseEnv('VITE_FIREBASE_API_KEY'),
     authDomain: requiredFirebaseEnv('VITE_FIREBASE_AUTH_DOMAIN'),
