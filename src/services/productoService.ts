@@ -4,7 +4,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  orderBy,
   query,
   serverTimestamp,
   setDoc,
@@ -12,7 +11,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { getFirebaseServices } from './authService'
-import { CATEGORIAS, type OfertaDocument } from '../types/oferta'
+import { CATEGORIAS } from '../types/oferta'
 import type { ProductoDocument, ProductoEstado, ProductoPayload } from '../types/producto'
 import type { Product, ProductStatus } from '../components/admin/ProductsPanel'
 
