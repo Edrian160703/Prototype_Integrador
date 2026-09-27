@@ -14,6 +14,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { CATEGORIAS, type OfertaDocument, type OfertaPayload } from '../types/oferta'
+import { createProducto } from './productoService'
 
 function requiredFirebaseEnv(name: string): string {
   const value = import.meta.env[name]
@@ -74,6 +75,47 @@ export async function createOferta({ uid, payload }: CreateOfertaParams): Promis
   return idProducto
 }
 
+/**
+ * Publica una oferta y, junto con ella, crea el producto correspondiente en el
+ * catálogo del comercio (colección "productos"). La oferta guarda el id_producto
+ * que apunta a ese nuevo documento, en vez de un id inventado sin relación real.
+ */
+export async function createOfertaConProducto({ uid, payload }: CreateOfertaParams): Promise<string> {
+  const idProducto = await createProducto({
+    uid,
+    payload: {
+      nombre_producto: payload.nombre_producto,
+      id_categoria: payload.id_categoria,
+      descripcion: payload.descripcion,
+      precio_original: payload.precio_original,
+      stock: payload.cantidad_disponible,
+      imagen_url: payload.imagen_url,
+      estado: 'activo',
+    },
+  })
+
+  const db = getDb()
+  const idOferta = generarIdProducto()
+
+  const docData: OfertaDocument = {
+    id_producto: idProducto,
+    id_comercio: uid,
+    id_categoria: payload.id_categoria,
+    nombre_producto: payload.nombre_producto,
+    descripcion: payload.descripcion,
+    precio_original: payload.precio_original,
+    precio_oferta: payload.precio_oferta,
+    cantidad_disponible: payload.cantidad_disponible,
+    horario_recojo: payload.horario_recojo,
+    estado: payload.estado,
+    fecha_limite: Timestamp.fromDate(new Date(payload.fecha_limite)),
+    imagen_url: payload.imagen_url.trim() ? payload.imagen_url : null,
+  }
+
+  await setDoc(doc(collection(db, 'ofertas'), idOferta), docData)
+  return idOferta
+}
+
 export interface OfferCardData {
   id: string
   image: string
@@ -110,11 +152,11 @@ function crearResolverComercio(db: ReturnType<typeof getDb>) {
   }
 }
 
-function mapOfertaDoc(data: OfertaDocument, comercio: ComercioInfo | null): OfferCardData {
+function mapOfertaDoc(idOferta: string, data: OfertaDocument, comercio: ComercioInfo | null): OfferCardData {
   const categoria = CATEGORIAS.find((c) => c.id === data.id_categoria)
 
   return {
-    id: data.id_producto,
+    id: idOferta,
     image: data.imagen_url ?? '',
     discount: calcularDescuento(data.precio_original, data.precio_oferta),
     title: data.nombre_producto,
@@ -135,7 +177,7 @@ export async function getOfertas(): Promise<OfferCardData[]> {
     snapshot.docs.map(async (docSnap) => {
       const data = docSnap.data() as OfertaDocument
       const comercio = await resolverComercio(data.id_comercio)
-      return mapOfertaDoc(data, comercio)
+      return mapOfertaDoc(docSnap.id, data, comercio)
     }),
   )
 }
@@ -159,9 +201,9 @@ function formatearFechaLimite(fechaLimite: Timestamp): string {
   })
 }
 
-export async function getOfertaById(idProducto: string): Promise<OfertaDetalle | null> {
+export async function getOfertaById(idOferta: string): Promise<OfertaDetalle | null> {
   const db = getDb()
-  const snap = await getDoc(doc(db, 'ofertas', idProducto))
+  const snap = await getDoc(doc(db, 'ofertas', idOferta))
   if (!snap.exists()) return null
 
   const data = snap.data() as OfertaDocument
@@ -170,7 +212,7 @@ export async function getOfertaById(idProducto: string): Promise<OfertaDetalle |
   const categoria = CATEGORIAS.find((c) => c.id === data.id_categoria)
 
   return {
-    ...mapOfertaDoc(data, comercio),
+    ...mapOfertaDoc(idOferta, data, comercio),
     descripcion: data.descripcion,
     categoriaLabel: categoria?.label ?? 'Otros',
     cantidadDisponible: data.cantidad_disponible,
