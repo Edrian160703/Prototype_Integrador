@@ -78,6 +78,36 @@
 .reserva-confirm-actions{display:flex;justify-content:flex-end;gap:.6rem}
 .reserva-confirm-btn{border:none;border-radius:999px;padding:.55rem 1.1rem;font-size:.85rem;font-weight:600;cursor:pointer;transition:opacity .15s ease}
 .reserva-confirm-btn:disabled{opacity:.6;cursor:not-allowed}
+
+/* ---------- Mis publicaciones ---------- */
+.profile-publications-empty{margin:14px 0 4px;font-size:12.5px;color:var(--text-muted)}
+
+.profile-publication-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:16px}
+
+.profile-publication-card{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;background:var(--cream);box-shadow:var(--shadow)}
+
+.profile-publication-image{width:100%;height:150px;object-fit:cover;background:var(--green-soft);display:block}
+
+.profile-publication-copy{flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 16px}
+.profile-publication-category{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--green-primary);background:var(--green-soft);padding:3px 9px;border-radius:999px}
+.profile-publication-copy h3{margin:2px 0 0;font-size:14.5px;line-height:1.3}
+.profile-publication-copy p{margin:0;font-size:12px;line-height:1.45;color:var(--text-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.profile-publication-copy strong{margin-top:4px;font-size:16px;color:var(--green-dark,var(--green-primary))}
+
+.profile-publication-actions{display:flex;gap:8px;padding:0 16px 16px}
+.profile-publication-actions .btn{flex:1;padding:8px 10px;font-size:12px;text-align:center}
+.profile-delete-button{border-color:#e3a9a9!important;color:#c53f3f!important}
+.profile-delete-button:hover{background:#fbe3e3!important}
+
+.profile-publication-editor{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);display:grid;gap:14px}
+.profile-publication-editor-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.profile-publication-editor-head h3{margin:0;font-size:15px}
+.profile-publication-editor-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+
+@media(max-width:620px){
+  .profile-publication-list{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .profile-publication-image{height:120px}
+}
 .reserva-confirm-btn-secondary{background:#f2f4f1;color:var(--text-gray)}
 .reserva-confirm-btn-secondary:hover:not(:disabled){background:#e6ebe4}
 .reserva-confirm-btn-danger{background:#d64545;color:#fff}

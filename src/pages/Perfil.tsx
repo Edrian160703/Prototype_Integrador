@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import ProfileConsumerForm from '../components/ProfileConsumerForm'
 import ProfileStoreForm from '../components/ProfileStoreForm'
 import MisReservas from '../components/MisReservas'
+import MisPublicaciones from '../components/MisPublicaciones'
 import '../styles/perfil.css'
 
 export default function Perfil() {
@@ -52,7 +53,10 @@ export default function Perfil() {
       </header>
 
       {profile.role === 'store' ? (
-        <ProfileStoreForm profile={profile} onSaved={refreshProfile} />
+        <>
+          <ProfileStoreForm profile={profile} onSaved={refreshProfile} />
+          <MisPublicaciones uid={user.uid} />
+        </>
       ) : (
         <>
           <ProfileConsumerForm profile={profile} onSaved={refreshProfile} />

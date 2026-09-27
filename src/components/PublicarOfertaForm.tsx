@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { createOferta } from '../services/ofertaService'
+import { createOfertaConProducto } from '../services/ofertaService'
 import { CATEGORIAS } from '../types/oferta'
 
 const NOMBRE_MAX = 150
@@ -300,7 +300,7 @@ export default function PublicarOfertaForm() {
         estado: 'disponible' as const,
       }
 
-      await createOferta({
+      await createOfertaConProducto({
         uid: user.uid,
         payload,
       })
