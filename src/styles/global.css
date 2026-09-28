@@ -326,7 +326,7 @@ img {
 }
 .theme-toggle.is-dark img {
   transform: rotate(180deg) scale(0.9);
-  filter: brightness(1.15) saturate(0.9);
+  filter: brightness(1.15) saturate(0.9) invert(1);
 }
 /* ---------- hero ---------- */
 .hero {
