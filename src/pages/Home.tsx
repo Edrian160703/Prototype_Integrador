@@ -1,23 +1,13 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import OfferCard from '../components/OfferCard'
 import heroBowl from '../assets/images/hero-bowl.jpg'
-import cake from '../assets/images/cake.jpg'
+import { getOfertas, type OfferCardData } from '../services/ofertaService'
 
 interface Category {
   label: string
   icon: string
   active?: boolean
-}
-
-interface FeaturedOffer {
-  image: string
-  discount: string
-  title: string
-  place: string
-  rating: string
-  reviews: number
-  distance: string
-  price: string
 }
 
 const categories: Category[] = [
@@ -31,13 +21,37 @@ const categories: Category[] = [
   { label: 'Ver todas', icon: '⊞' },
 ]
 
-const featuredOffers: FeaturedOffer[] = [
-  { image: cake, discount: '-99%', title: 'Título', place: 'Lugar', rating: '4.5', reviews: 120, distance: '99.9 km', price: '99.90' },
-  { image: cake, discount: '-99%', title: 'Título', place: 'Lugar', rating: '4.5', reviews: 120, distance: '99.9 km', price: '99.90' },
-  { image: cake, discount: '-99%', title: 'Título', place: 'Lugar', rating: '4.5', reviews: 120, distance: '99.9 km', price: '99.90' },
-]
+const MAX_FEATURED = 3
 
 export default function Home() {
+  const [featuredOffers, setFeaturedOffers] = useState<OfferCardData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadOfertas() {
+      setLoading(true)
+      setLoadError('')
+      try {
+        const data = await getOfertas()
+        if (!cancelled) setFeaturedOffers(data.slice(0, MAX_FEATURED))
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : 'No pudimos cargar las ofertas.')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadOfertas()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <>
       <section className="hero">
@@ -101,9 +115,16 @@ export default function Home() {
           <h2>Ofertas Destacadas</h2>
           <Link to="/explorar">Ver todas las ofertas →</Link>
         </div>
+
+        {loading && <p className="explore-status">Cargando ofertas...</p>}
+        {!loading && loadError && <p className="explore-status is-error">{loadError}</p>}
+        {!loading && !loadError && featuredOffers.length === 0 && (
+          <p className="explore-status">Todavía no hay ofertas publicadas.</p>
+        )}
+
         <div className="cards-grid">
-          {featuredOffers.map((o, i) => (
-            <OfferCard key={i} {...o} />
+          {featuredOffers.map((o) => (
+            <OfferCard key={o.id} {...o} />
           ))}
         </div>
 

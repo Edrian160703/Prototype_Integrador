@@ -1,7 +1,9 @@
 import { NavLink, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import UserMenu from "./UserMenu";
+import CartPanel from "./CartPanel";
 import darkModeIcon from "../assets/images/dark-mode-icon-black.png";
 
 interface HeaderProps {
@@ -23,6 +25,8 @@ export default function Header({ onOpenLogin }: HeaderProps) {
   });
   const { user, profile, loading } = useAuth();
   const isComercio = profile?.role === "store";
+  const { totalItems } = useCart();
+  const [cartOpen, setCartOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? "dark" : "light";
@@ -38,70 +42,85 @@ export default function Header({ onOpenLogin }: HeaderProps) {
   ];
 
   return (
-    <header className="header container">
-      <Link className="logo" to="/" onClick={() => setNavOpen(false)}>
-        <span className="logo-mark" aria-hidden="true">
-          ♻
-        </span>
-        <span>
-          <span className="logo-text">FOODBACK</span>
-          <small className="logo-tagline">
-            Buena comida, segunda oportunidad
-          </small>
-        </span>
-      </Link>
+    <>
+      <header className="header container">
+        <Link className="logo" to="/" onClick={() => setNavOpen(false)}>
+          <span className="logo-mark" aria-hidden="true">
+            ♻
+          </span>
+          <span>
+            <span className="logo-text">FOODBACK</span>
+            <small className="logo-tagline">
+              Buena comida, segunda oportunidad
+            </small>
+          </span>
+        </Link>
 
-      <nav className={`nav${navOpen ? " open" : ""}`}>
-        {links.map((l) => (
-          <NavLink
-            key={l.to}
-            to={l.to}
-            end={l.end}
-            onClick={() => setNavOpen(false)}
-          >
-            {l.label}
-          </NavLink>
-        ))}
-      </nav>
-
-      <div className="header-right">
-        {!loading && isComercio && (
-          <Link to="/publicar" className="btn btn-publish">
-            + Publicar
-          </Link>
-        )}
-        <span className="location-pill"> Lima, Perú</span>
-        <button className="icon-btn" aria-label="Favoritos">
-          ♡
-        </button>
-        <button
-          className={`theme-toggle${darkMode ? " is-dark" : ""}`}
-          type="button"
-          aria-label={
-            darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
-          }
-          aria-pressed={darkMode}
-          title={darkMode ? "Modo claro" : "Modo oscuro"}
-          onClick={() => setDarkMode((value) => !value)}
-        >
-          <img src={darkModeIcon} alt="" aria-hidden="true" />
-        </button>
-        {!loading &&
-          (user ? (
-            <UserMenu />
-          ) : (
-            <button className="btn btn-primary" onClick={onOpenLogin}>
-              Iniciar sesión
-            </button>
+        <nav className={`nav${navOpen ? " open" : ""}`}>
+          {links.map((l) => (
+            <NavLink
+              key={l.to}
+              to={l.to}
+              end={l.end}
+              onClick={() => setNavOpen(false)}
+            >
+              {l.label}
+            </NavLink>
           ))}
+        </nav>
+
+        <div className="header-right">
+          {!loading && isComercio && (
+            <Link to="/publicar" className="btn btn-publish">
+              + Publicar
+            </Link>
+          )}
+          <span className="location-pill"> Lima, Perú</span>
+          <button className="icon-btn" aria-label="Favoritos">
+            ♡
+          </button>
+          <button
+            className={`theme-toggle${darkMode ? " is-dark" : ""}`}
+            type="button"
+            aria-label={
+              darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+            }
+            aria-pressed={darkMode}
+            title={darkMode ? "Modo claro" : "Modo oscuro"}
+            onClick={() => setDarkMode((value) => !value)}
+          >
+            <img src={darkModeIcon} alt="" aria-hidden="true" />
+          </button>
+          {!loading &&
+            (user ? (
+              <UserMenu />
+            ) : (
+              <button className="btn btn-primary" onClick={onOpenLogin}>
+                Iniciar sesión
+              </button>
+            ))}
+          <button
+            className="nav-toggle"
+            aria-label="Abrir menú"
+            onClick={() => setNavOpen((v) => !v)}
+          >
+            ☰
+          </button>
+        </div>
+      </header>
+
+      {!isComercio && (
         <button
-          className="nav-toggle"
-          aria-label="Abrir menú"
-          onClick={() => setNavOpen((v) => !v)}
+          className="cart-fab"
+          aria-label="Carrito de compras"
+          onClick={() => setCartOpen(true)}
         >
-          ☰
+          🛒
+          {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
         </button>
-      </div>
-    </header>
+      )}
+
+      <CartPanel open={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
   );
 }
