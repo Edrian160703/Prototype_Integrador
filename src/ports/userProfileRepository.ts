@@ -11,8 +11,11 @@ export interface IProfileCreator {
   ): Promise<void>
 }
 
-export interface IProfileUpdater {
+export interface IOnboardingProfileWriter {
   updateOnboarding(uid: string, role: UserRole, profile: InitialUserProfile): Promise<void>
+}
+
+export interface IProfileEditor {
   saveChanges(
     uid: string,
     role: UserRole,

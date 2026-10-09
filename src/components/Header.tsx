@@ -1,10 +1,11 @@
 import { NavLink, Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuthSession, useUserProfile } from '../context/AuthContext'
 import { useCartCount } from '../context/CartContext'
 import UserMenu from './UserMenu'
-import CartPanel from './CartPanel'
 import darkModeIcon from '../assets/images/dark-mode-icon.png'
+
+const CartPanel = lazy(() => import('./CartPanel'))
 
 interface HeaderProps {
   onOpenLogin: () => void
@@ -106,7 +107,11 @@ export default function Header({ onOpenLogin }: HeaderProps) {
       </button>
     )}
 
-    <CartPanel open={cartOpen} onClose={() => setCartOpen(false)} />
+    {cartOpen && (
+      <Suspense fallback={null}>
+        <CartPanel open onClose={() => setCartOpen(false)} />
+      </Suspense>
+    )}
     </>
   )
 }

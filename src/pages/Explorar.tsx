@@ -10,22 +10,17 @@ export default function Explorar() {
   const navigate = useNavigate()
 
   const [active, setActive] = useState<string>('Todos')
-  const [toastMessage, setToastMessage] = useState('')
+  const state = location.state as { toastMessage?: string } | null
+  const toastMessage = state?.toastMessage ?? ''
   const { offers, loading, error: loadError } = useOfertas()
 
   useEffect(() => {
-    const state = location.state as { toastMessage?: string } | null
-    if (state?.toastMessage) {
-      setToastMessage(state.toastMessage)
-      navigate(location.pathname, { replace: true, state: {} })
-    }
-  }, [location, navigate])
-
-  useEffect(() => {
     if (!toastMessage) return
-    const timer = setTimeout(() => setToastMessage(''), 4000)
+    const timer = setTimeout(() => {
+      navigate(location.pathname, { replace: true, state: {} })
+    }, 4000)
     return () => clearTimeout(timer)
-  }, [toastMessage])
+  }, [location.pathname, navigate, toastMessage])
 
   const visibleOffers = active === 'Todos' ? offers : offers.filter((o) => o.categoriaChip === active)
 

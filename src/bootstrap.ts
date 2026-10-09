@@ -15,7 +15,7 @@ import {
   getProductosByComercio as getProductosByComercioUseCase,
   updateProductoEstado as updateProductoEstadoUseCase,
 } from './application/productos'
-import { listAccounts, setAccountStatus as setAccountStatusUseCase, deleteAccountDocument as deleteAccountUseCase } from './services/accounts'
+import { listAccounts, setAccountStatus as setAccountStatusUseCase, deleteAccountDocument as deleteAccountUseCase } from './application/accounts'
 import {
   getCurrentUser as getCurrentUserUseCase,
   getUserDocument as getUserDocumentUseCase,
@@ -27,180 +27,255 @@ import {
   signOutUser as signOutUserUseCase,
   subscribeToAuthChanges as subscribeToAuthChangesUseCase,
   updateUserProfile as updateUserProfileUseCase,
-} from './services/authService'
+} from './application/auth'
 import {
   cancelarReserva as cancelarReservaUseCase,
   crearReservasDesdeCarrito as crearReservasDesdeCarritoUseCase,
   getReservasByUsuario as getReservasByUsuarioUseCase,
-  type ReservaConOferta,
-} from './services/reservaService'
-import { FirebaseAccountRepository } from './infrastructure/firebase/FirebaseAccountRepository'
+} from './application/reservas'
 import { FirebaseAuthGateway } from './infrastructure/firebase/FirebaseAuthGateway'
-import { FirebaseComercioRepository } from './infrastructure/firebase/FirebaseComercioRepository'
-import { FirebaseOfertaRepository } from './infrastructure/firebase/FirebaseOfertaRepository'
-import { FirebaseProductoRepository } from './infrastructure/firebase/FirebaseProductoRepository'
-import { FirebaseReservaRepository } from './infrastructure/firebase/FirebaseReservaRepository'
-import { FirebaseUserProfileRepository } from './infrastructure/firebase/FirebaseUserProfileRepository'
-import { toOfferCardData, toOfertaDetalle, type OfertaDetalle, type OfferCardData } from './presentation/OfertaPresenter'
-import { toProductoAdminItems } from './presentation/ProductoPresenter'
-import type { CreateOfertaParams } from './services/ofertaService'
+import type { CreateOfertaParams } from './types/oferta'
 import type { CartItem } from './types/cart'
 import type { OfertaPayload } from './types/oferta'
 import type { ProductoEstado, ProductoPayload } from './types/producto'
-import type { ProductoAdminItem } from './types/productoAdmin'
+import type { ProductoAdminRecord } from './types/productoAdmin'
 import type { UserRole } from './types/user'
 import type { AccountStatus } from './ports/accountRepository'
 import type { AuthIdentity } from './ports/authGateway'
 import type { InitialUserData, InitialUserProfile } from './types/user'
+import type { ReservaConOferta } from './types/reserva'
+import type { FoodBackApplication } from './application/contracts'
+import { getFirebaseAuth, getFirebaseFirestore } from './infrastructure/firebase/firebaseClient'
 
-const productoRepository = new FirebaseProductoRepository()
-const ofertaRepository = new FirebaseOfertaRepository()
-const comercioRepository = new FirebaseComercioRepository()
-const reservaRepository = new FirebaseReservaRepository()
-const accountRepository = new FirebaseAccountRepository()
-const authGateway = new FirebaseAuthGateway()
-const userProfileRepository = new FirebaseUserProfileRepository()
-
-export function createProducto(uid: string, payload: ProductoPayload): Promise<string> {
-  return createProductoUseCase(productoRepository, { uid, payload })
+function lazyRepository<T>(factory: () => Promise<T>): () => Promise<T> {
+  let repository: Promise<T> | undefined
+  return () => {
+    repository ??= factory()
+    return repository
+  }
 }
 
-export function getProductosByComercio(idComercio: string) {
-  return getProductosByComercioUseCase(productoRepository, idComercio)
-}
+export function createFoodBackApplication(): FoodBackApplication {
+  const authGateway = new FirebaseAuthGateway(getFirebaseAuth())
+  const productoRepository = lazyRepository(async () => {
+    const [{ FirebaseProductoRepository }, db] = await Promise.all([
+      import('./infrastructure/firebase/FirebaseProductoRepository'),
+      getFirebaseFirestore(),
+    ])
+    return new FirebaseProductoRepository(db)
+  })
+  const ofertaRepository = lazyRepository(async () => {
+    const [{ FirebaseOfertaRepository }, db] = await Promise.all([
+      import('./infrastructure/firebase/FirebaseOfertaRepository'),
+      getFirebaseFirestore(),
+    ])
+    return new FirebaseOfertaRepository(db)
+  })
+  const comercioRepository = lazyRepository(async () => {
+    const [{ FirebaseComercioRepository }, db] = await Promise.all([
+      import('./infrastructure/firebase/FirebaseComercioRepository'),
+      getFirebaseFirestore(),
+    ])
+    return new FirebaseComercioRepository(db)
+  })
+  const reservaRepository = lazyRepository(async () => {
+    const [{ FirebaseReservaRepository }, db] = await Promise.all([
+      import('./infrastructure/firebase/FirebaseReservaRepository'),
+      getFirebaseFirestore(),
+    ])
+    return new FirebaseReservaRepository(db)
+  })
+  const accountRepository = lazyRepository(async () => {
+    const [{ FirebaseAccountRepository }, db] = await Promise.all([
+      import('./infrastructure/firebase/FirebaseAccountRepository'),
+      getFirebaseFirestore(),
+    ])
+    return new FirebaseAccountRepository(db)
+  })
+  const userProfileRepository = lazyRepository(async () => {
+    const [{ FirebaseUserProfileRepository }, db] = await Promise.all([
+      import('./infrastructure/firebase/FirebaseUserProfileRepository'),
+      getFirebaseFirestore(),
+    ])
+    return new FirebaseUserProfileRepository(db)
+  })
 
-export function getProductoById(idProducto: string) {
-  return getProductoByIdUseCase(productoRepository, idProducto)
-}
+  async function createProducto(uid: string, payload: ProductoPayload): Promise<string> {
+    return createProductoUseCase(await productoRepository(), { uid, payload })
+  }
 
-export function updateProductoEstado(idProducto: string, estado: ProductoEstado): Promise<void> {
-  return updateProductoEstadoUseCase(productoRepository, idProducto, estado)
-}
+  async function getProductosByComercio(idComercio: string) {
+    return getProductosByComercioUseCase(await productoRepository(), idComercio)
+  }
 
-export function deleteProducto(idProducto: string): Promise<void> {
-  return deleteProductoUseCase(productoRepository, idProducto)
-}
+  async function getProductoById(idProducto: string) {
+    return getProductoByIdUseCase(await productoRepository(), idProducto)
+  }
 
-export async function getAllProductosForAdmin(): Promise<ProductoAdminItem[]> {
-  const records = await getAllProductosForAdminUseCase(productoRepository)
-  return toProductoAdminItems(records)
-}
+  async function updateProductoEstado(idProducto: string, estado: ProductoEstado): Promise<void> {
+    return updateProductoEstadoUseCase(await productoRepository(), idProducto, estado)
+  }
 
-export function createOferta(params: CreateOfertaParams): Promise<string> {
-  return createOfertaUseCase(ofertaRepository, params)
-}
+  async function deleteProducto(idProducto: string): Promise<void> {
+    return deleteProductoUseCase(await productoRepository(), idProducto)
+  }
 
-export function createOfertaConProducto(params: CreateOfertaParams): Promise<string> {
-  return createOfertaConProductoUseCase(params, productoRepository, ofertaRepository)
-}
+  async function getAllProductosForAdmin(): Promise<ProductoAdminRecord[]> {
+    const [products, commerces] = await Promise.all([productoRepository(), comercioRepository()])
+    return getAllProductosForAdminUseCase(products, commerces)
+  }
 
-export async function getOfertas(): Promise<OfferCardData[]> {
-  const offers = await getOfertasUseCase(ofertaRepository, comercioRepository)
-  return offers.map(toOfferCardData)
-}
+  async function createOferta(params: CreateOfertaParams): Promise<string> {
+    return createOfertaUseCase(await ofertaRepository(), params)
+  }
 
-export async function getOfertaById(idOferta: string): Promise<OfertaDetalle | null> {
-  const offer = await getOfertaByIdUseCase(idOferta, ofertaRepository, comercioRepository)
-  return offer ? toOfertaDetalle(offer) : null
-}
+  async function createOfertaConProducto(params: CreateOfertaParams): Promise<string> {
+    const [products, offers] = await Promise.all([productoRepository(), ofertaRepository()])
+    return createOfertaConProductoUseCase(params, products, offers)
+  }
 
-export function getOfertasByOwner(uid: string) {
-  return getOfertasByOwnerUseCase(ofertaRepository, uid)
-}
+  async function getOfertas() {
+    const [offers, commerces] = await Promise.all([ofertaRepository(), comercioRepository()])
+    return getOfertasUseCase(offers, commerces)
+  }
 
-export function updateOferta(id: string, uid: string, payload: Omit<OfertaPayload, 'estado'>) {
-  return updateOfertaUseCase(ofertaRepository, id, uid, payload)
-}
+  async function getOfertaById(idOferta: string) {
+    const [offers, commerces] = await Promise.all([ofertaRepository(), comercioRepository()])
+    return getOfertaByIdUseCase(idOferta, offers, commerces)
+  }
 
-export function deleteOferta(id: string, uid: string) {
-  return deleteOfertaUseCase(ofertaRepository, id, uid)
-}
+  async function getOfertasByOwner(uid: string) {
+    return getOfertasByOwnerUseCase(await ofertaRepository(), uid)
+  }
 
-export function listUsers() {
-  return listAccounts(accountRepository, 'consumer')
-}
+  async function updateOferta(id: string, uid: string, payload: Omit<OfertaPayload, 'estado'>) {
+    return updateOfertaUseCase(await ofertaRepository(), id, uid, payload)
+  }
 
-export function listStores() {
-  return listAccounts(accountRepository, 'store')
-}
+  async function deleteOferta(id: string, uid: string) {
+    return deleteOfertaUseCase(await ofertaRepository(), id, uid)
+  }
 
-export function setAccountStatus(id: string, role: UserRole, status: AccountStatus) {
-  return setAccountStatusUseCase(accountRepository, id, role, status)
-}
+  async function listUsers() {
+    return listAccounts(await accountRepository(), 'consumer')
+  }
 
-export function deleteAccountDocument(id: string, role: UserRole) {
-  return deleteAccountUseCase(accountRepository, id, role)
-}
+  async function listStores() {
+    return listAccounts(await accountRepository(), 'store')
+  }
 
-export function crearReservasDesdeCarrito(idUsuario: string, emailUsuario: string, items: CartItem[]) {
-  return crearReservasDesdeCarritoUseCase(reservaRepository, idUsuario, emailUsuario, items)
-}
+  async function setAccountStatus(id: string, role: UserRole, status: AccountStatus) {
+    return setAccountStatusUseCase(await accountRepository(), id, role, status)
+  }
 
-export function cancelarReserva(reserva: ReservaConOferta) {
-  return cancelarReservaUseCase(reservaRepository, reserva)
-}
+  async function deleteAccountDocument(id: string, role: UserRole) {
+    return deleteAccountUseCase(await accountRepository(), id, role)
+  }
 
-export function getReservasByUsuario(idUsuario: string) {
-  return getReservasByUsuarioUseCase(reservaRepository, ofertaRepository, idUsuario)
-}
+  async function crearReservasDesdeCarrito(idUsuario: string, emailUsuario: string, items: CartItem[]) {
+    return crearReservasDesdeCarritoUseCase(await reservaRepository(), idUsuario, emailUsuario, items)
+  }
 
-export function registerWithEmail(
-  email: string,
-  password: string,
-  role: UserRole,
-  profile: InitialUserData['profile'] = {},
-): Promise<AuthIdentity> {
-  return registerWithEmailUseCase(authGateway, userProfileRepository, email, password, role, profile)
-}
+  async function cancelarReserva(reserva: ReservaConOferta) {
+    return cancelarReservaUseCase(await reservaRepository(), reserva)
+  }
 
-export function signInWithGoogle(
-  role: UserRole,
-  profile: InitialUserData['profile'] = {},
-): Promise<AuthIdentity> {
-  return signInWithGoogleUseCase(authGateway, userProfileRepository, role, profile)
-}
+  async function getReservasByUsuario(idUsuario: string) {
+    const [reservas, offers] = await Promise.all([reservaRepository(), ofertaRepository()])
+    return getReservasByUsuarioUseCase(reservas, offers, idUsuario)
+  }
 
-export function signInWithEmail(email: string, password: string): Promise<AuthIdentity> {
-  return signInWithEmailUseCase(authGateway, email, password)
-}
+  async function registerWithEmail(
+    email: string,
+    password: string,
+    role: UserRole,
+    profile: InitialUserData['profile'] = {},
+  ): Promise<AuthIdentity> {
+    return registerWithEmailUseCase(authGateway, await userProfileRepository(), email, password, role, profile)
+  }
 
-export function loginWithGoogle(): Promise<AuthIdentity> {
-  return loginWithGoogleUseCase(authGateway, userProfileRepository)
-}
+  async function signInWithGoogle(
+    role: UserRole,
+    profile: InitialUserData['profile'] = {},
+  ): Promise<AuthIdentity> {
+    return signInWithGoogleUseCase(authGateway, await userProfileRepository(), role, profile)
+  }
 
-export function signOutUser(): Promise<void> {
-  return signOutUserUseCase(authGateway)
-}
+  function signInWithEmail(email: string, password: string): Promise<AuthIdentity> {
+    return signInWithEmailUseCase(authGateway, email, password)
+  }
 
-export function getCurrentUser(): AuthIdentity | null {
-  return getCurrentUserUseCase(authGateway)
-}
+  async function loginWithGoogle(): Promise<AuthIdentity> {
+    return loginWithGoogleUseCase(authGateway, await userProfileRepository())
+  }
 
-export function subscribeToAuthChanges(listener: (user: AuthIdentity | null) => void): () => void {
-  return subscribeToAuthChangesUseCase(authGateway, listener)
-}
+  function signOutUser(): Promise<void> {
+    return signOutUserUseCase(authGateway)
+  }
 
-export function getUserDocument(uid: string) {
-  return getUserDocumentUseCase(userProfileRepository, uid)
-}
+  function getCurrentUser(): AuthIdentity | null {
+    return getCurrentUserUseCase(authGateway)
+  }
 
-export function updateUserProfile(uid: string, role: UserRole, profile: InitialUserProfile): Promise<void> {
-  return updateUserProfileUseCase(userProfileRepository, uid, role, profile)
-}
+  function subscribeToAuthChanges(listener: (user: AuthIdentity | null) => void): () => void {
+    return subscribeToAuthChangesUseCase(authGateway, listener)
+  }
 
-export function saveProfileChanges(
-  uid: string,
-  role: UserRole,
-  profile: InitialUserProfile,
-  displayName: string | null,
-): Promise<void> {
-  return saveProfileChangesUseCase(
-    authGateway,
-    authGateway,
-    userProfileRepository,
-    uid,
-    role,
-    profile,
-    displayName,
-  )
+  async function getUserDocument(uid: string) {
+    return getUserDocumentUseCase(await userProfileRepository(), uid)
+  }
+
+  async function updateUserProfile(uid: string, role: UserRole, profile: InitialUserProfile): Promise<void> {
+    return updateUserProfileUseCase(await userProfileRepository(), uid, role, profile)
+  }
+
+  async function saveProfileChanges(
+    uid: string,
+    role: UserRole,
+    profile: InitialUserProfile,
+    displayName: string | null,
+  ): Promise<void> {
+    return saveProfileChangesUseCase(
+      authGateway,
+      authGateway,
+      await userProfileRepository(),
+      uid,
+      role,
+      profile,
+      displayName,
+    )
+  }
+
+  return {
+    createProducto,
+    getProductosByComercio,
+    getProductoById,
+    updateProductoEstado,
+    deleteProducto,
+    getAllProductosForAdmin,
+    createOferta,
+    createOfertaConProducto,
+    getOfertas,
+    getOfertaById,
+    getOfertasByOwner,
+    updateOferta,
+    deleteOferta,
+    listUsers,
+    listStores,
+    setAccountStatus,
+    deleteAccountDocument,
+    crearReservasDesdeCarrito,
+    cancelarReserva,
+    getReservasByUsuario,
+    registerWithEmail,
+    signInWithGoogle,
+    signInWithEmail,
+    loginWithGoogle,
+    signOutUser,
+    getCurrentUser,
+    subscribeToAuthChanges,
+    getUserDocument,
+    updateUserProfile,
+    saveProfileChanges,
+  }
 }

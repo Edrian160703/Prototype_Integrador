@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { deleteOferta, getOfertasByOwner, updateOferta } from '../bootstrap'
+import { useOfferEditing, useOfferOwnerQuery } from '../context/ApplicationContext'
 import type { OfertaPayload } from '../types/oferta'
-import type { OwnedOferta } from '../services/ofertaService'
+import type { OwnedOferta } from '../types/oferta'
 
 export interface PublicacionEditValues {
   nombre_producto: string
@@ -51,6 +51,8 @@ interface UseMisPublicacionesResult {
 }
 
 export default function useMisPublicaciones(uid: string): UseMisPublicacionesResult {
+  const { deleteOferta, updateOferta } = useOfferEditing()
+  const { getOfertasByOwner } = useOfferOwnerQuery()
   const [publicaciones, setPublicaciones] = useState<OwnedOferta[]>([])
   const [seleccionada, setSeleccionada] = useState<OwnedOferta | null>(null)
   const [values, setValues] = useState<PublicacionEditValues | null>(null)
@@ -60,12 +62,20 @@ export default function useMisPublicaciones(uid: string): UseMisPublicacionesRes
   const [error, setError] = useState('')
   const requestId = useRef(0)
 
-  const loadPublicaciones = useCallback(async () => {
+  const requestPublicaciones = useCallback(() => {
     const currentRequestId = ++requestId.current
+    return {
+      currentRequestId,
+      result: getOfertasByOwner(uid),
+    }
+  }, [getOfertasByOwner, uid])
+
+  const loadPublicaciones = useCallback(async () => {
     setLoading(true)
     setError('')
+    const { currentRequestId, result } = requestPublicaciones()
     try {
-      const data = await getOfertasByOwner(uid)
+      const data = await result
       if (currentRequestId === requestId.current) setPublicaciones(data)
     } catch (reason) {
       if (currentRequestId === requestId.current) {
@@ -74,14 +84,28 @@ export default function useMisPublicaciones(uid: string): UseMisPublicacionesRes
     } finally {
       if (currentRequestId === requestId.current) setLoading(false)
     }
-  }, [uid])
+  }, [requestPublicaciones])
 
   useEffect(() => {
-    void loadPublicaciones()
+    let active = true
+    const { currentRequestId, result } = requestPublicaciones()
+    result
+      .then((data) => {
+        if (active && currentRequestId === requestId.current) setPublicaciones(data)
+      })
+      .catch((reason: unknown) => {
+        if (active && currentRequestId === requestId.current) {
+          setError(reason instanceof Error ? reason.message : 'No pudimos cargar tus publicaciones.')
+        }
+      })
+      .finally(() => {
+        if (active && currentRequestId === requestId.current) setLoading(false)
+      })
     return () => {
+      active = false
       requestId.current += 1
     }
-  }, [loadPublicaciones])
+  }, [requestPublicaciones])
 
   const selectOferta = (oferta: OwnedOferta) => {
     setSeleccionada(oferta)

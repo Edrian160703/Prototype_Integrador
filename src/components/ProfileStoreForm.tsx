@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { saveProfileChanges } from '../bootstrap'
+import { useProfileEditing } from '../context/ApplicationContext'
 import type { PickupSchedule, StoreUser } from '../types/user'
 
 const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
@@ -53,6 +53,7 @@ function validateSchedule(schedule: PickupSchedule) {
 }
 
 export default function ProfileStoreForm({ profile, onSaved }: ProfileStoreFormProps) {
+  const { saveProfileChanges } = useProfileEditing()
   const [baseline, setBaseline] = useState(() => toFormValues(profile))
   const [form, setForm] = useState(baseline)
   const [errors, setErrors] = useState<FieldErrors>({})

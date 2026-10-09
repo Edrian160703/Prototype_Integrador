@@ -1,4 +1,9 @@
-import type { ProductoEstado } from './producto'
+import type { ProductoDocument, ProductoEstado } from './producto'
+
+export interface ProductoAdminRecord {
+  product: ProductoDocument
+  storeName?: string
+}
 
 export interface ProductoAdminItem {
   id: string

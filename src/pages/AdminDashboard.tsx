@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
 import { useAuthSession } from "../context/AuthContext";
+import {
+  useAccountManagement,
+  useAccountQuery,
+  useProductAdminQuery,
+  useProductManagement,
+} from "../context/ApplicationContext";
 import AccountsPanel from "../components/admin/AccountsPanel";
 import ProductsPanel from "../components/admin/ProductsPanel";
-import {
-  listUsers,
-  listStores,
-  setAccountStatus,
-  deleteAccountDocument,
-  deleteProducto,
-  getAllProductosForAdmin,
-  updateProductoEstado,
-} from "../bootstrap";
-import type { ManagedAccount, AccountStatus } from "../services/accounts";
+import type { ManagedAccount, AccountStatus } from "../application/contracts";
 import type { ProductoEstado } from "../types/producto";
 import type { ProductoAdminItem } from "../types/productoAdmin";
+import { toProductoAdminItems } from "../presentation/ProductoPresenter";
 import "../styles/admin-dashboard.css";
 
 type TabKey = "usuarios" | "comercios" | "productos";
@@ -26,6 +24,21 @@ const TABS: { key: TabKey; label: string; icon: string }[] = [
 
 export default function AdminDashboard() {
   const { loading: authLoading } = useAuthSession();
+  const {
+    listUsers,
+    listStores,
+  } = useAccountQuery();
+  const {
+    setAccountStatus,
+    deleteAccountDocument,
+  } = useAccountManagement();
+  const {
+    getAllProductosForAdmin,
+  } = useProductAdminQuery();
+  const {
+    deleteProducto,
+    updateProductoEstado,
+  } = useProductManagement();
   const [activeTab, setActiveTab] = useState<TabKey>("usuarios");
 
   const [users, setUsers] = useState<ManagedAccount[] | null>(null);
@@ -46,7 +59,7 @@ export default function AdminDashboard() {
         if (active) {
           setUsers(usersData);
           setStores(storesData);
-          setProducts(productsData);
+          setProducts(toProductoAdminItems(productsData));
         }
       } catch (e) {
         if (active) {
@@ -60,7 +73,7 @@ export default function AdminDashboard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [getAllProductosForAdmin, listStores, listUsers]);
 
   if (authLoading) return null;
 

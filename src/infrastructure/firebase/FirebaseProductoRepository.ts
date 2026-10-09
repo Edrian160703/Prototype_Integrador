@@ -9,11 +9,10 @@ import {
   setDoc,
   updateDoc,
   where,
+  type Firestore,
 } from 'firebase/firestore'
-import { getFirebaseServices } from './firebaseClient'
 import { toDate } from './firestoreDates'
 import type {
-  ProductoAdminRecord,
   ProductoAdminReader,
   ProductoByCommerceReader,
   ProductoByIdReader,
@@ -34,10 +33,6 @@ function generarIdProducto(): string {
   return `prod_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`
 }
 
-interface ComercioInfo {
-  businessName?: string
-}
-
 export class FirebaseProductoRepository implements
   ProductoCreator,
   ProductoByCommerceReader,
@@ -45,8 +40,9 @@ export class FirebaseProductoRepository implements
   ProductoStateWriter,
   ProductoDeleter,
   ProductoAdminReader {
+  constructor(private readonly db: Firestore) {}
+
   async create(payload: ProductoPayload, uid: string): Promise<string> {
-    const { db } = getFirebaseServices()
     const idProducto = generarIdProducto()
 
     const docData: Record<string, unknown> = {
@@ -63,13 +59,12 @@ export class FirebaseProductoRepository implements
       updatedAt: serverTimestamp(),
     }
 
-    await setDoc(doc(collection(db, 'productos'), idProducto), docData)
+    await setDoc(doc(collection(this.db, 'productos'), idProducto), docData)
     return idProducto
   }
 
   async getByComercio(idComercio: string): Promise<ProductoDocument[]> {
-    const { db } = getFirebaseServices()
-    const productosQuery = query(collection(db, 'productos'), where('id_comercio', '==', idComercio))
+    const productosQuery = query(collection(this.db, 'productos'), where('id_comercio', '==', idComercio))
     const snapshot = await getDocs(productosQuery)
     return snapshot.docs.map((docSnap) => {
       const data = docSnap.data()
@@ -82,8 +77,7 @@ export class FirebaseProductoRepository implements
   }
 
   async getById(idProducto: string): Promise<ProductoDocument | null> {
-    const { db } = getFirebaseServices()
-    const snap = await getDoc(doc(db, 'productos', idProducto))
+    const snap = await getDoc(doc(this.db, 'productos', idProducto))
     if (!snap.exists()) return null
     const data = snap.data()
     return {
@@ -94,44 +88,25 @@ export class FirebaseProductoRepository implements
   }
 
   async updateEstado(idProducto: string, estado: ProductoEstado): Promise<void> {
-    const { db } = getFirebaseServices()
-    await updateDoc(doc(db, 'productos', idProducto), {
+    await updateDoc(doc(this.db, 'productos', idProducto), {
       estado,
       updatedAt: serverTimestamp(),
     })
   }
 
   async delete(idProducto: string): Promise<void> {
-    const { db } = getFirebaseServices()
-    await deleteDoc(doc(db, 'productos', idProducto))
+    await deleteDoc(doc(this.db, 'productos', idProducto))
   }
 
-  async getAllForAdmin(): Promise<ProductoAdminRecord[]> {
-    const { db } = getFirebaseServices()
-    const snapshot = await getDocs(collection(db, 'productos'))
-    const comercioCache = new Map<string, Promise<ComercioInfo | null>>()
-
-    function resolverComercio(idComercio: string): Promise<ComercioInfo | null> {
-      if (!comercioCache.has(idComercio)) {
-        comercioCache.set(
-          idComercio,
-          getDoc(doc(db, 'comercios', idComercio)).then((snap) => (snap.exists() ? (snap.data() as ComercioInfo) : null)),
-        )
-      }
-      return comercioCache.get(idComercio)!
-    }
-
-    return Promise.all(
-      snapshot.docs.map(async (docSnap) => {
-        const storedData = docSnap.data()
-        const data = {
-          ...storedData,
-          createdAt: toDate(storedData.createdAt),
-          updatedAt: toDate(storedData.updatedAt),
-        } as ProductoDocument
-        const comercio = await resolverComercio(data.id_comercio)
-        return { product: data, storeName: comercio?.businessName }
-      }),
-    )
+  async getAll(): Promise<ProductoDocument[]> {
+    const snapshot = await getDocs(collection(this.db, 'productos'))
+    return snapshot.docs.map((docSnap) => {
+      const storedData = docSnap.data()
+      return {
+        ...storedData,
+        createdAt: toDate(storedData.createdAt),
+        updatedAt: toDate(storedData.updatedAt),
+      } as ProductoDocument
+    })
   }
 }

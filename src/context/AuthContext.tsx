@@ -1,5 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { getCurrentUser, getUserDocument, subscribeToAuthChanges } from '../bootstrap'
+import {
+  useAuthStateSubscription,
+  useCurrentUserQuery,
+  useUserProfileQuery,
+} from './ApplicationContext'
 import type { AuthIdentity } from '../ports/authGateway'
 import type { UserDocument } from '../types/user'
 
@@ -22,6 +26,9 @@ const UserProfileContext = createContext<UserProfileReader | null>(null)
 const UserProfileRefreshContext = createContext<UserProfileRefresher | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { getCurrentUser } = useCurrentUserQuery()
+  const { subscribeToAuthChanges } = useAuthStateSubscription()
+  const { getUserDocument } = useUserProfileQuery()
   const [user, setUser] = useState<AuthIdentity | null>(null)
   const [profile, setProfile] = useState<UserDocument | null>(null)
   const [loading, setLoading] = useState(true)
@@ -36,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Si falla la lectura se conserva el perfil que ya estaba en pantalla.
       console.error('No se pudo actualizar el perfil', error)
     }
-  }, [])
+  }, [getCurrentUser, getUserDocument])
 
   useEffect(() => {
     // onAuthStateChanged ya restaura la sesión sola al recargar la página
@@ -47,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
     return unsubscribe
-  }, [])
+  }, [getUserDocument, subscribeToAuthChanges])
 
   return (
     <AuthSessionContext.Provider value={{ user, loading }}>

@@ -8,6 +8,7 @@ import {
   updateProfile,
   type User,
 } from 'firebase/auth'
+import type { Auth } from 'firebase/auth'
 import type {
   AuthIdentity,
   IAuthProfileUpdater,
@@ -16,7 +17,6 @@ import type {
   IAuthSignIn,
   IAuthSignOut,
 } from '../../ports/authGateway'
-import { getFirebaseServices } from './firebaseClient'
 
 function toIdentity(user: User): AuthIdentity {
   return {
@@ -33,38 +33,39 @@ export class FirebaseAuthGateway implements
   IAuthSignIn,
   IAuthProfileUpdater,
   IAuthSignOut {
+  constructor(private readonly auth: Auth) {}
+
   get currentUser(): AuthIdentity | null {
-    const user = getFirebaseServices().auth.currentUser
+    const user = this.auth.currentUser
     return user ? toIdentity(user) : null
   }
 
   onAuthStateChanged(listener: (user: AuthIdentity | null) => void): () => void {
-    return onAuthStateChanged(getFirebaseServices().auth, (user) => listener(user ? toIdentity(user) : null))
+    return onAuthStateChanged(this.auth, (user) => listener(user ? toIdentity(user) : null))
   }
 
   async registerWithEmail(email: string, password: string, displayName: string | null): Promise<AuthIdentity> {
-    const { auth } = getFirebaseServices()
-    const { user } = await createUserWithEmailAndPassword(auth, email, password)
+    const { user } = await createUserWithEmailAndPassword(this.auth, email, password)
     if (displayName) await updateProfile(user, { displayName })
     return toIdentity(user)
   }
 
   async signInWithEmail(email: string, password: string): Promise<AuthIdentity> {
-    const { user } = await signInWithEmailAndPassword(getFirebaseServices().auth, email, password)
+    const { user } = await signInWithEmailAndPassword(this.auth, email, password)
     return toIdentity(user)
   }
 
   async signInWithGoogle(): Promise<AuthIdentity> {
-    const { user } = await signInWithPopup(getFirebaseServices().auth, new GoogleAuthProvider())
+    const { user } = await signInWithPopup(this.auth, new GoogleAuthProvider())
     return toIdentity(user)
   }
 
   async updateDisplayName(uid: string, displayName: string): Promise<void> {
-    const user = getFirebaseServices().auth.currentUser
+    const user = this.auth.currentUser
     if (user?.uid === uid) await updateProfile(user, { displayName })
   }
 
   async signOut(): Promise<void> {
-    await signOut(getFirebaseServices().auth)
+    await signOut(this.auth)
   }
 }

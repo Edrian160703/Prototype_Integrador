@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, type FormEvent, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { loginWithGoogle, signInWithEmail } from '../bootstrap'
+import { useEmailSignIn, useGoogleSignIn } from '../context/ApplicationContext'
 
 interface LoginModalProps {
-  open: boolean
   onClose: () => void
 }
 
 type Tab = 'login' | 'register'
 
-export default function LoginModal({ open, onClose }: LoginModalProps) {
+export default function LoginModal({ onClose }: LoginModalProps) {
+  const { loginWithGoogle } = useGoogleSignIn()
+  const { signInWithEmail } = useEmailSignIn()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('login')
   const [showPass, setShowPass] = useState(false)
@@ -19,23 +20,11 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [authError, setAuthError] = useState('')
 
-  useEffect(() => {
-    if (!open) {
-      setTab('login')
-      setShowPass(false)
-      setEmail('')
-      setPassword('')
-      setAuthError('')
-    }
-  }, [open])
-
-  if (!open) return null
-
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleOverlayClick = (e: MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose()
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setAuthError('')
     setLoading(true)

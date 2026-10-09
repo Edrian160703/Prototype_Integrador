@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 
 export default function RegistroNegocio() {
   const [sent, setSent] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     // Solo funcionalidad visual: no se realiza ninguna petición HTTP ni se guardan datos.
     setSent(true)

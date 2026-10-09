@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthSession, useUserProfile } from '../context/AuthContext'
-import { createOfertaConProducto } from '../bootstrap'
+import { useOfferPublishing } from '../context/ApplicationContext'
 import type { OfertaPayload } from '../types/oferta'
 
 type SubmitStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 export default function usePublicarOferta() {
+  const { createOfertaConProducto } = useOfferPublishing()
   const navigate = useNavigate()
   const { user } = useAuthSession()
   const { profile } = useUserProfile()

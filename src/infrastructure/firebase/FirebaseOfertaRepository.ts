@@ -10,14 +10,16 @@ import {
   Timestamp,
   updateDoc,
   where,
+  type Firestore,
 } from 'firebase/firestore'
 import type {
+  OfertaByIdReader,
   OfertaCreator,
-  OfertaReader,
+  OfertaListReader,
+  OfertaOwnerReader,
   OfertaWriter,
 } from '../../ports/ofertaRepository'
 import type { OfertaDocument, OfertaPayload } from '../../types/oferta'
-import { getFirebaseServices } from './firebaseClient'
 import { mapOfertaDocument } from './mapOfertaDocument'
 
 function toFirestoreData(
@@ -41,36 +43,38 @@ function toFirestoreData(
   }
 }
 
-export class FirebaseOfertaRepository implements OfertaCreator, OfertaReader, OfertaWriter {
+export class FirebaseOfertaRepository implements
+  OfertaCreator,
+  OfertaByIdReader,
+  OfertaListReader,
+  OfertaOwnerReader,
+  OfertaWriter {
+  constructor(private readonly db: Firestore) {}
+
   async create(uid: string, payload: OfertaPayload, idProducto: string, idOferta = idProducto): Promise<string> {
-    const { db } = getFirebaseServices()
-    await setDoc(doc(collection(db, 'ofertas'), idOferta), toFirestoreData(uid, payload, idProducto))
+    await setDoc(doc(collection(this.db, 'ofertas'), idOferta), toFirestoreData(uid, payload, idProducto))
     return idOferta
   }
 
   async listAll(): Promise<Array<{ id: string; data: OfertaDocument }>> {
-    const { db } = getFirebaseServices()
-    const snapshot = await getDocs(query(collection(db, 'ofertas'), orderBy('fecha_limite', 'asc')))
+    const snapshot = await getDocs(query(collection(this.db, 'ofertas'), orderBy('fecha_limite', 'asc')))
     return snapshot.docs.map((item) => ({ id: item.id, data: mapOfertaDocument(item.data()) }))
   }
 
   async getById(id: string): Promise<{ id: string; data: OfertaDocument } | null> {
-    const { db } = getFirebaseServices()
-    const snapshot = await getDoc(doc(db, 'ofertas', id))
+    const snapshot = await getDoc(doc(this.db, 'ofertas', id))
     return snapshot.exists() ? { id, data: mapOfertaDocument(snapshot.data()) } : null
   }
 
   async listByOwner(uid: string): Promise<Array<{ id: string; data: OfertaDocument }>> {
-    const { db } = getFirebaseServices()
-    const snapshot = await getDocs(query(collection(db, 'ofertas'), where('id_comercio', '==', uid)))
+    const snapshot = await getDocs(query(collection(this.db, 'ofertas'), where('id_comercio', '==', uid)))
     return snapshot.docs
       .map((item) => ({ id: item.id, data: mapOfertaDocument(item.data()) }))
       .sort((left, right) => right.data.fecha_limite.getTime() - left.data.fecha_limite.getTime())
   }
 
   async updateOwned(id: string, uid: string, payload: Omit<OfertaPayload, 'estado'>): Promise<void> {
-    const { db } = getFirebaseServices()
-    const reference = doc(db, 'ofertas', id)
+    const reference = doc(this.db, 'ofertas', id)
     const snapshot = await getDoc(reference)
     if (!snapshot.exists() || mapOfertaDocument(snapshot.data()).id_comercio !== uid) {
       throw new Error('No tienes permiso para modificar esta publicación.')
@@ -89,8 +93,7 @@ export class FirebaseOfertaRepository implements OfertaCreator, OfertaReader, Of
   }
 
   async deleteOwned(id: string, uid: string): Promise<void> {
-    const { db } = getFirebaseServices()
-    const reference = doc(db, 'ofertas', id)
+    const reference = doc(this.db, 'ofertas', id)
     const snapshot = await getDoc(reference)
     if (!snapshot.exists() || mapOfertaDocument(snapshot.data()).id_comercio !== uid) {
       throw new Error('No tienes permiso para eliminar esta publicación.')

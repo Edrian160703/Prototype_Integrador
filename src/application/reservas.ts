@@ -1,18 +1,7 @@
-import type {
-  ReservaCreator,
-  ReservaDeleter,
-  ReservaReader,
-} from '../ports/reservaRepository'
+import type { ReservaCreator, ReservaDeleter, ReservaReader } from '../ports/reservaRepository'
 import type { OfertaByIdReader } from '../ports/ofertaRepository'
 import type { CartItem } from '../types/cart'
-import type { ReservaDocument } from '../types/reserva'
-
-export interface ReservaConOferta extends ReservaDocument {
-  nombre_producto: string
-  imagen_url: string | null
-  precio_oferta: number
-  horario_recojo: string
-}
+import type { ReservaConOferta, ReservaDocument } from '../types/reserva'
 
 export function crearReserva(
   repository: ReservaCreator,
@@ -62,3 +51,5 @@ export async function getReservasByUsuario(
 
   return enriched.sort((left, right) => right.fecha_reserva.getTime() - left.fecha_reserva.getTime())
 }
+
+export type { ReservaDocument }

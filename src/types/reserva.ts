@@ -9,3 +9,10 @@ export interface ReservaDocument {
   cantidad: number
   estado_reserva: EstadoReserva
 }
+
+export interface ReservaConOferta extends ReservaDocument {
+  nombre_producto: string
+  imagen_url: string | null
+  precio_oferta: number
+  horario_recojo: string
+}

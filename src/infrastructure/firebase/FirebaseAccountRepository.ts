@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc, type Firestore } from 'firebase/firestore'
 import type {
   AccountReader,
   AccountStatus,
@@ -6,14 +6,14 @@ import type {
   ManagedAccount,
 } from '../../ports/accountRepository'
 import type { UserRole } from '../../types/user'
-import { getFirebaseServices } from './firebaseClient'
 import { toDate } from './firestoreDates'
 import { getUserCollectionName } from './userCollections'
 
 export class FirebaseAccountRepository implements AccountReader, AccountWriter {
+  constructor(private readonly db: Firestore) {}
+
   async listByRole(role: UserRole): Promise<ManagedAccount[]> {
-    const { db } = getFirebaseServices()
-    const snapshot = await getDocs(collection(db, getUserCollectionName(role)))
+    const snapshot = await getDocs(collection(this.db, getUserCollectionName(role)))
     return snapshot.docs.map((item) => {
       const data = item.data()
       return {
@@ -32,15 +32,13 @@ export class FirebaseAccountRepository implements AccountReader, AccountWriter {
   }
 
   async setStatus(id: string, role: UserRole, status: AccountStatus): Promise<void> {
-    const { db } = getFirebaseServices()
-    await updateDoc(doc(db, getUserCollectionName(role), id), {
+    await updateDoc(doc(this.db, getUserCollectionName(role), id), {
       accountStatus: status,
       updatedAt: serverTimestamp(),
     })
   }
 
   async delete(id: string, role: UserRole): Promise<void> {
-    const { db } = getFirebaseServices()
-    await deleteDoc(doc(db, getUserCollectionName(role), id))
+    await deleteDoc(doc(this.db, getUserCollectionName(role), id))
   }
 }

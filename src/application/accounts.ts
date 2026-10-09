@@ -1,12 +1,5 @@
-import type {
-  AccountReader,
-  AccountStatus,
-  AccountWriter,
-  ManagedAccount,
-} from '../ports/accountRepository'
+import type { AccountReader, AccountStatus, AccountWriter, ManagedAccount } from '../ports/accountRepository'
 import type { UserRole } from '../types/user'
-
-export type { AccountStatus, ManagedAccount } from '../ports/accountRepository'
 
 export function listAccounts(repository: AccountReader, role: UserRole): Promise<ManagedAccount[]> {
   return repository.listByRole(role)

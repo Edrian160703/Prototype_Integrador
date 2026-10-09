@@ -1,3 +1,21 @@
+import type { ComercioSummary } from './comercio'
+
+export interface CreateOfertaParams {
+  uid: string
+  payload: OfertaPayload
+}
+
+export interface OwnedOferta {
+  id: string
+  data: OfertaDocument
+}
+
+export interface OfertaConComercio {
+  id: string
+  data: OfertaDocument
+  comercio: ComercioSummary | null
+}
+
 export interface OfertaPayload {
   nombre_producto: string
   id_categoria: string

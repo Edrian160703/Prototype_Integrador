@@ -1,10 +1,5 @@
 import type { ProductoDocument, ProductoEstado, ProductoPayload } from '../types/producto'
 
-export interface ProductoAdminRecord {
-  product: ProductoDocument
-  storeName?: string
-}
-
 export interface ProductoCreator {
   create(payload: ProductoPayload, uid: string): Promise<string>
 }
@@ -26,5 +21,5 @@ export interface ProductoDeleter {
 }
 
 export interface ProductoAdminReader {
-  getAllForAdmin(): Promise<ProductoAdminRecord[]>
+  getAll(): Promise<ProductoDocument[]>
 }

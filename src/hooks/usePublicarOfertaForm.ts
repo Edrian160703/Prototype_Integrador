@@ -50,7 +50,6 @@ export default function usePublicarOfertaForm() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const descripcionRestante = DESCRIPCION_MAX - form.descripcion.length
-  const ahoraLocal = new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
   const descuentoValido = isValidDecimal(form.precio_original)
     && isValidDecimal(form.precio_oferta)
     && Number(form.precio_oferta) < Number(form.precio_original)
@@ -153,6 +152,8 @@ export default function usePublicarOfertaForm() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const now = new Date()
+    const ahoraLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
     const values: OfertaFormValues = {
       ...form,
       nombre_producto: form.nombre_producto.trim(),

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { saveProfileChanges } from '../bootstrap'
+import { useProfileEditing } from '../context/ApplicationContext'
 import type { ConsumerUser } from '../types/user'
 
 const PREFERENCE_OPTIONS = ['Panaderías', 'Menús', 'Vegano', 'Postres', 'Frutas y verduras']
@@ -56,6 +56,7 @@ function isValidPhone(phone: string) {
 }
 
 export default function ProfileConsumerForm({ profile, onSaved }: ProfileConsumerFormProps) {
+  const { saveProfileChanges } = useProfileEditing()
   const [baseline, setBaseline] = useState(() => toFormValues(profile))
   const [form, setForm] = useState(baseline)
   const [errors, setErrors] = useState<FieldErrors>({})

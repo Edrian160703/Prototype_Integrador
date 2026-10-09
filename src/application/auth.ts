@@ -7,8 +7,9 @@ import type {
   IAuthSignOut,
 } from '../ports/authGateway'
 import type {
+  IOnboardingProfileWriter,
   IProfileCreator,
-  IProfileUpdater,
+  IProfileEditor,
   UserProfileReader,
 } from '../ports/userProfileRepository'
 import type { InitialUserData, InitialUserProfile, UserDocument, UserRole } from '../types/user'
@@ -21,7 +22,7 @@ function getDisplayName(profile: InitialUserData['profile']): string | null {
   return null
 }
 
-export async function createInitialUserDocument(
+async function createInitialUserDocument(
   profiles: IProfileCreator,
   user: AuthIdentity,
   data: Omit<InitialUserData, 'uid' | 'email'>,
@@ -54,7 +55,7 @@ export async function signInWithGoogle(
 }
 
 export function updateUserProfile(
-  profiles: IProfileUpdater,
+  profiles: IOnboardingProfileWriter,
   uid: string,
   role: UserRole,
   profile: InitialUserProfile,
@@ -65,7 +66,7 @@ export function updateUserProfile(
 export async function saveProfileChanges(
   authSession: IAuthSession,
   authProfileUpdater: IAuthProfileUpdater,
-  profiles: IProfileUpdater,
+  profiles: IProfileEditor,
   uid: string,
   role: UserRole,
   profile: InitialUserProfile,

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthSession, useUserProfile } from '../context/AuthContext'
-import { signOutUser } from '../bootstrap'
+import { useSignOut } from '../context/ApplicationContext'
 
 export default function UserMenu() {
+  const { signOutUser } = useSignOut()
   const { user } = useAuthSession()
   const { profile } = useUserProfile()
   const navigate = useNavigate()

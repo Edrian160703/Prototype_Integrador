@@ -8,8 +8,11 @@ export interface OfertaByIdReader {
   getById(id: string): Promise<{ id: string; data: OfertaDocument } | null>
 }
 
-export interface OfertaReader extends OfertaByIdReader {
+export interface OfertaListReader {
   listAll(): Promise<Array<{ id: string; data: OfertaDocument }>>
+}
+
+export interface OfertaOwnerReader {
   listByOwner(uid: string): Promise<Array<{ id: string; data: OfertaDocument }>>
 }
 

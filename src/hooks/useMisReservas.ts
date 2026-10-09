@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { cancelarReserva, getReservasByUsuario } from '../bootstrap'
-import type { ReservaConOferta } from '../services/reservaService'
+import { useReservationHistory, useReservationManagement } from '../context/ApplicationContext'
+import type { ReservaConOferta } from '../types/reserva'
 
 interface UseMisReservasResult {
   reservas: ReservaConOferta[]
@@ -15,6 +15,8 @@ interface UseMisReservasResult {
 }
 
 export default function useMisReservas(idUsuario: string): UseMisReservasResult {
+  const { cancelarReserva } = useReservationManagement()
+  const { getReservasByUsuario } = useReservationHistory()
   const [reservas, setReservas] = useState<ReservaConOferta[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -44,7 +46,7 @@ export default function useMisReservas(idUsuario: string): UseMisReservasResult 
     return () => {
       cancelled = true
     }
-  }, [idUsuario])
+  }, [getReservasByUsuario, idUsuario])
 
   const selectReservaToDelete = (reserva: ReservaConOferta) => {
     setReservaAEliminar(reserva)

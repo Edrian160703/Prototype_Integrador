@@ -1,5 +1,5 @@
 import useMisReservas from '../hooks/useMisReservas'
-import type { ReservaConOferta } from '../services/reservaService'
+import type { ReservaConOferta } from '../types/reserva'
 
 interface MisReservasProps {
   idUsuario: string

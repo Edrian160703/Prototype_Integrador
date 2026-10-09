@@ -1,12 +1,16 @@
-import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
-import type { IProfileCreator, IProfileUpdater, UserProfileReader } from '../../ports/userProfileRepository'
+import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc, type Firestore } from 'firebase/firestore'
+import type {
+  IOnboardingProfileWriter,
+  IProfileCreator,
+  IProfileEditor,
+  UserProfileReader,
+} from '../../ports/userProfileRepository'
 import type {
   InitialUserData,
   InitialUserProfile,
   UserDocument,
   UserRole,
 } from '../../types/user'
-import { getFirebaseServices } from './firebaseClient'
 import { toDate } from './firestoreDates'
 import { getUserCollectionName, USER_COLLECTION_NAMES } from './userCollections'
 
@@ -26,11 +30,16 @@ function toUserDocument(uid: string, data: Record<string, unknown>): UserDocumen
   throw new TypeError(`Rol de usuario no válido para el perfil ${uid}.`)
 }
 
-export class FirebaseUserProfileRepository implements UserProfileReader, IProfileCreator, IProfileUpdater {
+export class FirebaseUserProfileRepository implements
+  UserProfileReader,
+  IProfileCreator,
+  IOnboardingProfileWriter,
+  IProfileEditor {
+  constructor(private readonly db: Firestore) {}
+
   async getById(uid: string): Promise<UserDocument | null> {
-    const { db } = getFirebaseServices()
     for (const collectionName of USER_COLLECTION_NAMES) {
-      const snapshot = await getDoc(doc(collection(db, collectionName), uid))
+      const snapshot = await getDoc(doc(collection(this.db, collectionName), uid))
       if (snapshot.exists()) return toUserDocument(uid, snapshot.data())
     }
     return null
@@ -40,8 +49,7 @@ export class FirebaseUserProfileRepository implements UserProfileReader, IProfil
     user: { uid: string; email: string; displayName: string | null; photoURL: string | null },
     data: Omit<InitialUserData, 'uid' | 'email'>,
   ): Promise<void> {
-    const { db } = getFirebaseServices()
-    const userReference = doc(collection(db, getUserCollectionName(data.role)), user.uid)
+    const userReference = doc(collection(this.db, getUserCollectionName(data.role)), user.uid)
     const existingUser = await getDoc(userReference)
     if (existingUser.exists()) return
 
@@ -60,8 +68,7 @@ export class FirebaseUserProfileRepository implements UserProfileReader, IProfil
   }
 
   async updateOnboarding(uid: string, role: UserRole, profile: InitialUserProfile): Promise<void> {
-    const { db } = getFirebaseServices()
-    await updateDoc(doc(collection(db, getUserCollectionName(role)), uid), {
+    await updateDoc(doc(collection(this.db, getUserCollectionName(role)), uid), {
       ...profile,
       onboardingCompleted: true,
       updatedAt: serverTimestamp(),
@@ -74,8 +81,7 @@ export class FirebaseUserProfileRepository implements UserProfileReader, IProfil
     profile: InitialUserProfile,
     displayName: string | null,
   ): Promise<void> {
-    const { db } = getFirebaseServices()
-    await updateDoc(doc(collection(db, getUserCollectionName(role)), uid), {
+    await updateDoc(doc(collection(this.db, getUserCollectionName(role)), uid), {
       ...profile,
       displayName,
       updatedAt: serverTimestamp(),

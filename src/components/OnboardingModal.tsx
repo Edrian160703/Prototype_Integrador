@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getCurrentUser, updateUserProfile } from '../bootstrap'
+import { useCurrentUserQuery, useProfileOnboarding } from '../context/ApplicationContext'
 import type { ConsumerProfile, PickupSchedule, StoreProfile, UserRole } from '../types/user'
 
 type ConsumerForm = Required<Pick<ConsumerProfile, 'phone' | 'habitualLocation'>> & {
@@ -33,6 +33,8 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default function OnboardingModal() {
+  const { getCurrentUser } = useCurrentUserQuery()
+  const { updateUserProfile } = useProfileOnboarding()
   const navigate = useNavigate()
   const { role: routeRole } = useParams<{ role: string }>()
   const role: UserRole = routeRole === 'comercio' || routeRole === 'store' ? 'store' : 'consumer'
@@ -81,7 +83,7 @@ export default function OnboardingModal() {
     }))
   }
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
 

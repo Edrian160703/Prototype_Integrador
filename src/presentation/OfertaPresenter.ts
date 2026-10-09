@@ -1,5 +1,5 @@
 import { CATEGORIAS_VISUALES } from '../config/ofertaCategories'
-import type { OfertaConComercio } from '../services/ofertaService'
+import type { OfertaConComercio } from '../types/oferta'
 
 export interface OfferCardData {
   id: string

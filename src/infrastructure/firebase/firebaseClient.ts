@@ -1,6 +1,5 @@
 import { getApps, initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
 
 function requiredFirebaseEnv(name: string): string {
   const value = import.meta.env[name]
@@ -12,7 +11,7 @@ function requiredFirebaseEnv(name: string): string {
   return value
 }
 
-export function getFirebaseServices() {
+function getFirebaseApp() {
   const firebaseConfig = {
     apiKey: requiredFirebaseEnv('VITE_FIREBASE_API_KEY'),
     authDomain: requiredFirebaseEnv('VITE_FIREBASE_AUTH_DOMAIN'),
@@ -22,10 +21,15 @@ export function getFirebaseServices() {
     appId: requiredFirebaseEnv('VITE_FIREBASE_APP_ID'),
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
   }
-  const firebaseApp = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig)
 
-  return {
-    auth: getAuth(firebaseApp),
-    db: getFirestore(firebaseApp),
-  }
+  return getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig)
+}
+
+export function getFirebaseAuth() {
+  return getAuth(getFirebaseApp())
+}
+
+export async function getFirebaseFirestore() {
+  const { getFirestore } = await import('firebase/firestore')
+  return getFirestore(getFirebaseApp())
 }

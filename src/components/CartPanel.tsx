@@ -2,7 +2,7 @@ import type { MouseEvent } from 'react'
 import { useState } from 'react'
 import { useCartManagement, useCartSummary } from '../context/CartContext'
 import { useAuthSession } from '../context/AuthContext'
-import { crearReservasDesdeCarrito } from '../bootstrap'
+import { useReservationCheckout } from '../context/ApplicationContext'
 
 interface CartPanelProps {
   open: boolean
@@ -13,6 +13,7 @@ export default function CartPanel({ open, onClose }: CartPanelProps) {
   const { items, totalPrice } = useCartSummary()
   const { updateQuantity, removeFromCart, clearCart } = useCartManagement()
   const { user } = useAuthSession()
+  const { crearReservasDesdeCarrito } = useReservationCheckout()
   const [comprando, setComprando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

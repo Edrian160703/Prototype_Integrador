@@ -7,6 +7,7 @@ import {
   serverTimestamp,
   setDoc,
   where,
+  type Firestore,
 } from 'firebase/firestore'
 import type {
   ReservaCreator,
@@ -15,7 +16,6 @@ import type {
 } from '../../ports/reservaRepository'
 import type { CartItem } from '../../types/cart'
 import type { ReservaDocument } from '../../types/reserva'
-import { getFirebaseServices } from './firebaseClient'
 import { toDate } from './firestoreDates'
 
 function generarIdReserva(): string {
@@ -27,10 +27,11 @@ export class FirebaseReservaRepository implements
   ReservaCreator,
   ReservaReader,
   ReservaDeleter {
+  constructor(private readonly db: Firestore) {}
+
   async create(idUsuario: string, emailUsuario: string, item: CartItem): Promise<string> {
-    const { db } = getFirebaseServices()
     const idReserva = generarIdReserva()
-    await setDoc(doc(db, 'reservas', idReserva), {
+    await setDoc(doc(this.db, 'reservas', idReserva), {
       id_reserva: idReserva,
       id_usuario: idUsuario,
       email_usuario: emailUsuario,
@@ -43,8 +44,7 @@ export class FirebaseReservaRepository implements
   }
 
   async listByUsuario(idUsuario: string): Promise<ReservaDocument[]> {
-    const { db } = getFirebaseServices()
-    const snapshot = await getDocs(query(collection(db, 'reservas'), where('id_usuario', '==', idUsuario)))
+    const snapshot = await getDocs(query(collection(this.db, 'reservas'), where('id_usuario', '==', idUsuario)))
     return snapshot.docs.map((item) => {
       const data = item.data()
       return {
@@ -62,7 +62,6 @@ export class FirebaseReservaRepository implements
   }
 
   async delete(idReserva: string): Promise<void> {
-    const { db } = getFirebaseServices()
-    await deleteDoc(doc(db, 'reservas', idReserva))
+    await deleteDoc(doc(this.db, 'reservas', idReserva))
   }
 }

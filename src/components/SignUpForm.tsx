@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { registerWithEmail, signInWithGoogle } from '../bootstrap'
+import { useAuthRegistration } from '../context/ApplicationContext'
 import { SIGNUP_PRESENTATION } from '../config/signupPresentation'
 import {
   getSignupRoleStrategy,
@@ -29,6 +29,7 @@ function getPasswordStrength(password: string) {
 }
 
 export default function SignUpForm() {
+  const { registerWithEmail, signInWithGoogle } = useAuthRegistration()
   const navigate = useNavigate()
   const [role, setRole] = useState<SignupRole>('consumer')
   const [values, setValues] = useState<FormValues>(initialValues)
@@ -60,7 +61,7 @@ export default function SignUpForm() {
     navigate(rolePresentation.onboardingPath)
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!validate()) return
 

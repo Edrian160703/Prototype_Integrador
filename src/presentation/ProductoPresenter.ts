@@ -1,5 +1,5 @@
 import { CATEGORIAS_VISUALES } from '../config/ofertaCategories'
-import type { ProductoAdminRecord } from '../ports/productoRepository'
+import type { ProductoAdminRecord } from '../types/productoAdmin'
 import type { ProductoAdminItem } from '../types/productoAdmin'
 
 export function toProductoAdminItems(records: ProductoAdminRecord[]): ProductoAdminItem[] {
