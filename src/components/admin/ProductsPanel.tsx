@@ -1,19 +1,10 @@
 import { useMemo, useState } from "react";
 import ConfirmDialog from "./ConfirmDialog";
 import { formatCurrency, formatRelative } from "../../utils/adminFormatters";
+import type { ProductoEstado } from "../../types/producto";
+import type { ProductoAdminItem } from "../../types/productoAdmin";
 
-export type ProductStatus = "activo" | "pausado" | "agotado";
-
-export interface Product {
-  id: string;
-  name: string;
-  category: string;
-  storeName: string;
-  price: number;
-  stock: number;
-  status: ProductStatus;
-  updatedAt: Date;
-}
+type ProductStatus = ProductoEstado;
 
 const STATUSES: ProductStatus[] = ["activo", "pausado", "agotado"];
 const STATUS_LABELS: Record<ProductStatus, string> = {
@@ -31,12 +22,12 @@ const STATUS_CLASS: Record<ProductStatus, string> = {
 const PAGE_SIZE = 8;
 
 type PendingAction = {
-  product: Product;
+  product: ProductoAdminItem;
   action: "activar" | "pausar" | "eliminar";
 };
 
 interface ProductsPanelProps {
-  initialProducts: Product[];
+  initialProducts: ProductoAdminItem[];
   onStatusChange?: (id: string, status: ProductStatus) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
 }
@@ -46,7 +37,7 @@ export default function ProductsPanel({
   onStatusChange,
   onDelete,
 }: ProductsPanelProps) {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<ProductoAdminItem[]>(initialProducts);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | ProductStatus>(
     "todos",

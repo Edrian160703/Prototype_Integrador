@@ -1,89 +1,41 @@
-import { getApps, initializeApp } from 'firebase/app'
-import {
-  Timestamp,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  getFirestore,
-  orderBy,
-  query,
-  setDoc,
-  updateDoc,
-  where,
-} from 'firebase/firestore'
-import { CATEGORIAS, type OfertaDocument, type OfertaPayload } from '../types/oferta'
-import { createProducto } from './productoService'
-
-function requiredFirebaseEnv(name: string): string {
-  const value = import.meta.env[name]
-
-  if (!value) {
-    throw new Error(`Missing Firebase environment variable: ${name}`)
-  }
-
-  return value
-}
-
-function getDb() {
-  const firebaseConfig = {
-    apiKey: requiredFirebaseEnv('VITE_FIREBASE_API_KEY'),
-    authDomain: requiredFirebaseEnv('VITE_FIREBASE_AUTH_DOMAIN'),
-    projectId: requiredFirebaseEnv('VITE_FIREBASE_PROJECT_ID'),
-    storageBucket: requiredFirebaseEnv('VITE_FIREBASE_STORAGE_BUCKET'),
-    messagingSenderId: requiredFirebaseEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-    appId: requiredFirebaseEnv('VITE_FIREBASE_APP_ID'),
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-  }
-  const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig)
-  return getFirestore(app)
-}
-
-function generarIdProducto(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-  return `prod_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`
-}
+import type { OfertaCreator, OfertaReader, OfertaWriter } from '../ports/ofertaRepository'
+import type { ComercioReader, ComercioSummary } from '../ports/comercioRepository'
+import type { ProductoCreator } from '../ports/productoRepository'
+import type { OfertaDocument, OfertaPayload } from '../types/oferta'
 
 export interface CreateOfertaParams {
   uid: string
   payload: OfertaPayload
 }
 
-export async function createOferta({ uid, payload }: CreateOfertaParams): Promise<string> {
-  const db = getDb()
-  const idProducto = generarIdProducto()
-
-  const docData: OfertaDocument = {
-    id_producto: idProducto,
-    id_comercio: uid,
-    id_categoria: payload.id_categoria,
-    nombre_producto: payload.nombre_producto,
-    descripcion: payload.descripcion,
-    precio_original: payload.precio_original,
-    precio_oferta: payload.precio_oferta,
-    cantidad_disponible: payload.cantidad_disponible,
-    horario_recojo: payload.horario_recojo,
-    estado: payload.estado,
-    fecha_limite: Timestamp.fromDate(new Date(payload.fecha_limite)),
-    imagen_url: payload.imagen_url.trim() ? payload.imagen_url : null,
-  }
-
-  await setDoc(doc(collection(db, 'ofertas'), idProducto), docData)
-  return idProducto
+export interface OwnedOferta {
+  id: string
+  data: OfertaDocument
 }
 
-/**
- * Publica una oferta y, junto con ella, crea el producto correspondiente en el
- * catálogo del comercio (colección "productos"). La oferta guarda el id_producto
- * que apunta a ese nuevo documento, en vez de un id inventado sin relación real.
- */
-export async function createOfertaConProducto({ uid, payload }: CreateOfertaParams): Promise<string> {
-  const idProducto = await createProducto({
-    uid,
-    payload: {
+export interface OfertaConComercio {
+  id: string
+  data: OfertaDocument
+  comercio: ComercioSummary | null
+}
+
+function generateOfferId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
+  return `off_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`
+}
+
+export function createOferta(repository: OfertaCreator, { uid, payload }: CreateOfertaParams): Promise<string> {
+  const idProducto = generateOfferId()
+  return repository.create(uid, payload, idProducto)
+}
+
+export async function createOfertaConProducto(
+  { uid, payload }: CreateOfertaParams,
+  productoCreator: ProductoCreator,
+  ofertaCreator: OfertaCreator,
+): Promise<string> {
+  const idProducto = await productoCreator.create(
+    {
       nombre_producto: payload.nombre_producto,
       id_categoria: payload.id_categoria,
       descripcion: payload.descripcion,
@@ -92,189 +44,48 @@ export async function createOfertaConProducto({ uid, payload }: CreateOfertaPara
       imagen_url: payload.imagen_url,
       estado: 'activo',
     },
-  })
-
-  const db = getDb()
-  const idOferta = generarIdProducto()
-
-  const docData: OfertaDocument = {
-    id_producto: idProducto,
-    id_comercio: uid,
-    id_categoria: payload.id_categoria,
-    nombre_producto: payload.nombre_producto,
-    descripcion: payload.descripcion,
-    precio_original: payload.precio_original,
-    precio_oferta: payload.precio_oferta,
-    cantidad_disponible: payload.cantidad_disponible,
-    horario_recojo: payload.horario_recojo,
-    estado: payload.estado,
-    fecha_limite: Timestamp.fromDate(new Date(payload.fecha_limite)),
-    imagen_url: payload.imagen_url.trim() ? payload.imagen_url : null,
-  }
-
-  await setDoc(doc(collection(db, 'ofertas'), idOferta), docData)
-  return idOferta
-}
-
-export interface OfferCardData {
-  id: string
-  image: string
-  discount: string
-  title: string
-  place: string
-  distance: string
-  price: string
-  categoriaChip: string
-}
-
-function calcularDescuento(original: number, oferta: number): string {
-  if (!original || original <= 0 || oferta >= original) return ''
-  const pct = Math.round((1 - oferta / original) * 100)
-  return pct > 0 ? `-${pct}%` : ''
-}
-
-interface ComercioInfo {
-  businessName?: string
-  district?: string
-}
-
-function crearResolverComercio(db: ReturnType<typeof getDb>) {
-  const cache = new Map<string, Promise<ComercioInfo | null>>()
-
-  return (idComercio: string): Promise<ComercioInfo | null> => {
-    if (!cache.has(idComercio)) {
-      cache.set(
-        idComercio,
-        getDoc(doc(db, 'comercios', idComercio)).then((snap) => (snap.exists() ? (snap.data() as ComercioInfo) : null)),
-      )
-    }
-    return cache.get(idComercio)!
-  }
-}
-
-function mapOfertaDoc(idOferta: string, data: OfertaDocument, comercio: ComercioInfo | null): OfferCardData {
-  const categoria = CATEGORIAS.find((c) => c.id === data.id_categoria)
-
-  return {
-    id: idOferta,
-    image: data.imagen_url ?? '',
-    discount: calcularDescuento(data.precio_original, data.precio_oferta),
-    title: data.nombre_producto,
-    place: comercio?.businessName || 'Comercio FoodBack',
-    distance: comercio?.district || 'Lima, Perú',
-    price: data.precio_oferta.toFixed(2),
-    categoriaChip: categoria?.chip ?? 'Todos',
-  }
-}
-
-export async function getOfertas(): Promise<OfferCardData[]> {
-  const db = getDb()
-  const ofertasQuery = query(collection(db, 'ofertas'), orderBy('fecha_limite', 'asc'))
-  const snapshot = await getDocs(ofertasQuery)
-  const resolverComercio = crearResolverComercio(db)
-
-  return Promise.all(
-    snapshot.docs.map(async (docSnap) => {
-      const data = docSnap.data() as OfertaDocument
-      const comercio = await resolverComercio(data.id_comercio)
-      return mapOfertaDoc(docSnap.id, data, comercio)
-    }),
+    uid,
   )
+  return ofertaCreator.create(uid, payload, idProducto, generateOfferId())
 }
 
-export interface OfertaDetalle extends OfferCardData {
-  descripcion: string
-  categoriaLabel: string
-  cantidadDisponible: number
-  horarioRecojo: string
-  fechaLimite: string
-  precioOriginal: number
-  precioOfertaNum: number
+export async function getOfertas(
+  repository: OfertaReader,
+  comercios: ComercioReader,
+): Promise<OfertaConComercio[]> {
+  const ofertas = await repository.listAll()
+  const cache = new Map<string, Promise<Awaited<ReturnType<ComercioReader['getCommerceById']>>>>()
+
+  return Promise.all(ofertas.map(async ({ id, data }) => {
+    if (!cache.has(data.id_comercio)) cache.set(data.id_comercio, comercios.getCommerceById(data.id_comercio))
+    return { id, data, comercio: await cache.get(data.id_comercio)! }
+  }))
 }
 
-function formatearFechaLimite(fechaLimite: Timestamp): string {
-  return fechaLimite.toDate().toLocaleString('es-PE', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+export async function getOfertaById(
+  idOferta: string,
+  repository: OfertaReader,
+  comercios: ComercioReader,
+): Promise<OfertaConComercio | null> {
+  const oferta = await repository.getById(idOferta)
+  if (!oferta) return null
+  const comercio = await comercios.getCommerceById(oferta.data.id_comercio)
+  return { ...oferta, comercio }
 }
 
-export async function getOfertaById(idOferta: string): Promise<OfertaDetalle | null> {
-  const db = getDb()
-  const snap = await getDoc(doc(db, 'ofertas', idOferta))
-  if (!snap.exists()) return null
-
-  const data = snap.data() as OfertaDocument
-  const comercioSnap = await getDoc(doc(db, 'comercios', data.id_comercio))
-  const comercio = comercioSnap.exists() ? (comercioSnap.data() as ComercioInfo) : null
-  const categoria = CATEGORIAS.find((c) => c.id === data.id_categoria)
-
-  return {
-    ...mapOfertaDoc(idOferta, data, comercio),
-    descripcion: data.descripcion,
-    categoriaLabel: categoria?.label ?? 'Otros',
-    cantidadDisponible: data.cantidad_disponible,
-    horarioRecojo: data.horario_recojo,
-    fechaLimite: formatearFechaLimite(data.fecha_limite),
-    precioOriginal: data.precio_original,
-    precioOfertaNum: data.precio_oferta,
-  }
+export async function getOfertasByOwner(repository: OfertaReader, uid: string): Promise<OwnedOferta[]> {
+  return repository.listByOwner(uid)
 }
 
-export interface OwnedOferta {
-  id: string
-  data: OfertaDocument
-}
-
-/** Trae todas las publicaciones (ofertas) creadas por un comercio, más recientes primero. */
-export async function getOfertasByOwner(uid: string): Promise<OwnedOferta[]> {
-  const db = getDb()
-  const ofertasQuery = query(collection(db, 'ofertas'), where('id_comercio', '==', uid))
-  const snapshot = await getDocs(ofertasQuery)
-
-  return snapshot.docs
-    .map((docSnap) => ({ id: docSnap.id, data: docSnap.data() as OfertaDocument }))
-    .sort((a, b) => (b.data.fecha_limite?.toMillis?.() ?? 0) - (a.data.fecha_limite?.toMillis?.() ?? 0))
-}
-
-/** Actualiza los datos editables de una publicación existente. Solo el dueño puede modificarla. */
-export async function updateOferta(
-  idProducto: string,
+export function updateOferta(
+  repository: OfertaWriter,
+  id: string,
   uid: string,
   payload: Omit<OfertaPayload, 'estado'>,
 ): Promise<void> {
-  const db = getDb()
-  const ofertaRef = doc(db, 'ofertas', idProducto)
-  const snap = await getDoc(ofertaRef)
-
-  if (!snap.exists() || (snap.data() as OfertaDocument).id_comercio !== uid) {
-    throw new Error('No tienes permiso para modificar esta publicación.')
-  }
-
-  await updateDoc(ofertaRef, {
-    nombre_producto: payload.nombre_producto,
-    id_categoria: payload.id_categoria,
-    descripcion: payload.descripcion,
-    precio_original: payload.precio_original,
-    precio_oferta: payload.precio_oferta,
-    cantidad_disponible: payload.cantidad_disponible,
-    horario_recojo: payload.horario_recojo,
-    fecha_limite: Timestamp.fromDate(new Date(payload.fecha_limite)),
-    imagen_url: payload.imagen_url.trim() ? payload.imagen_url : null,
-  })
+  return repository.updateOwned(id, uid, payload)
 }
 
-/** Elimina una publicación. Solo el dueño puede eliminarla. */
-export async function deleteOferta(idProducto: string, uid: string): Promise<void> {
-  const db = getDb()
-  const ofertaRef = doc(db, 'ofertas', idProducto)
-  const snap = await getDoc(ofertaRef)
-
-  if (!snap.exists() || (snap.data() as OfertaDocument).id_comercio !== uid) {
-    throw new Error('No tienes permiso para eliminar esta publicación.')
-  }
-
-  await deleteDoc(ofertaRef)
+export function deleteOferta(repository: OfertaWriter, id: string, uid: string): Promise<void> {
+  return repository.deleteOwned(id, uid)
 }

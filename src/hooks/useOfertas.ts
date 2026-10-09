@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getOfertas, type OfferCardData } from '../services/ofertaService'
+import { getOfertas } from '../bootstrap'
+import type { OfferCardData } from '../presentation/OfertaPresenter'
 
 export default function useOfertas() {
   const [offers, setOffers] = useState<OfferCardData[]>([])

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getCurrentUser, updateUserProfile } from '../services/authService'
+import { getCurrentUser, updateUserProfile } from '../bootstrap'
 import type { ConsumerProfile, PickupSchedule, StoreProfile, UserRole } from '../types/user'
 
 type ConsumerForm = Required<Pick<ConsumerProfile, 'phone' | 'habitualLocation'>> & {

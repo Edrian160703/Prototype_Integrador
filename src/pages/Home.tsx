@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import OfferCard from '../components/OfferCard'
 import heroBowl from '../assets/images/hero-bowl.jpg'
-import { getOfertas, type OfferCardData } from '../services/ofertaService'
+import useOfertas from '../hooks/useOfertas'
 
 interface Category {
   label: string
@@ -24,33 +23,8 @@ const categories: Category[] = [
 const MAX_FEATURED = 3
 
 export default function Home() {
-  const [featuredOffers, setFeaturedOffers] = useState<OfferCardData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState('')
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadOfertas() {
-      setLoading(true)
-      setLoadError('')
-      try {
-        const data = await getOfertas()
-        if (!cancelled) setFeaturedOffers(data.slice(0, MAX_FEATURED))
-      } catch (error) {
-        if (!cancelled) {
-          setLoadError(error instanceof Error ? error.message : 'No pudimos cargar las ofertas.')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    loadOfertas()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { offers, loading, error: loadError } = useOfertas()
+  const featuredOffers = offers.slice(0, MAX_FEATURED)
 
   return (
     <>

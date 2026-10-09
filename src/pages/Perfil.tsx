@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuthSession, useRefreshUserProfile, useUserProfile } from '../context/AuthContext'
 import ProfileConsumerForm from '../components/ProfileConsumerForm'
 import ProfileStoreForm from '../components/ProfileStoreForm'
 import MisReservas from '../components/MisReservas'
@@ -7,7 +7,9 @@ import MisPublicaciones from '../components/MisPublicaciones'
 import '../styles/perfil.css'
 
 export default function Perfil() {
-  const { user, profile, loading, refreshProfile } = useAuth()
+  const { user, loading } = useAuthSession()
+  const { profile } = useUserProfile()
+  const { refreshProfile } = useRefreshUserProfile()
 
   if (loading) return null
   if (!user) return <Navigate to="/" replace />

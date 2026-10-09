@@ -1,212 +1,107 @@
-import {
-  GoogleAuthProvider,
-  createUserWithEmailAndPassword,
-  getAuth,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-
-  updateProfile,
-  type User,
-  type UserCredential,
-} from 'firebase/auth'
-import { getApps, initializeApp } from 'firebase/app'
-import {
-  collection,
-  doc,
-  getFirestore,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore'
-import { getUserCollectionName } from '../types/user'
+import type {
+  AuthIdentity,
+  IAuthProfileUpdater,
+  IAuthRegistrar,
+  IAuthSession,
+  IAuthSignIn,
+  IAuthSignOut,
+} from '../ports/authGateway'
+import type {
+  IProfileCreator,
+  IProfileUpdater,
+  UserProfileReader,
+} from '../ports/userProfileRepository'
 import type { InitialUserData, InitialUserProfile, UserDocument, UserRole } from '../types/user'
 
-function requiredFirebaseEnv(name: string): string {
-  const value = import.meta.env[name]
-
-  if (!value) {
-    throw new Error(`Missing Firebase environment variable: ${name}`)
+function getDisplayName(profile: InitialUserData['profile']): string | null {
+  if (profile && 'firstName' in profile) {
+    return [profile.firstName, profile.lastName].filter(Boolean).join(' ') || null
   }
-
-  return value
-}
-
-export function getFirebaseServices() {
-  const firebaseConfig = {
-    apiKey: requiredFirebaseEnv('VITE_FIREBASE_API_KEY'),
-    authDomain: requiredFirebaseEnv('VITE_FIREBASE_AUTH_DOMAIN'),
-    projectId: requiredFirebaseEnv('VITE_FIREBASE_PROJECT_ID'),
-    storageBucket: requiredFirebaseEnv('VITE_FIREBASE_STORAGE_BUCKET'),
-    messagingSenderId: requiredFirebaseEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-    appId: requiredFirebaseEnv('VITE_FIREBASE_APP_ID'),
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-  }
-  const firebaseApp = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig)
-
-  return {
-    auth: getAuth(firebaseApp),
-    db: getFirestore(firebaseApp),
-  }
+  if (profile && 'businessName' in profile) return profile.businessName ?? null
+  return null
 }
 
 export async function createInitialUserDocument(
-  user: User,
+  profiles: IProfileCreator,
+  user: AuthIdentity,
   data: Omit<InitialUserData, 'uid' | 'email'>,
 ): Promise<void> {
-  const { db } = getFirebaseServices()
-  const userReference = doc(collection(db, getUserCollectionName(data.role)), user.uid)
-  const existingUser = await getDoc(userReference)
-
-  if (existingUser.exists()) {
-    return
-  }
-
-  const userData: Record<string, unknown> = {
-    uid: user.uid,
-    email: user.email ?? '',
-    role: data.role,
-    displayName: data.displayName ?? user.displayName,
-    photoURL: data.photoURL ?? user.photoURL,
-    onboardingCompleted: false,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    ...data.profile,
-  }
-
-  await setDoc(userReference, userData)
+  await profiles.createIfMissing({ ...user, email: user.email ?? '' }, data)
 }
 
 export async function registerWithEmail(
+  auth: IAuthRegistrar,
+  profiles: IProfileCreator,
   email: string,
   password: string,
   role: UserRole,
   profile: InitialUserData['profile'] = {},
-): Promise<UserCredential> {
-  const { auth } = getFirebaseServices()
-  const credential = await createUserWithEmailAndPassword(auth, email, password)
-  const displayName = profile && 'firstName' in profile
-    ? [profile.firstName, profile.lastName].filter(Boolean).join(' ') || null
-    : profile && 'businessName' in profile
-      ? profile.businessName ?? null
-      : null
-
-  if (displayName) {
-    await updateProfile(credential.user, { displayName })
-  }
-
-  await createInitialUserDocument(credential.user, {
-    role,
-    displayName,
-    profile,
-  })
-
-  return credential
+): Promise<AuthIdentity> {
+  const user = await auth.registerWithEmail(email, password, getDisplayName(profile))
+  await createInitialUserDocument(profiles, user, { role, displayName: getDisplayName(profile), profile })
+  return user
 }
 
 export async function signInWithGoogle(
+  auth: IAuthSignIn,
+  profiles: IProfileCreator,
   role: UserRole,
   profile: InitialUserData['profile'] = {},
-): Promise<UserCredential> {
-  const { auth } = getFirebaseServices()
-  const googleProvider = new GoogleAuthProvider()
-  const credential = await signInWithPopup(auth, googleProvider)
-
-  await createInitialUserDocument(credential.user, {
-    role,
-    profile,
-  })
-
-  return credential
+): Promise<AuthIdentity> {
+  const user = await auth.signInWithGoogle()
+  await createInitialUserDocument(profiles, user, { role, profile })
+  return user
 }
 
-export async function updateUserProfile(
+export function updateUserProfile(
+  profiles: IProfileUpdater,
   uid: string,
   role: UserRole,
   profile: InitialUserProfile,
 ): Promise<void> {
-  const { db } = getFirebaseServices()
-  const userReference = doc(collection(db, getUserCollectionName(role)), uid)
-
-  await updateDoc(userReference, {
-    ...profile,
-    onboardingCompleted: true,
-    updatedAt: serverTimestamp(),
-  })
+  return profiles.updateOnboarding(uid, role, profile)
 }
 
-
 export async function saveProfileChanges(
+  authSession: IAuthSession,
+  authProfileUpdater: IAuthProfileUpdater,
+  profiles: IProfileUpdater,
   uid: string,
   role: UserRole,
   profile: InitialUserProfile,
   displayName: string | null,
 ): Promise<void> {
-  const { auth, db } = getFirebaseServices()
-  const userReference = doc(collection(db, getUserCollectionName(role)), uid)
-
-  await updateDoc(userReference, {
-    ...profile,
-    displayName,
-    updatedAt: serverTimestamp(),
-  })
-
-  const currentUser = auth.currentUser
-  if (currentUser && currentUser.uid === uid && displayName) {
-    await updateProfile(currentUser, { displayName })
+  await profiles.saveChanges(uid, role, profile, displayName)
+  if (displayName && authSession.currentUser?.uid === uid) {
+    await authProfileUpdater.updateDisplayName(uid, displayName)
   }
 }
 
-export function getCurrentUser(): User | null {
-  return getFirebaseServices().auth.currentUser
+export function getCurrentUser(auth: IAuthSession): AuthIdentity | null {
+  return auth.currentUser
 }
 
-
-export function getFirebaseAuth() {
-  return getFirebaseServices().auth
+export function subscribeToAuthChanges(
+  auth: IAuthSession,
+  listener: (user: AuthIdentity | null) => void,
+): () => void {
+  return auth.onAuthStateChanged(listener)
 }
 
-export async function signInWithEmail(email: string, password: string): Promise<UserCredential> {
-  const { auth } = getFirebaseServices()
-  return signInWithEmailAndPassword(auth, email, password)
+export function signInWithEmail(auth: IAuthSignIn, email: string, password: string): Promise<AuthIdentity> {
+  return auth.signInWithEmail(email, password)
 }
 
-
-export async function loginWithGoogle(): Promise<UserCredential> {
-  const { auth } = getFirebaseServices()
-  const googleProvider = new GoogleAuthProvider()
-  const credential = await signInWithPopup(auth, googleProvider)
-  await createInitialUserDocument(credential.user, { role: 'consumer' })
-  return credential
+export async function loginWithGoogle(auth: IAuthSignIn, profiles: IProfileCreator): Promise<AuthIdentity> {
+  const user = await auth.signInWithGoogle()
+  await createInitialUserDocument(profiles, user, { role: 'consumer' })
+  return user
 }
 
-/** Cierra la sesión activa. */
-export async function signOutUser(): Promise<void> {
-  const { auth } = getFirebaseServices()
-  await signOut(auth)
+export function signOutUser(auth: IAuthSignOut): Promise<void> {
+  return auth.signOut()
 }
 
-/**
- * Trae el documento de perfil de Firestore para un usuario autenticado.
- * Como ahora hay 2 colecciones separadas (consumidores / comercios) y en este
- * punto todavía no sabemos el rol del usuario, se busca primero en
- * "consumidores" y, si no aparece, en "comercios".
- */
-export async function getUserDocument(uid: string): Promise<UserDocument | null> {
-  const { db } = getFirebaseServices()
-
-  const consumerSnapshot = await getDoc(doc(collection(db, 'consumidores'), uid))
-  if (consumerSnapshot.exists()) {
-    return consumerSnapshot.data() as UserDocument
-  }
-
-  const storeSnapshot = await getDoc(doc(collection(db, 'comercios'), uid))
-  if (storeSnapshot.exists()) {
-    return storeSnapshot.data() as UserDocument
-  }
-
-  return null
+export function getUserDocument(profiles: UserProfileReader, uid: string): Promise<UserDocument | null> {
+  return profiles.getById(uid)
 }
-
-export type { UserDocument }

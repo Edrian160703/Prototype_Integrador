@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { registerWithEmail, signInWithGoogle } from '../services/authService'
-
-type UserRole = 'consumer' | 'business'
+import { registerWithEmail, signInWithGoogle } from '../bootstrap'
+import { SIGNUP_PRESENTATION } from '../config/signupPresentation'
+import {
+  getSignupRoleStrategy,
+  type SignupRole,
+} from '../strategies/userRoleStrategies'
 
 interface FormValues {
   fullName: string
@@ -27,7 +30,7 @@ function getPasswordStrength(password: string) {
 
 export default function SignUpForm() {
   const navigate = useNavigate()
-  const [role, setRole] = useState<UserRole>('consumer')
+  const [role, setRole] = useState<SignupRole>('consumer')
   const [values, setValues] = useState<FormValues>(initialValues)
   const [errors, setErrors] = useState<FormErrors>({})
   const [loading, setLoading] = useState(false)
@@ -35,6 +38,9 @@ export default function SignUpForm() {
   const [authError, setAuthError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const passwordStrength = useMemo(() => getPasswordStrength(values.password), [values.password])
+  const roleStrategy = getSignupRoleStrategy(role)
+  const rolePresentation = SIGNUP_PRESENTATION.find((option) => option.signupRole === role)
+  if (!rolePresentation) throw new Error(`No signup presentation is registered for role "${role}".`)
 
   const updateField = (field: keyof FormValues, value: string) => {
     setValues((current) => ({ ...current, [field]: value }))
@@ -43,7 +49,7 @@ export default function SignUpForm() {
 
   const validate = () => {
     const nextErrors: FormErrors = {}
-    if (!values.fullName.trim()) nextErrors.fullName = role === 'consumer' ? 'Ingresa tu nombre completo.' : 'Ingresa el nombre del representante.'
+    if (!values.fullName.trim()) nextErrors.fullName = rolePresentation.missingNameMessage
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) nextErrors.email = 'Ingresa un correo electrónico válido.'
     if (values.password.length < 8) nextErrors.password = 'Usa al menos 8 caracteres.'
     setErrors(nextErrors)
@@ -51,7 +57,7 @@ export default function SignUpForm() {
   }
 
   const redirectToOnboarding = () => {
-    navigate(role === 'consumer' ? '/onboarding/consumidor' : '/onboarding/comercio')
+    navigate(rolePresentation.onboardingPath)
   }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -60,12 +66,13 @@ export default function SignUpForm() {
 
     setLoading(true)
     setAuthError('')
-    const [firstName, ...lastNameParts] = values.fullName.trim().split(/\s+/)
-    const lastName = lastNameParts.join(' ')
-    const firebaseRole = role === 'consumer' ? 'consumer' : 'store'
-    const profile = role === 'consumer' ? { firstName, lastName } : {}
 
-    registerWithEmail(values.email, values.password, firebaseRole, profile)
+    registerWithEmail(
+      values.email,
+      values.password,
+      roleStrategy.userRole,
+      roleStrategy.createInitialProfile(values.fullName),
+    )
       .then(redirectToOnboarding)
       .catch((error: unknown) => {
         setAuthError(error instanceof Error ? error.message : 'No pudimos crear tu cuenta.')
@@ -76,17 +83,14 @@ export default function SignUpForm() {
   const handleGoogle = () => {
     setGoogleLoading(true)
     setAuthError('')
-    const firebaseRole = role === 'consumer' ? 'consumer' : 'store'
 
-    signInWithGoogle(firebaseRole)
+    signInWithGoogle(roleStrategy.userRole)
       .then(redirectToOnboarding)
       .catch((error: unknown) => {
         setAuthError(error instanceof Error ? error.message : 'No pudimos conectar con Google.')
       })
       .finally(() => setGoogleLoading(false))
   }
-
-  const nameLabel = role === 'consumer' ? 'Nombre completo' : 'Nombre del representante'
 
   return (
     <section className="signup-page">
@@ -98,22 +102,25 @@ export default function SignUpForm() {
         </div>
 
         <div className="role-selector" aria-label="Selecciona tu rol">
-          <button type="button" className={`role-card${role === 'consumer' ? ' selected' : ''}`} onClick={() => setRole('consumer')} aria-pressed={role === 'consumer'}>
-            <span className="role-icon" aria-hidden="true">🛒</span>
-            <span><strong>Consumidor</strong><small>Encuentra ofertas cerca de ti</small></span>
-            <span className="role-check" aria-hidden="true">{role === 'consumer' ? '✓' : ''}</span>
-          </button>
-          <button type="button" className={`role-card${role === 'business' ? ' selected' : ''}`} onClick={() => setRole('business')} aria-pressed={role === 'business'}>
-            <span className="role-icon" aria-hidden="true">🏪</span>
-            <span><strong>Comercio</strong><small>Publica tus excedentes</small></span>
-            <span className="role-check" aria-hidden="true">{role === 'business' ? '✓' : ''}</span>
-          </button>
+          {SIGNUP_PRESENTATION.map((presentation) => (
+            <button
+              key={presentation.signupRole}
+              type="button"
+              className={`role-card${role === presentation.signupRole ? ' selected' : ''}`}
+              onClick={() => setRole(presentation.signupRole)}
+              aria-pressed={role === presentation.signupRole}
+            >
+              <span className="role-icon" aria-hidden="true">{presentation.icon}</span>
+              <span><strong>{presentation.title}</strong><small>{presentation.description}</small></span>
+              <span className="role-check" aria-hidden="true">{role === presentation.signupRole ? '✓' : ''}</span>
+            </button>
+          ))}
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="field">
-            <label htmlFor="signup-name">{nameLabel}</label>
-            <input id="signup-name" value={values.fullName} onChange={(event) => updateField('fullName', event.target.value)} placeholder={role === 'consumer' ? 'Ej. Ana García' : 'Ej. Ana García, representante'} aria-invalid={Boolean(errors.fullName)} />
+            <label htmlFor="signup-name">{rolePresentation.nameLabel}</label>
+            <input id="signup-name" value={values.fullName} onChange={(event) => updateField('fullName', event.target.value)} placeholder={rolePresentation.namePlaceholder} aria-invalid={Boolean(errors.fullName)} />
             {errors.fullName && <span className="field-error">{errors.fullName}</span>}
           </div>
           <div className="field">

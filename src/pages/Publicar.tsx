@@ -1,11 +1,12 @@
-import { useAuth } from '../context/AuthContext'
+import { useAuthSession, useUserProfile } from '../context/AuthContext'
 import { Navigate } from 'react-router-dom'
 import PublicarOfertaForm from '../components/PublicarOfertaForm'
 import '../styles/perfil.css'
 import '../styles/publicar.css'
 
 export default function Publicar() {
-  const { profile, loading } = useAuth()
+  const { loading } = useAuthSession()
+  const { profile } = useUserProfile()
 
   if (loading) return null
 

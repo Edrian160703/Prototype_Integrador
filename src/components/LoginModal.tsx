@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { loginWithGoogle, signInWithEmail } from '../services/authService'
+import { loginWithGoogle, signInWithEmail } from '../bootstrap'
 
 interface LoginModalProps {
   open: boolean

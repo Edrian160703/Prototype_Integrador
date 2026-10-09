@@ -1,7 +1,7 @@
 import { NavLink, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { useCart } from '../context/CartContext'
+import { useAuthSession, useUserProfile } from '../context/AuthContext'
+import { useCartCount } from '../context/CartContext'
 import UserMenu from './UserMenu'
 import CartPanel from './CartPanel'
 import darkModeIcon from '../assets/images/dark-mode-icon.png'
@@ -23,9 +23,10 @@ export default function Header({ onOpenLogin }: HeaderProps) {
     if (savedTheme) return savedTheme === 'dark'
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
-  const { user, profile, loading } = useAuth()
+  const { user, loading } = useAuthSession()
+  const { profile } = useUserProfile()
   const isComercio = profile?.role === 'store'
-  const { totalItems } = useCart()
+  const { totalItems } = useCartCount()
   const [cartOpen, setCartOpen] = useState(false)
 
   useEffect(() => {

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { cancelarReserva, getReservasByUsuario, type ReservaConOferta } from '../services/reservaService'
+import useMisReservas from '../hooks/useMisReservas'
+import type { ReservaConOferta } from '../services/reservaService'
 
 interface MisReservasProps {
   idUsuario: string
@@ -13,8 +13,7 @@ const ESTADO_LABEL: Record<string, string> = {
 
 function formatearFecha(reserva: ReservaConOferta): string {
   const fecha = reserva.fecha_reserva
-  if (!fecha || typeof fecha.toDate !== 'function') return ''
-  return fecha.toDate().toLocaleString('es-PE', {
+  return fecha.toLocaleString('es-PE', {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
@@ -23,64 +22,17 @@ function formatearFecha(reserva: ReservaConOferta): string {
 }
 
 export default function MisReservas({ idUsuario }: MisReservasProps) {
-  const [reservas, setReservas] = useState<ReservaConOferta[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [cancelandoId, setCancelandoId] = useState<string | null>(null)
-  const [errorCancelId, setErrorCancelId] = useState<string | null>(null)
-  const [reservaAEliminar, setReservaAEliminar] = useState<ReservaConOferta | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function cargar() {
-      setLoading(true)
-      setError('')
-      try {
-        const data = await getReservasByUsuario(idUsuario)
-        if (!cancelled) setReservas(data)
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'No pudimos cargar tus reservas.')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    cargar()
-    return () => {
-      cancelled = true
-    }
-  }, [idUsuario])
-
-  const handleEliminar = (reserva: ReservaConOferta) => {
-    setReservaAEliminar(reserva)
-  }
-
-  const handleCerrarConfirmacion = () => {
-    if (cancelandoId) return
-    setReservaAEliminar(null)
-  }
-
-  const handleConfirmarEliminar = async () => {
-    const reserva = reservaAEliminar
-    if (!reserva) return
-
-    setErrorCancelId(null)
-    setCancelandoId(reserva.id_reserva)
-    try {
-      await cancelarReserva(reserva)
-      setReservas((current) => current.filter((r) => r.id_reserva !== reserva.id_reserva))
-      setReservaAEliminar(null)
-    } catch (err) {
-      setErrorCancelId(reserva.id_reserva)
-      console.error('Error al cancelar la reserva', err)
-      setReservaAEliminar(null)
-    } finally {
-      setCancelandoId(null)
-    }
-  }
+  const {
+    reservas,
+    loading,
+    error,
+    cancelandoId,
+    errorCancelId,
+    reservaAEliminar,
+    selectReservaToDelete,
+    closeDeleteConfirmation,
+    confirmDelete,
+  } = useMisReservas(idUsuario)
 
   return (
     <section className="profile-section" aria-labelledby="consumer-reservas-title">
@@ -129,7 +81,7 @@ export default function MisReservas({ idUsuario }: MisReservasProps) {
                   type="button"
                   className="reserva-item-delete"
                   aria-label="Eliminar reserva"
-                  onClick={() => handleEliminar(reserva)}
+                  onClick={() => selectReservaToDelete(reserva)}
                   disabled={cancelandoId === reserva.id_reserva}
                 >
                   {cancelandoId === reserva.id_reserva ? '...' : '🗑'}
@@ -154,7 +106,7 @@ export default function MisReservas({ idUsuario }: MisReservasProps) {
               <button
                 type="button"
                 className="reserva-confirm-btn reserva-confirm-btn-secondary"
-                onClick={handleCerrarConfirmacion}
+                onClick={closeDeleteConfirmation}
                 disabled={cancelandoId === reservaAEliminar.id_reserva}
               >
                 Mantener reserva
@@ -162,7 +114,7 @@ export default function MisReservas({ idUsuario }: MisReservasProps) {
               <button
                 type="button"
                 className="reserva-confirm-btn reserva-confirm-btn-danger"
-                onClick={handleConfirmarEliminar}
+                onClick={() => void confirmDelete()}
                 disabled={cancelandoId === reservaAEliminar.id_reserva}
               >
                 {cancelandoId === reservaAEliminar.id_reserva ? 'Eliminando...' : 'Sí, eliminar'}

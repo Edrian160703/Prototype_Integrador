@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getOfertaById, type OfertaDetalle } from '../services/ofertaService'
-import { useCart } from '../context/CartContext'
+import { getOfertaById } from '../bootstrap'
+import type { OfertaDetalle } from '../presentation/OfertaPresenter'
+import { useAddToCart } from '../context/CartContext'
 
 export default function ReservaExclusiva() {
   const { id } = useParams<{ id: string }>()
-  const { addToCart } = useCart()
+  const { addToCart } = useAddToCart()
 
   const [oferta, setOferta] = useState<OfertaDetalle | null>(null)
   const [loading, setLoading] = useState(true)

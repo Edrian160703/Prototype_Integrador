@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { saveProfileChanges } from '../services/authService'
+import { saveProfileChanges } from '../bootstrap'
 import type { PickupSchedule, StoreUser } from '../types/user'
 
 const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']

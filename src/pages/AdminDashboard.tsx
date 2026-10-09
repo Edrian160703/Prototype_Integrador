@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuthSession } from "../context/AuthContext";
 import AccountsPanel from "../components/admin/AccountsPanel";
-import ProductsPanel, { Product } from "../components/admin/ProductsPanel";
+import ProductsPanel from "../components/admin/ProductsPanel";
 import {
   listUsers,
   listStores,
   setAccountStatus,
   deleteAccountDocument,
-  type ManagedAccount,
-  type AccountStatus,
-} from "../services/accounts";
-import {
+  deleteProducto,
   getAllProductosForAdmin,
   updateProductoEstado,
-  deleteProducto,
-} from "../services/productoService";
-import type { ProductStatus } from "../components/admin/ProductsPanel";
+} from "../bootstrap";
+import type { ManagedAccount, AccountStatus } from "../services/accounts";
+import type { ProductoEstado } from "../types/producto";
+import type { ProductoAdminItem } from "../types/productoAdmin";
 import "../styles/admin-dashboard.css";
 
 type TabKey = "usuarios" | "comercios" | "productos";
@@ -27,14 +25,14 @@ const TABS: { key: TabKey; label: string; icon: string }[] = [
 ];
 
 export default function AdminDashboard() {
-  const { loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuthSession();
   const [activeTab, setActiveTab] = useState<TabKey>("usuarios");
 
   const [users, setUsers] = useState<ManagedAccount[] | null>(null);
   const [stores, setStores] = useState<ManagedAccount[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [products, setProducts] = useState<Product[] | null>(null);
+  const [products, setProducts] = useState<ProductoAdminItem[] | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -78,7 +76,7 @@ export default function AdminDashboard() {
   async function handleStoreDelete(id: string) {
     await deleteAccountDocument(id, "store");
   }
-  async function handleProductStatusChange(id: string, status: ProductStatus) {
+  async function handleProductStatusChange(id: string, status: ProductoEstado) {
     await updateProductoEstado(id, status);
   }
   async function handleProductDelete(id: string) {

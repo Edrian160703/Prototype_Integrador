@@ -1,5 +1,3 @@
-import type { Timestamp } from 'firebase/firestore'
-
 export type UserRole = 'consumer' | 'store'
 
 export interface PickupSchedule {
@@ -34,8 +32,8 @@ interface BaseUser {
   email: string
   displayName: string | null
   photoURL: string | null
-  createdAt: Timestamp
-  updatedAt: Timestamp
+  createdAt: Date
+  updatedAt: Date
   onboardingCompleted: boolean
 }
 
@@ -58,12 +56,4 @@ export interface InitialUserData {
   displayName?: string | null
   photoURL?: string | null
   profile?: InitialUserProfile
-}
-
-/** Nombre de la colección de Firestore donde vive cada rol. */
-export type UserCollectionName = 'consumidores' | 'comercios'
-
-/** Mapea el rol de un usuario a su colección de Firestore (2 apartados separados). */
-export function getUserCollectionName(role: UserRole): UserCollectionName {
-  return role === 'store' ? 'comercios' : 'consumidores'
 }

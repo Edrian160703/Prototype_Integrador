@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { saveProfileChanges } from '../services/authService'
+import { saveProfileChanges } from '../bootstrap'
 import type { ConsumerUser } from '../types/user'
 
 const PREFERENCE_OPTIONS = ['Panaderías', 'Menús', 'Vegano', 'Postres', 'Frutas y verduras']
