@@ -52,15 +52,18 @@ function oferta(overrides: Partial<OfertaDocument> = {}): OfertaDocument {
 
 describe('casos de uso de ofertas', () => {
   it('crea una oferta delegando la persistencia al repositorio', async () => {
+    const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
     const repository: OfertaCreator = {
       create: vi.fn().mockResolvedValue('offer-1'),
     }
 
-    await expect(createOferta(repository, { uid: 'user-1', payload })).resolves.toBe('offer-1')
-    expect(repository.create).toHaveBeenCalledWith('user-1', payload, expect.any(String))
+    await expect(createOferta(repository, { uid: 'user-1', payload }, idGenerator)).resolves.toBe('offer-1')
+    expect(idGenerator.next).toHaveBeenCalledOnce()
+    expect(repository.create).toHaveBeenCalledWith('user-1', payload, 'offer-id')
   })
 
   it('crea el producto antes de crear la oferta asociada', async () => {
+    const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
     const productoCreator: ProductoCreator = {
       create: vi.fn().mockResolvedValue('product-1'),
     }
@@ -69,7 +72,7 @@ describe('casos de uso de ofertas', () => {
     }
 
     await expect(
-      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator),
+      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, idGenerator),
     ).resolves.toBe('offer-1')
 
     expect(productoCreator.create).toHaveBeenCalledWith({
@@ -85,11 +88,13 @@ describe('casos de uso de ofertas', () => {
       'user-1',
       payload,
       'product-1',
-      expect.any(String),
+      'offer-id',
     )
+    expect(idGenerator.next).toHaveBeenCalledOnce()
   })
 
   it('no intenta guardar la oferta si falla la creación del producto', async () => {
+    const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
     const productoCreator: ProductoCreator = {
       create: vi.fn().mockRejectedValue(new Error('falló el producto')),
     }
@@ -98,7 +103,7 @@ describe('casos de uso de ofertas', () => {
     }
 
     await expect(
-      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator),
+      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, idGenerator),
     ).rejects.toThrow('falló el producto')
     expect(ofertaCreator.create).not.toHaveBeenCalled()
   })

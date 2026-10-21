@@ -17,6 +17,7 @@ import type {
   OfertaWriter,
 } from '../ports/ofertaRepository'
 import type { ProductoCreator } from '../ports/productoRepository'
+import type { IdGenerator } from '../ports/idGenerator'
 import type { CreateOfertaParams, OfertaPayload } from '../types/oferta'
 
 type OfferRepository =
@@ -30,19 +31,21 @@ interface OfferServiceDependencies {
   offers: () => Promise<OfferRepository>
   products: () => Promise<ProductoCreator>
   commerces: () => Promise<ComercioReader>
+  idGenerator: IdGenerator
 }
 
 export function createOfferServices({
   offers,
   products,
   commerces,
+  idGenerator,
 }: OfferServiceDependencies): OfferApplication {
   return {
     createOferta: async (params: CreateOfertaParams) =>
-      createOferta(await offers(), params),
+      createOferta(await offers(), params, idGenerator),
     createOfertaConProducto: async (params: CreateOfertaParams) => {
       const [productRepository, offerRepository] = await Promise.all([products(), offers()])
-      return createOfertaConProducto(params, productRepository, offerRepository)
+      return createOfertaConProducto(params, productRepository, offerRepository, idGenerator)
     },
     getOfertas: async () => {
       const [offerRepository, commerceRepository] = await Promise.all([offers(), commerces()])

@@ -1,13 +1,15 @@
 import { getFirebaseFirestore } from './firebaseClient'
 import { createLazyRepository } from '../createLazyRepository'
+import { createCryptoIdGenerator } from '../cryptoIdGenerator'
+import type { IdGenerator } from '../../ports/idGenerator'
 
-export function createFirebaseRepositories() {
+export function createFirebaseRepositories(idGenerator: IdGenerator = createCryptoIdGenerator()) {
   const products = createLazyRepository(async () => {
     const [{ FirebaseProductoRepository }, db] = await Promise.all([
       import('./FirebaseProductoRepository'),
       getFirebaseFirestore(),
     ])
-    return new FirebaseProductoRepository(db)
+    return new FirebaseProductoRepository(db, idGenerator)
   })
 
   const offers = createLazyRepository(async () => {
@@ -31,7 +33,7 @@ export function createFirebaseRepositories() {
       import('./FirebaseReservaRepository'),
       getFirebaseFirestore(),
     ])
-    return new FirebaseReservaRepository(db)
+    return new FirebaseReservaRepository(db, idGenerator)
   })
 
   const accounts = createLazyRepository(async () => {

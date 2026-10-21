@@ -11,24 +11,8 @@ import type {
   UserDocument,
   UserRole,
 } from '../../types/user'
-import { toDate } from './firestoreDates'
 import { getUserCollectionName, USER_COLLECTION_NAMES } from './userCollections'
-
-function toUserDocument(uid: string, data: Record<string, unknown>): UserDocument {
-  const common = {
-    ...data,
-    uid,
-    email: typeof data.email === 'string' ? data.email : '',
-    displayName: typeof data.displayName === 'string' ? data.displayName : null,
-    photoURL: typeof data.photoURL === 'string' ? data.photoURL : null,
-    createdAt: toDate(data.createdAt),
-    updatedAt: toDate(data.updatedAt),
-    onboardingCompleted: data.onboardingCompleted === true,
-  }
-  if (data.role === 'consumer') return common as UserDocument
-  if (data.role === 'store') return common as UserDocument
-  throw new TypeError(`Rol de usuario no válido para el perfil ${uid}.`)
-}
+import { mapUserProfileDocument } from './mapUserProfileDocument'
 
 export class FirebaseUserProfileRepository implements
   UserProfileReader,
@@ -40,7 +24,7 @@ export class FirebaseUserProfileRepository implements
   async getById(uid: string): Promise<UserDocument | null> {
     for (const collectionName of USER_COLLECTION_NAMES) {
       const snapshot = await getDoc(doc(collection(this.db, collectionName), uid))
-      if (snapshot.exists()) return toUserDocument(uid, snapshot.data())
+      if (snapshot.exists()) return mapUserProfileDocument(uid, collectionName, snapshot.data())
     }
     return null
   }

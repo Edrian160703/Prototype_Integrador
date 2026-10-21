@@ -7,10 +7,12 @@ import { createUserProfileService } from './composition/createUserProfileService
 import type { ApplicationServices } from './application/contracts'
 import { FirebaseAuthGateway } from './infrastructure/firebase/FirebaseAuthGateway'
 import { createFirebaseRepositories } from './infrastructure/firebase/createFirebaseRepositories'
+import { createCryptoIdGenerator } from './infrastructure/cryptoIdGenerator'
 import { getFirebaseAuth } from './infrastructure/firebase/firebaseClient'
 
 export function createFoodBackApplication(): ApplicationServices {
-  const repositories = createFirebaseRepositories()
+  const idGenerator = createCryptoIdGenerator()
+  const repositories = createFirebaseRepositories(idGenerator)
   const authGateway = new FirebaseAuthGateway(getFirebaseAuth())
 
   return {
@@ -22,6 +24,7 @@ export function createFoodBackApplication(): ApplicationServices {
       offers: repositories.offers,
       products: repositories.products,
       commerces: repositories.commerces,
+      idGenerator,
     }),
     accounts: createAccountServices(repositories.accounts),
     reservations: createReservationServices({

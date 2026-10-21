@@ -17,20 +17,20 @@ import type {
 import type { CartItem } from '../../types/cart'
 import type { ReservaDocument } from '../../types/reserva'
 import { toDate } from './firestoreDates'
-
-function generarIdReserva(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
-  return `res_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`
-}
+import { createCryptoIdGenerator } from '../cryptoIdGenerator'
+import type { IdGenerator } from '../../ports/idGenerator'
 
 export class FirebaseReservaRepository implements
   ReservaCreator,
   ReservaReader,
   ReservaDeleter {
-  constructor(private readonly db: Firestore) {}
+  constructor(
+    private readonly db: Firestore,
+    private readonly idGenerator: IdGenerator = createCryptoIdGenerator(),
+  ) {}
 
   async create(idUsuario: string, emailUsuario: string, item: CartItem): Promise<string> {
-    const idReserva = generarIdReserva()
+    const idReserva = this.idGenerator.next()
     await setDoc(doc(this.db, 'reservas', idReserva), {
       id_reserva: idReserva,
       id_usuario: idUsuario,

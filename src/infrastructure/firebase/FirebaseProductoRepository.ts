@@ -11,7 +11,7 @@ import {
   where,
   type Firestore,
 } from 'firebase/firestore'
-import { toDate } from './firestoreDates'
+import { mapProductoDocument } from './mapProductoDocument'
 import type {
   ProductoAdminReader,
   ProductoByCommerceReader,
@@ -25,13 +25,8 @@ import type {
   ProductoEstado,
   ProductoPayload,
 } from '../../types/producto'
-
-function generarIdProducto(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-  return `prod_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`
-}
+import { createCryptoIdGenerator } from '../cryptoIdGenerator'
+import type { IdGenerator } from '../../ports/idGenerator'
 
 export class FirebaseProductoRepository implements
   ProductoCreator,
@@ -40,10 +35,13 @@ export class FirebaseProductoRepository implements
   ProductoStateWriter,
   ProductoDeleter,
   ProductoAdminReader {
-  constructor(private readonly db: Firestore) {}
+  constructor(
+    private readonly db: Firestore,
+    private readonly idGenerator: IdGenerator = createCryptoIdGenerator(),
+  ) {}
 
   async create(payload: ProductoPayload, uid: string): Promise<string> {
-    const idProducto = generarIdProducto()
+    const idProducto = this.idGenerator.next()
 
     const docData: Record<string, unknown> = {
       id_producto: idProducto,
@@ -66,25 +64,13 @@ export class FirebaseProductoRepository implements
   async getByComercio(idComercio: string): Promise<ProductoDocument[]> {
     const productosQuery = query(collection(this.db, 'productos'), where('id_comercio', '==', idComercio))
     const snapshot = await getDocs(productosQuery)
-    return snapshot.docs.map((docSnap) => {
-      const data = docSnap.data()
-      return {
-        ...data,
-        createdAt: toDate(data.createdAt),
-        updatedAt: toDate(data.updatedAt),
-      } as ProductoDocument
-    })
+    return snapshot.docs.map((docSnap) => mapProductoDocument(docSnap.id, docSnap.data()))
   }
 
   async getById(idProducto: string): Promise<ProductoDocument | null> {
     const snap = await getDoc(doc(this.db, 'productos', idProducto))
     if (!snap.exists()) return null
-    const data = snap.data()
-    return {
-      ...data,
-      createdAt: toDate(data.createdAt),
-      updatedAt: toDate(data.updatedAt),
-    } as ProductoDocument
+    return mapProductoDocument(snap.id, snap.data())
   }
 
   async updateEstado(idProducto: string, estado: ProductoEstado): Promise<void> {
@@ -100,13 +86,6 @@ export class FirebaseProductoRepository implements
 
   async getAll(): Promise<ProductoDocument[]> {
     const snapshot = await getDocs(collection(this.db, 'productos'))
-    return snapshot.docs.map((docSnap) => {
-      const storedData = docSnap.data()
-      return {
-        ...storedData,
-        createdAt: toDate(storedData.createdAt),
-        updatedAt: toDate(storedData.updatedAt),
-      } as ProductoDocument
-    })
+    return snapshot.docs.map((docSnap) => mapProductoDocument(docSnap.id, docSnap.data()))
   }
 }
