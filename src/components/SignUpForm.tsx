@@ -1,8 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthRegistration } from '../context/ApplicationContext'
-import { SIGNUP_PRESENTATION } from '../config/signupPresentation'
 import {
+  USER_SIGNUP_STRATEGIES,
   getSignupRoleStrategy,
   type SignupRole,
 } from '../strategies/userRoleStrategies'
@@ -40,8 +40,7 @@ export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false)
   const passwordStrength = useMemo(() => getPasswordStrength(values.password), [values.password])
   const roleStrategy = getSignupRoleStrategy(role)
-  const rolePresentation = SIGNUP_PRESENTATION.find((option) => option.signupRole === role)
-  if (!rolePresentation) throw new Error(`No signup presentation is registered for role "${role}".`)
+  const rolePresentation = roleStrategy.presentation
 
   const updateField = (field: keyof FormValues, value: string) => {
     setValues((current) => ({ ...current, [field]: value }))
@@ -103,7 +102,7 @@ export default function SignUpForm() {
         </div>
 
         <div className="role-selector" aria-label="Selecciona tu rol">
-          {SIGNUP_PRESENTATION.map((presentation) => (
+          {USER_SIGNUP_STRATEGIES.map(({ presentation }) => (
             <button
               key={presentation.signupRole}
               type="button"

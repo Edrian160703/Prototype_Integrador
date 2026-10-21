@@ -1,22 +1,10 @@
-import { useEffect, useState } from "react";
 import { useAuthSession } from "../context/AuthContext";
-import {
-  useAccountManagement,
-  useAccountQuery,
-  useProductAdminQuery,
-  useProductManagement,
-} from "../context/ApplicationContext";
+import useAdminDashboard, { type AdminTab } from "../hooks/useAdminDashboard";
 import AccountsPanel from "../components/admin/AccountsPanel";
 import ProductsPanel from "../components/admin/ProductsPanel";
-import type { ManagedAccount, AccountStatus } from "../application/contracts";
-import type { ProductoEstado } from "../types/producto";
-import type { ProductoAdminItem } from "../types/productoAdmin";
-import { toProductoAdminItems } from "../presentation/ProductoPresenter";
 import "../styles/admin-dashboard.css";
 
-type TabKey = "usuarios" | "comercios" | "productos";
-
-const TABS: { key: TabKey; label: string; icon: string }[] = [
+const TABS: { key: AdminTab; label: string; icon: string }[] = [
   { key: "usuarios", label: "Usuarios", icon: "👤" },
   { key: "comercios", label: "Comercios", icon: "🏪" },
   { key: "productos", label: "Productos", icon: "📦" },
@@ -25,76 +13,21 @@ const TABS: { key: TabKey; label: string; icon: string }[] = [
 export default function AdminDashboard() {
   const { loading: authLoading } = useAuthSession();
   const {
-    listUsers,
-    listStores,
-  } = useAccountQuery();
-  const {
-    setAccountStatus,
-    deleteAccountDocument,
-  } = useAccountManagement();
-  const {
-    getAllProductosForAdmin,
-  } = useProductAdminQuery();
-  const {
-    deleteProducto,
-    updateProductoEstado,
-  } = useProductManagement();
-  const [activeTab, setActiveTab] = useState<TabKey>("usuarios");
-
-  const [users, setUsers] = useState<ManagedAccount[] | null>(null);
-  const [stores, setStores] = useState<ManagedAccount[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  const [products, setProducts] = useState<ProductoAdminItem[] | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        const [usersData, storesData, productsData] = await Promise.all([
-          listUsers(),
-          listStores(),
-          getAllProductosForAdmin(),
-        ]);
-        if (active) {
-          setUsers(usersData);
-          setStores(storesData);
-          setProducts(toProductoAdminItems(productsData));
-        }
-      } catch (e) {
-        if (active) {
-          //  por alguna razon suelta el error "FirebaseError: Missing or insufficient permissions."
-          console.log(e);
-          setLoadError("No pudimos cargar las cuentas desde Firestore.");
-        }
-      }
-    }
-    load();
-    return () => {
-      active = false;
-    };
-  }, [getAllProductosForAdmin, listStores, listUsers]);
+    activeTab,
+    setActiveTab,
+    users,
+    stores,
+    products,
+    loadError,
+    handleUserStatusChange,
+    handleUserDelete,
+    handleStoreStatusChange,
+    handleStoreDelete,
+    handleProductStatusChange,
+    handleProductDelete,
+  } = useAdminDashboard();
 
   if (authLoading) return null;
-
-  async function handleUserStatusChange(id: string, status: AccountStatus) {
-    await setAccountStatus(id, "consumer", status);
-  }
-  async function handleUserDelete(id: string) {
-    await deleteAccountDocument(id, "consumer");
-  }
-  async function handleStoreStatusChange(id: string, status: AccountStatus) {
-    await setAccountStatus(id, "store", status);
-  }
-  async function handleStoreDelete(id: string) {
-    await deleteAccountDocument(id, "store");
-  }
-  async function handleProductStatusChange(id: string, status: ProductoEstado) {
-    await updateProductoEstado(id, status);
-  }
-  async function handleProductDelete(id: string) {
-    await deleteProducto(id);
-  }
 
   return (
     <section className="admin-page">

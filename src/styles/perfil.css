@@ -113,6 +113,61 @@
 .reserva-confirm-btn-danger{background:#d64545;color:#fff}
 .reserva-confirm-btn-danger:hover:not(:disabled){background:#c23a3a}
 
+html[data-theme="dark"] .profile-hero {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-muted) 100%);
+}
+
+html[data-theme="dark"] .profile-actions {
+  background: rgba(24, 35, 30, 0.96);
+  color: var(--text-dark);
+}
+
+html[data-theme="dark"] .profile-actions .btn-outline:disabled {
+  background: var(--surface-muted);
+}
+
+html[data-theme="dark"] .profile-form .field input:disabled {
+  background: var(--surface-muted);
+}
+
+html[data-theme="dark"] .reserva-item-estado {
+  background: var(--surface-muted);
+  color: var(--text-gray);
+}
+
+html[data-theme="dark"] .reserva-item-estado-pendiente {
+  background: #3b2d1c;
+  color: #f2c078;
+}
+
+html[data-theme="dark"] .reserva-item-estado-confirmada {
+  background: #1c3827;
+  color: #86d49d;
+}
+
+html[data-theme="dark"] .reserva-item-estado-cancelada {
+  background: #3b2222;
+  color: #f09b9b;
+}
+
+html[data-theme="dark"] .reserva-item-delete {
+  background: var(--surface);
+  color: var(--text-dark);
+}
+
+html[data-theme="dark"] .reserva-item-delete:hover:not(:disabled),
+html[data-theme="dark"] .reserva-confirm-btn-secondary {
+  background: var(--surface-muted);
+}
+
+html[data-theme="dark"] .reserva-confirm-modal {
+  background: var(--surface);
+}
+
+html[data-theme="dark"] .reserva-confirm-title {
+  color: var(--text-dark);
+}
+
 @media (max-width:480px){
   .reserva-confirm-actions{flex-direction:column-reverse}
   .reserva-confirm-btn{width:100%}

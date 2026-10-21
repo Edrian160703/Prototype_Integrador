@@ -117,30 +117,49 @@ export interface ProfileEditingApplication {
   ): Promise<void>
 }
 
-export interface FoodBackApplication extends
+export interface ProductApplication extends
   ProductCatalogApplication,
   ProductAdminQueryApplication,
-  ProductManagementApplication,
+  ProductManagementApplication {}
+
+export interface OfferApplication extends
   OfferListQueryApplication,
   OfferDetailsQueryApplication,
   OfferOwnerQueryApplication,
   OfferEditingApplication,
   OfferCreationApplication,
-  OfferPublishingApplication,
+  OfferPublishingApplication {}
+
+export interface AccountApplication extends
   AccountQueryApplication,
-  AccountManagementApplication,
+  AccountManagementApplication {}
+
+export interface ReservationApplication extends
   ReservationCheckoutApplication,
   ReservationManagementApplication,
-  ReservationHistoryApplication,
+  ReservationHistoryApplication {}
+
+export interface AuthenticationApplication extends
   CurrentUserQueryApplication,
   AuthStateSubscriptionApplication,
-  UserProfileQueryApplication,
   AuthRegistrationApplication,
   EmailSignInApplication,
   GoogleSignInApplication,
-  SignOutApplication,
+  SignOutApplication {}
+
+export interface UserProfileApplication extends
+  UserProfileQueryApplication,
   ProfileOnboardingApplication,
   ProfileEditingApplication {}
+
+export interface ApplicationServices {
+  products: ProductApplication
+  offers: OfferApplication
+  accounts: AccountApplication
+  reservations: ReservationApplication
+  authentication: AuthenticationApplication
+  userProfiles: UserProfileApplication
+}
 
 export type {
   AccountStatus,
