@@ -1,8 +1,9 @@
 import { createAccountServices } from './composition/createAccountServices'
-import { createIdentityServices } from './composition/createIdentityServices'
+import { createAuthenticationService } from './composition/createAuthenticationService'
 import { createOfferServices } from './composition/createOfferServices'
 import { createProductServices } from './composition/createProductServices'
 import { createReservationServices } from './composition/createReservationServices'
+import { createUserProfileService } from './composition/createUserProfileService'
 import type { ApplicationServices } from './application/contracts'
 import { FirebaseAuthGateway } from './infrastructure/firebase/FirebaseAuthGateway'
 import { createFirebaseRepositories } from './infrastructure/firebase/createFirebaseRepositories'
@@ -27,8 +28,13 @@ export function createFoodBackApplication(): ApplicationServices {
       reservations: repositories.reservations,
       offers: repositories.offers,
     }),
-    ...createIdentityServices({
+    authentication: createAuthenticationService({
       auth: authGateway,
+      profiles: repositories.userProfiles,
+    }),
+    userProfiles: createUserProfileService({
+      authSession: authGateway,
+      authProfileUpdater: authGateway,
       profiles: repositories.userProfiles,
     }),
   }

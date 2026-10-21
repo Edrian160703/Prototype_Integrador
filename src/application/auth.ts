@@ -1,18 +1,14 @@
 import type {
   AuthIdentity,
-  IAuthProfileUpdater,
   IAuthRegistrar,
   IAuthSession,
   IAuthSignIn,
   IAuthSignOut,
 } from '../ports/authGateway'
 import type {
-  IOnboardingProfileWriter,
   IProfileCreator,
-  IProfileEditor,
-  UserProfileReader,
 } from '../ports/userProfileRepository'
-import type { InitialUserData, InitialUserProfile, UserDocument, UserRole } from '../types/user'
+import type { InitialUserData, UserRole } from '../types/user'
 
 function getDisplayName(profile: InitialUserData['profile']): string | null {
   if (profile && 'firstName' in profile) {
@@ -54,30 +50,6 @@ export async function signInWithGoogle(
   return user
 }
 
-export function updateUserProfile(
-  profiles: IOnboardingProfileWriter,
-  uid: string,
-  role: UserRole,
-  profile: InitialUserProfile,
-): Promise<void> {
-  return profiles.updateOnboarding(uid, role, profile)
-}
-
-export async function saveProfileChanges(
-  authSession: IAuthSession,
-  authProfileUpdater: IAuthProfileUpdater,
-  profiles: IProfileEditor,
-  uid: string,
-  role: UserRole,
-  profile: InitialUserProfile,
-  displayName: string | null,
-): Promise<void> {
-  await profiles.saveChanges(uid, role, profile, displayName)
-  if (displayName && authSession.currentUser?.uid === uid) {
-    await authProfileUpdater.updateDisplayName(uid, displayName)
-  }
-}
-
 export function getCurrentUser(auth: IAuthSession): AuthIdentity | null {
   return auth.currentUser
 }
@@ -101,8 +73,4 @@ export async function loginWithGoogle(auth: IAuthSignIn, profiles: IProfileCreat
 
 export function signOutUser(auth: IAuthSignOut): Promise<void> {
   return auth.signOut()
-}
-
-export function getUserDocument(profiles: UserProfileReader, uid: string): Promise<UserDocument | null> {
-  return profiles.getById(uid)
 }
