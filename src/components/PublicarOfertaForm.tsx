@@ -1,330 +1,44 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { createOfertaConProducto } from '../services/ofertaService'
-import { CATEGORIAS } from '../types/oferta'
-
-const NOMBRE_MAX = 150
-const DESCRIPCION_MAX = 255
-const HORARIO_MAX = 100
-const IMAGEN_URL_MAX = 255
-
-interface OfertaFormValues {
-  nombre_producto: string
-  id_categoria: string
-  descripcion: string
-  precio_original: string
-  precio_oferta: string
-  cantidad_disponible: string
-  horario_recojo: string
-  fecha_limite: string
-  imagen_url: string
-}
-
-const INITIAL_VALUES: OfertaFormValues = {
-  nombre_producto: '',
-  id_categoria: '',
-  descripcion: '',
-  precio_original: '',
-  precio_oferta: '',
-  cantidad_disponible: '',
-  horario_recojo: '',
-  fecha_limite: '',
-  imagen_url: '',
-}
-
-type FieldErrors = Partial<Record<keyof OfertaFormValues, string>>
-type SubmitStatus = 'idle' | 'saving' | 'saved' | 'error'
-
-function combinarHorario(inicio: string, fin: string): string {
-  if (!inicio || !fin) return ''
-  return `${inicio} - ${fin} hs`
-}
-
-function esFechaValida(dia: string, mes: string, anio: string): boolean {
-  const d = Number(dia)
-  const m = Number(mes)
-  const y = Number(anio)
-  if (!d || !m || !y || anio.length !== 4) return false
-  if (m < 1 || m > 12) return false
-  const diasEnMes = new Date(y, m, 0).getDate()
-  return d >= 1 && d <= diasEnMes
-}
-
-function combinarFechaHora(dia: string, mes: string, anio: string, hora: string): string {
-  if (!dia || !mes || !anio || !hora || !esFechaValida(dia, mes, anio)) return ''
-  return `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}T${hora}`
-}
-
-/** Convierte un archivo local en un data URL para previsualizarlo (y guardarlo como imagen_url). */
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () => reject(new Error('No se pudo leer la imagen.'))
-    reader.readAsDataURL(file)
-  })
-}
-
-/** Valida que el texto sea un decimal positivo con hasta 2 dígitos decimales (decimal(10,2)). */
-function isValidDecimal(value: string): boolean {
-  return /^\d{1,8}(\.\d{1,2})?$/.test(value.trim())
-}
-
-function isValidInteger(value: string): boolean {
-  return /^\d+$/.test(value.trim())
-}
-
-/** Redondea un texto numérico a 2 decimales al salir del campo. */
-function normalizeDecimalOnBlur(value: string): string {
-  const trimmed = value.trim()
-  if (!trimmed || !isValidDecimal(trimmed)) return trimmed
-  return Number(trimmed).toFixed(2)
-}
+import usePublicarOfertaForm from '../hooks/usePublicarOfertaForm'
+import { CATEGORIAS_VISUALES } from '../config/ofertaCategories'
+import {
+  DESCRIPCION_MAX,
+  IMAGEN_URL_MAX,
+  normalizeDecimalOnBlur,
+  NOMBRE_MAX,
+} from '../utils/ofertaForm'
 
 export default function PublicarOfertaForm() {
-  const navigate = useNavigate()
-  const { user, profile } = useAuth()
-  const [form, setForm] = useState<OfertaFormValues>(INITIAL_VALUES)
-  const [horarioInicio, setHorarioInicio] = useState('')
-  const [horarioFin, setHorarioFin] = useState('')
-  const [fechaDia, setFechaDia] = useState('')
-  const [fechaMes, setFechaMes] = useState('')
-  const [fechaAnio, setFechaAnio] = useState('')
-  const [fechaHora, setFechaHora] = useState('')
-  const [errors, setErrors] = useState<FieldErrors>({})
-  const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload')
-  const [imagePreview, setImagePreview] = useState<string>('')
-  const [imageError, setImageError] = useState('')
-  const [status, setStatus] = useState<SubmitStatus>('idle')
-  const [statusMessage, setStatusMessage] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const descripcionRestante = DESCRIPCION_MAX - form.descripcion.length
-  const ahoraLocal = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)
-
-  const touch = () => {
-    if (status !== 'idle') setStatus('idle')
-  }
-
-  const updateField = <K extends keyof OfertaFormValues>(field: K, value: OfertaFormValues[K]) => {
-    setForm((current) => ({ ...current, [field]: value }))
-    setErrors((current) => ({ ...current, [field]: undefined }))
-    touch()
-  }
-
-  const handleHorarioInicioChange = (value: string) => {
-    setHorarioInicio(value)
-    updateField('horario_recojo', combinarHorario(value, horarioFin))
-  }
-
-  const handleHorarioFinChange = (value: string) => {
-    setHorarioFin(value)
-    updateField('horario_recojo', combinarHorario(horarioInicio, value))
-  }
-
-  const handleFechaChange = (parte: 'dia' | 'mes' | 'anio' | 'hora', value: string) => {
-    const siguiente = {
-      dia: parte === 'dia' ? value : fechaDia,
-      mes: parte === 'mes' ? value : fechaMes,
-      anio: parte === 'anio' ? value : fechaAnio,
-      hora: parte === 'hora' ? value : fechaHora,
-    }
-    if (parte === 'dia') setFechaDia(value)
-    if (parte === 'mes') setFechaMes(value)
-    if (parte === 'anio') setFechaAnio(value)
-    if (parte === 'hora') setFechaHora(value)
-    updateField('fecha_limite', combinarFechaHora(siguiente.dia, siguiente.mes, siguiente.anio, siguiente.hora))
-  }
-
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    setImageError('')
-
-    if (!file.type.startsWith('image/')) {
-      setImageError('Selecciona un archivo de imagen válido (JPG, PNG o WEBP).')
-      return
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setImageError('La imagen no debe superar los 5 MB.')
-      return
-    }
-
-    try {
-      const dataUrl = await readFileAsDataUrl(file)
-      setImagePreview(dataUrl)
-      updateField('imagen_url', dataUrl)
-    } catch {
-      setImageError('No se pudo cargar la imagen. Intenta con otro archivo.')
-    }
-  }
-
-  const handleUrlChange = (value: string) => {
-    updateField('imagen_url', value)
-    setImagePreview(value.trim())
-    setImageError('')
-  }
-
-  const switchImageMode = (mode: 'upload' | 'url') => {
-    setImageMode(mode)
-    setImageError('')
-    setImagePreview('')
-    updateField('imagen_url', '')
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const removeImage = () => {
-    setImagePreview('')
-    setImageError('')
-    updateField('imagen_url', '')
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const validate = (values: OfertaFormValues): FieldErrors => {
-    const nextErrors: FieldErrors = {}
-
-    if (!values.nombre_producto.trim()) {
-      nextErrors.nombre_producto = 'Ingresa el nombre del producto.'
-    } else if (values.nombre_producto.length > NOMBRE_MAX) {
-      nextErrors.nombre_producto = `Máximo ${NOMBRE_MAX} caracteres.`
-    }
-
-    if (!values.id_categoria) {
-      nextErrors.id_categoria = 'Selecciona una categoría.'
-    }
-
-    if (!values.descripcion.trim()) {
-      nextErrors.descripcion = 'Agrega una breve descripción del producto.'
-    } else if (values.descripcion.length > DESCRIPCION_MAX) {
-      nextErrors.descripcion = `Máximo ${DESCRIPCION_MAX} caracteres.`
-    }
-
-    if (!values.precio_original.trim()) {
-      nextErrors.precio_original = 'Ingresa el precio original.'
-    } else if (!isValidDecimal(values.precio_original) || Number(values.precio_original) <= 0) {
-      nextErrors.precio_original = 'Ingresa un precio válido (ej. 25.90).'
-    }
-
-    if (!values.precio_oferta.trim()) {
-      nextErrors.precio_oferta = 'Ingresa el precio de oferta.'
-    } else if (!isValidDecimal(values.precio_oferta) || Number(values.precio_oferta) <= 0) {
-      nextErrors.precio_oferta = 'Ingresa un precio válido (ej. 12.90).'
-    } else if (
-      isValidDecimal(values.precio_original) &&
-      Number(values.precio_oferta) >= Number(values.precio_original)
-    ) {
-      nextErrors.precio_oferta = 'Debe ser menor al precio original.'
-    }
-
-    if (!values.cantidad_disponible.trim()) {
-      nextErrors.cantidad_disponible = 'Ingresa la cantidad disponible.'
-    } else if (!isValidInteger(values.cantidad_disponible) || Number(values.cantidad_disponible) < 1) {
-      nextErrors.cantidad_disponible = 'Ingresa un número entero mayor a 0.'
-    }
-
-    if (!horarioInicio || !horarioFin) {
-      nextErrors.horario_recojo = 'Selecciona la hora de inicio y fin del recojo.'
-    } else if (horarioInicio >= horarioFin) {
-      nextErrors.horario_recojo = 'La hora de fin debe ser posterior a la de inicio.'
-    } else if (values.horario_recojo.length > HORARIO_MAX) {
-      nextErrors.horario_recojo = `Máximo ${HORARIO_MAX} caracteres.`
-    }
-
-    if (imageMode === 'url' && values.imagen_url.length > IMAGEN_URL_MAX) {
-      nextErrors.imagen_url = `La URL no debe superar los ${IMAGEN_URL_MAX} caracteres.`
-    }
-
-    if (!fechaDia || !fechaMes || !fechaAnio || !fechaHora) {
-      nextErrors.fecha_limite = 'Completa la fecha y hora límite.'
-    } else if (!esFechaValida(fechaDia, fechaMes, fechaAnio)) {
-      nextErrors.fecha_limite = 'Ingresa una fecha válida.'
-    } else if (values.fecha_limite < ahoraLocal) {
-      nextErrors.fecha_limite = 'La fecha límite debe ser posterior al momento actual.'
-    }
-
-    return nextErrors
-  }
-
-  const handleReset = () => {
-    setForm(INITIAL_VALUES)
-    setErrors({})
-    setHorarioInicio('')
-    setHorarioFin('')
-    setFechaDia('')
-    setFechaMes('')
-    setFechaAnio('')
-    setFechaHora('')
-    setImagePreview('')
-    setImageError('')
-    setStatus('idle')
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    const values: OfertaFormValues = {
-      ...form,
-      nombre_producto: form.nombre_producto.trim(),
-      descripcion: form.descripcion.trim(),
-      horario_recojo: form.horario_recojo.trim(),
-      precio_original: normalizeDecimalOnBlur(form.precio_original),
-      precio_oferta: normalizeDecimalOnBlur(form.precio_oferta),
-    }
-
-    const nextErrors = validate(values)
-    setErrors(nextErrors)
-    if (Object.keys(nextErrors).length > 0) {
-      setStatus('error')
-      setStatusMessage('Revisa los campos marcados antes de publicar.')
-      return
-    }
-
-    if (!user || !profile || profile.role !== 'store') {
-      setStatus('error')
-      setStatusMessage('Debes iniciar sesión como comercio para publicar una oferta.')
-      return
-    }
-
-    setStatus('saving')
-    setStatusMessage('')
-
-    try {
-      const payload = {
-        ...values,
-        precio_original: Number(values.precio_original),
-        precio_oferta: Number(values.precio_oferta),
-        cantidad_disponible: Number(values.cantidad_disponible),
-        estado: 'disponible' as const,
-      }
-
-      await createOfertaConProducto({
-        uid: user.uid,
-        payload,
-      })
-
-      setForm(INITIAL_VALUES)
-      setHorarioInicio('')
-      setHorarioFin('')
-      setFechaDia('')
-      setFechaMes('')
-      setFechaAnio('')
-      setFechaHora('')
-      setImagePreview('')
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      setStatus('saved')
-      setStatusMessage('✓ Tu oferta fue publicada correctamente.')
-
-      navigate('/explorar', { state: { toastMessage: '¡Oferta publicada exitosamente!' } })
-    } catch (error) {
-      setStatus('error')
-      setStatusMessage(error instanceof Error ? error.message : 'No pudimos publicar tu oferta. Inténtalo de nuevo.')
-    }
-  }
-
-  const saving = status === 'saving'
+  const {
+    form,
+    horarioInicio,
+    horarioFin,
+    fechaDia,
+    fechaMes,
+    fechaAnio,
+    fechaHora,
+    errors,
+    imageMode,
+    imagePreview,
+    imageError,
+    fileInputRef,
+    descripcionRestante,
+    descuentoValido,
+    porcentajeDescuento,
+    status,
+    statusMessage,
+    saving,
+    updateField,
+    handleHorarioInicioChange,
+    handleHorarioFinChange,
+    handleFechaChange,
+    handleFileChange,
+    handleUrlChange,
+    handlePreviewError,
+    switchImageMode,
+    removeImage,
+    resetForm,
+    handleSubmit,
+  } = usePublicarOfertaForm()
 
   return (
     <form className="oferta-form" onSubmit={handleSubmit} noValidate>
@@ -365,7 +79,7 @@ export default function PublicarOfertaForm() {
             aria-invalid={Boolean(errors.id_categoria)}
           >
             <option value="" disabled>Selecciona una categoría</option>
-            {CATEGORIAS.map((categoria) => (
+            {CATEGORIAS_VISUALES.map((categoria) => (
               <option key={categoria.id} value={categoria.id}>{categoria.label}</option>
             ))}
           </select>
@@ -434,11 +148,10 @@ export default function PublicarOfertaForm() {
           </div>
         </div>
 
-        {isValidDecimal(form.precio_original) && isValidDecimal(form.precio_oferta) &&
-          Number(form.precio_oferta) < Number(form.precio_original) && (
-            <p className="oferta-descuento-tag">
-              🏷️ {Math.round((1 - Number(form.precio_oferta) / Number(form.precio_original)) * 100)}% de descuento
-            </p>
+        {descuentoValido && (
+          <p className="oferta-descuento-tag">
+            🏷️ {porcentajeDescuento}% de descuento
+          </p>
         )}
 
         <div className="field-row">
@@ -614,7 +327,7 @@ export default function PublicarOfertaForm() {
 
         {imagePreview && (
           <div className="oferta-image-preview">
-            <img src={imagePreview} alt="Vista previa del producto" onError={() => setImageError('No se pudo cargar la vista previa. Verifica el archivo o la URL.')} />
+            <img src={imagePreview} alt="Vista previa del producto" onError={handlePreviewError} />
             <button type="button" className="oferta-image-remove" onClick={removeImage} aria-label="Quitar imagen">×</button>
           </div>
         )}
@@ -629,7 +342,7 @@ export default function PublicarOfertaForm() {
           {statusMessage}
         </p>
         <div className="profile-actions-buttons">
-          <button type="button" className="btn btn-outline" onClick={handleReset} disabled={saving}>
+          <button type="button" className="btn btn-outline" onClick={resetForm} disabled={saving}>
             Limpiar formulario
           </button>
           <button type="submit" className="btn btn-primary btn-publish" disabled={saving}>

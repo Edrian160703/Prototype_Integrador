@@ -1,111 +1,30 @@
-import { NavLink, Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { useCart } from '../context/CartContext'
-import UserMenu from './UserMenu'
-import CartPanel from './CartPanel'
-import darkModeIcon from '../assets/images/dark-mode-icon.png'
+import { useState } from 'react'
+import HeaderActions from './HeaderActions'
+import HeaderNavigation from './HeaderNavigation'
+import CartAccess from './CartAccess'
 
 interface HeaderProps {
   onOpenLogin: () => void
 }
 
-interface NavLinkItem {
-  to: string
-  label: string
-  end?: boolean
-}
-
 export default function Header({ onOpenLogin }: HeaderProps) {
   const [navOpen, setNavOpen] = useState(false)
-  const [darkMode, setDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('foodback-theme')
-    if (savedTheme) return savedTheme === 'dark'
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-  })
-  const { user, profile, loading } = useAuth()
-  const isComercio = profile?.role === 'store'
-  const { totalItems } = useCart()
-  const [cartOpen, setCartOpen] = useState(false)
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light'
-    localStorage.setItem('foodback-theme', darkMode ? 'dark' : 'light')
-  }, [darkMode])
-
-  const links: NavLinkItem[] = [
-    { to: '/', label: 'Inicio', end: true },
-    { to: '/explorar', label: 'Explorar' },
-    { to: '/como-funciona', label: '¿Cómo funciona?' },
-    { to: '/impacto', label: 'Impacto' },
-    { to: '/para-negocios', label: 'Para negocios' },
-  ]
 
   return (
     <>
-      <header className="header container">
-      <Link className="logo" to="/" onClick={() => setNavOpen(false)}>
-        <span className="logo-mark" aria-hidden="true">♻</span>
-        <span>
-          <span className="logo-text">FOODBACK</span>
-          <small className="logo-tagline">Buena comida, segunda oportunidad</small>
-        </span>
-      </Link>
-
-      <nav className={`nav${navOpen ? ' open' : ''}`}>
-        {links.map((l) => (
-          <NavLink
-            key={l.to}
-            to={l.to}
-            end={l.end}
-            onClick={() => setNavOpen(false)}
-          >
-            {l.label}
-          </NavLink>
-        ))}
-      </nav>
-
-      <div className="header-right">
-        {!loading && isComercio && (
-          <Link to="/publicar" className="btn btn-publish">
-            + Publicar
-          </Link>
-        )}
-        <span className="location-pill"> Lima, Perú</span>
-        <button className="icon-btn" aria-label="Favoritos">♡</button>
-        <button
-          className={`theme-toggle${darkMode ? ' is-dark' : ''}`}
-          type="button"
-          aria-label={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-          aria-pressed={darkMode}
-          title={darkMode ? 'Modo claro' : 'Modo oscuro'}
-          onClick={() => setDarkMode((value) => !value)}
-        >
-          <img src={darkModeIcon} alt="" aria-hidden="true" />
-        </button>
-        {!loading && (user ? <UserMenu /> : <button className="btn btn-primary" onClick={onOpenLogin}>Iniciar sesión</button>)}
-        <button
-          className="nav-toggle"
-          aria-label="Abrir menú"
-          onClick={() => setNavOpen((v) => !v)}
-        >
-          ☰
-        </button>
-      </div>
-    </header>
-
-    {!isComercio && (
-      <button
-        className="cart-fab"
-        aria-label="Carrito de compras"
-        onClick={() => setCartOpen(true)}
-      >
-        🛒
-        {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
-      </button>
-    )}
-
-    <CartPanel open={cartOpen} onClose={() => setCartOpen(false)} />
+      <header className="header">
+        <HeaderNavigation
+          onOpenLogin={onOpenLogin}
+          navOpen={navOpen}
+          onClose={() => setNavOpen(false)}
+        />
+        <HeaderActions
+          onOpenLogin={onOpenLogin}
+          navOpen={navOpen}
+          onToggleNavigation={() => setNavOpen((current) => !current)}
+        />
+      </header>
+      <CartAccess />
     </>
   )
 }

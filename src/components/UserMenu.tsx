@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { signOutUser } from '../services/authService'
+import { useAuthSession, useUserProfile } from '../context/AuthContext'
+import { useSignOut } from '../context/ApplicationContext'
 
 export default function UserMenu() {
-  const { user, profile } = useAuth()
+  const { signOutUser } = useSignOut()
+  const { user } = useAuthSession()
+  const { profile } = useUserProfile()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)

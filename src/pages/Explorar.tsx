@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import OfferCard from '../components/OfferCard'
-import { getOfertas, type OfferCardData } from '../services/ofertaService'
+import useOfertas from '../hooks/useOfertas'
 
 const filters: string[] = ['Todos', '🥐 Panaderías', '🍽 Restaurantes', '☕ Cafeterías', '🍰 Pastelerías', '🏬 Tiendas', '🌿 Saludable', '🌱 Vegano']
 
@@ -10,48 +10,17 @@ export default function Explorar() {
   const navigate = useNavigate()
 
   const [active, setActive] = useState<string>('Todos')
-  const [offers, setOffers] = useState<OfferCardData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState('')
-  const [toastMessage, setToastMessage] = useState('')
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadOfertas() {
-      setLoading(true)
-      setLoadError('')
-      try {
-        const data = await getOfertas()
-        if (!cancelled) setOffers(data)
-      } catch (error) {
-        if (!cancelled) {
-          setLoadError(error instanceof Error ? error.message : 'No pudimos cargar las ofertas.')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    loadOfertas()
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  useEffect(() => {
-    const state = location.state as { toastMessage?: string } | null
-    if (state?.toastMessage) {
-      setToastMessage(state.toastMessage)
-      navigate(location.pathname, { replace: true, state: {} })
-    }
-  }, [location, navigate])
+  const state = location.state as { toastMessage?: string } | null
+  const toastMessage = state?.toastMessage ?? ''
+  const { offers, loading, error: loadError } = useOfertas()
 
   useEffect(() => {
     if (!toastMessage) return
-    const timer = setTimeout(() => setToastMessage(''), 4000)
+    const timer = setTimeout(() => {
+      navigate(location.pathname, { replace: true, state: {} })
+    }, 4000)
     return () => clearTimeout(timer)
-  }, [toastMessage])
+  }, [location.pathname, navigate, toastMessage])
 
   const visibleOffers = active === 'Todos' ? offers : offers.filter((o) => o.categoriaChip === active)
 

@@ -71,13 +71,13 @@
   .reserva-item-actions{margin-left:70px}
 }
 
-.reserva-confirm-overlay{position:fixed;inset:0;background:rgba(20,32,24,.45);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:80}
-.reserva-confirm-modal{background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:360px;padding:1.5rem}
-.reserva-confirm-title{margin:0 0 .5rem;font-size:1.05rem;font-weight:700;color:#1c2a22}
-.reserva-confirm-body{margin:0 0 1.25rem;font-size:.9rem;line-height:1.4;color:var(--text-gray)}
-.reserva-confirm-actions{display:flex;justify-content:flex-end;gap:.6rem}
-.reserva-confirm-btn{border:none;border-radius:999px;padding:.55rem 1.1rem;font-size:.85rem;font-weight:600;cursor:pointer;transition:opacity .15s ease}
-.reserva-confirm-btn:disabled{opacity:.6;cursor:not-allowed}
+.reserva-confirm-overlay,.profile-confirm-overlay{position:fixed;inset:0;background:rgba(20,32,24,.45);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:80}
+.reserva-confirm-modal,.profile-confirm-modal{background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:360px;padding:1.5rem}
+.reserva-confirm-title,.profile-confirm-title{margin:0 0 .5rem;font-size:1.05rem;font-weight:700;color:#1c2a22}
+.reserva-confirm-body,.profile-confirm-body{margin:0 0 1.25rem;font-size:.9rem;line-height:1.4;color:var(--text-gray)}
+.reserva-confirm-actions,.profile-confirm-actions{display:flex;justify-content:flex-end;gap:.6rem}
+.reserva-confirm-btn,.profile-confirm-btn{border:none;border-radius:999px;padding:.55rem 1.1rem;font-size:.85rem;font-weight:600;cursor:pointer;transition:opacity .15s ease}
+.reserva-confirm-btn:disabled,.profile-confirm-btn:disabled{opacity:.6;cursor:not-allowed}
 
 /* ---------- Mis publicaciones ---------- */
 .profile-publications-empty{margin:14px 0 4px;font-size:12.5px;color:var(--text-muted)}
@@ -108,12 +108,70 @@
   .profile-publication-list{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
   .profile-publication-image{height:120px}
 }
-.reserva-confirm-btn-secondary{background:#f2f4f1;color:var(--text-gray)}
-.reserva-confirm-btn-secondary:hover:not(:disabled){background:#e6ebe4}
-.reserva-confirm-btn-danger{background:#d64545;color:#fff}
-.reserva-confirm-btn-danger:hover:not(:disabled){background:#c23a3a}
+.reserva-confirm-btn-secondary,.profile-confirm-btn-secondary{background:#f2f4f1;color:var(--text-gray)}
+.reserva-confirm-btn-secondary:hover:not(:disabled),.profile-confirm-btn-secondary:hover:not(:disabled){background:#e6ebe4}
+.reserva-confirm-btn-danger,.profile-confirm-btn-danger{background:#d64545;color:#fff}
+.reserva-confirm-btn-danger:hover:not(:disabled),.profile-confirm-btn-danger:hover:not(:disabled){background:#c23a3a}
+
+html[data-theme="dark"] .profile-hero {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-muted) 100%);
+}
+
+html[data-theme="dark"] .profile-actions {
+  background: rgba(24, 35, 30, 0.96);
+  color: var(--text-dark);
+}
+
+html[data-theme="dark"] .profile-actions .btn-outline:disabled {
+  background: var(--surface-muted);
+}
+
+html[data-theme="dark"] .profile-form .field input:disabled {
+  background: var(--surface-muted);
+}
+
+html[data-theme="dark"] .reserva-item-estado {
+  background: var(--surface-muted);
+  color: var(--text-gray);
+}
+
+html[data-theme="dark"] .reserva-item-estado-pendiente {
+  background: #3b2d1c;
+  color: #f2c078;
+}
+
+html[data-theme="dark"] .reserva-item-estado-confirmada {
+  background: #1c3827;
+  color: #86d49d;
+}
+
+html[data-theme="dark"] .reserva-item-estado-cancelada {
+  background: #3b2222;
+  color: #f09b9b;
+}
+
+html[data-theme="dark"] .reserva-item-delete {
+  background: var(--surface);
+  color: var(--text-dark);
+}
+
+html[data-theme="dark"] .reserva-item-delete:hover:not(:disabled),
+html[data-theme="dark"] .reserva-confirm-btn-secondary,
+html[data-theme="dark"] .profile-confirm-btn-secondary {
+  background: var(--surface-muted);
+}
+
+html[data-theme="dark"] .reserva-confirm-modal,
+html[data-theme="dark"] .profile-confirm-modal {
+  background: var(--surface);
+}
+
+html[data-theme="dark"] .reserva-confirm-title,
+html[data-theme="dark"] .profile-confirm-title {
+  color: var(--text-dark);
+}
 
 @media (max-width:480px){
-  .reserva-confirm-actions{flex-direction:column-reverse}
-  .reserva-confirm-btn{width:100%}
+  .reserva-confirm-actions,.profile-confirm-actions{flex-direction:column-reverse}
+  .reserva-confirm-btn,.profile-confirm-btn{width:100%}
 }

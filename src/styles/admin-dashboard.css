@@ -18,6 +18,20 @@
   background: var(--admin-bg);
 }
 
+html[data-theme="dark"] .admin-page {
+  --admin-ink: #edf5ed;
+  --admin-muted: #aabbb0;
+  --admin-border: #314138;
+  --admin-surface: #18231e;
+  --admin-bg: #101815;
+  --admin-success: #86d49d;
+  --admin-success-bg: #1c3827;
+  --admin-warning: #f2c078;
+  --admin-warning-bg: #3b2d1c;
+  --admin-danger: #f09b9b;
+  --admin-danger-bg: #3b2222;
+}
+
 .admin-hero {
   margin-bottom: 1.5rem;
 }
@@ -360,7 +374,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  z-index: 50;
+  z-index: 1200;
 }
 
 .modal {

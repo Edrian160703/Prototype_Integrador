@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
 import ConfirmDialog from "./ConfirmDialog";
 import { formatRelative, getInitials } from "../../utils/adminFormatters";
+import {
+  countAdminStatuses,
+  filterAdminItems,
+  paginateAdminItems,
+} from "../../utils/adminPanelData";
 
 export type AccountStatus = "activa" | "suspendida" | "pendiente";
 
@@ -51,27 +56,25 @@ export default function AccountsPanel({
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const filtered = useMemo(() => {
-    return accounts.filter((a) => {
-      const matchesQuery =
-        a.displayName.toLowerCase().includes(query.toLowerCase()) ||
-        a.email.toLowerCase().includes(query.toLowerCase());
-      const matchesStatus =
-        statusFilter === "todas" || a.status === statusFilter;
-      return matchesQuery && matchesStatus;
-    });
-  }, [accounts, query, statusFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const filtered = useMemo(
+    () =>
+      filterAdminItems(
+        accounts,
+        query,
+        (account) => [account.displayName, account.email],
+        (account) => statusFilter === "todas" || account.status === statusFilter,
+      ),
+    [accounts, query, statusFilter],
+  );
+  const { pageItems, currentPage, totalPages } = paginateAdminItems(
+    filtered,
+    page,
+    PAGE_SIZE,
+  );
 
   const counts = useMemo(
-    () => ({
-      total: accounts.length,
-      activas: accounts.filter((a) => a.status === "activa").length,
-      suspendidas: accounts.filter((a) => a.status === "suspendida").length,
-      pendientes: accounts.filter((a) => a.status === "pendiente").length,
-    }),
+    () =>
+      countAdminStatuses(accounts, STATUSES, (account) => account.status),
     [accounts],
   );
 
@@ -113,7 +116,7 @@ export default function AccountsPanel({
             👥
           </span>
           <div>
-            <p className="stat-value">{counts.total}</p>
+            <p className="stat-value">{accounts.length}</p>
             <p className="stat-label">Total de {entityLabelPlural}</p>
           </div>
         </div>
@@ -122,7 +125,7 @@ export default function AccountsPanel({
             🟢
           </span>
           <div>
-            <p className="stat-value">{counts.activas}</p>
+            <p className="stat-value">{counts.get("activa")}</p>
             <p className="stat-label">Activos</p>
           </div>
         </div>
@@ -131,7 +134,7 @@ export default function AccountsPanel({
             🔴
           </span>
           <div>
-            <p className="stat-value">{counts.suspendidas}</p>
+            <p className="stat-value">{counts.get("suspendida")}</p>
             <p className="stat-label">Suspendidos</p>
           </div>
         </div>
@@ -140,7 +143,7 @@ export default function AccountsPanel({
             🕓
           </span>
           <div>
-            <p className="stat-value">{counts.pendientes}</p>
+            <p className="stat-value">{counts.get("pendiente")}</p>
             <p className="stat-label">Pendientes</p>
           </div>
         </div>
@@ -261,21 +264,21 @@ export default function AccountsPanel({
 
         <div className="admin-pagination">
           <p>
-            Mostrando {pageItems.length ? (page - 1) * PAGE_SIZE + 1 : 0}–
-            {(page - 1) * PAGE_SIZE + pageItems.length} de {filtered.length}
+            Mostrando {pageItems.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
+            {(currentPage - 1) * PAGE_SIZE + pageItems.length} de {filtered.length}
           </p>
           <div className="pagination-controls">
             <button
               type="button"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
+          onClick={() => setPage(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
             >
               ◀
             </button>
             <button
               type="button"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
+              onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
             >
               ▶
             </button>

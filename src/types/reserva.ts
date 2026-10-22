@@ -1,5 +1,3 @@
-import type { Timestamp } from 'firebase/firestore'
-
 export type EstadoReserva = 'pendiente' | 'confirmada' | 'cancelada'
 
 export interface ReservaDocument {
@@ -7,7 +5,14 @@ export interface ReservaDocument {
   id_usuario: string
   email_usuario: string
   id_producto: string
-  fecha_reserva: Timestamp
+  fecha_reserva: Date
   cantidad: number
   estado_reserva: EstadoReserva
+}
+
+export interface ReservaConOferta extends ReservaDocument {
+  nombre_producto: string
+  imagen_url: string | null
+  precio_oferta: number
+  horario_recojo: string
 }

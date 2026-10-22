@@ -1,5 +1,3 @@
-import type { Timestamp } from 'firebase/firestore'
-
 export type ProductoEstado = 'activo' | 'pausado' | 'agotado'
 
 /** Datos que llegan desde el formulario al crear/editar un producto del catálogo. */
@@ -24,6 +22,6 @@ export interface ProductoDocument {
   stock: number
   estado: ProductoEstado
   imagen_url: string | null
-  createdAt: Timestamp
-  updatedAt: Timestamp
+  createdAt: Date
+  updatedAt: Date
 }

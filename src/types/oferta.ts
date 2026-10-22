@@ -1,20 +1,20 @@
-import type { Timestamp } from 'firebase/firestore'
+import type { ComercioSummary } from './comercio'
 
-export interface Categoria {
-  id: string
-  label: string
-  chip: string
+export interface CreateOfertaParams {
+  uid: string
+  payload: OfertaPayload
 }
 
-export const CATEGORIAS: Categoria[] = [
-  { id: '1', label: 'Panadería', chip: '🥐 Panaderías' },
-  { id: '2', label: 'Restaurantes', chip: '🍽 Restaurantes' },
-  { id: '3', label: 'Cafeterías', chip: '☕ Cafeterías' },
-  { id: '4', label: 'Supermercado', chip: '🏬 Tiendas' },
-  { id: '5', label: 'Pastelería', chip: '🍰 Pastelerías' },
-  { id: '6', label: 'Comida rápida', chip: '🍽 Restaurantes' },
-  { id: '7', label: 'Otros', chip: 'Todos' },
-]
+export interface OwnedOferta {
+  id: string
+  data: OfertaDocument
+}
+
+export interface OfertaConComercio {
+  id: string
+  data: OfertaDocument
+  comercio: ComercioSummary | null
+}
 
 export interface OfertaPayload {
   nombre_producto: string
@@ -40,6 +40,6 @@ export interface OfertaDocument {
   cantidad_disponible: number
   horario_recojo: string
   estado: string
-  fecha_limite: Timestamp
+  fecha_limite: Date
   imagen_url: string | null
 }

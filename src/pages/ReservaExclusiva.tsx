@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getOfertaById, type OfertaDetalle } from '../services/ofertaService'
-import { useCart } from '../context/CartContext'
+import { useOfferDetailsQuery } from '../context/ApplicationContext'
+import { toOfertaDetalle } from '../presentation/OfertaPresenter'
+import type { OfertaDetalle } from '../presentation/OfertaPresenter'
+import { useAddToCart } from '../context/CartContext'
 
 export default function ReservaExclusiva() {
   const { id } = useParams<{ id: string }>()
-  const { addToCart } = useCart()
+  const { addToCart } = useAddToCart()
+  const { getOfertaById } = useOfferDetailsQuery()
 
   const [oferta, setOferta] = useState<OfertaDetalle | null>(null)
   const [loading, setLoading] = useState(true)
@@ -21,7 +24,8 @@ export default function ReservaExclusiva() {
       setLoading(true)
       setLoadError('')
       try {
-        const data = await getOfertaById(id)
+        const result = await getOfertaById(id)
+        const data = result ? toOfertaDetalle(result) : null
         if (!cancelled) {
           setOferta(data)
           setCantidad(data && data.cantidadDisponible > 0 ? 1 : 0)
@@ -39,7 +43,7 @@ export default function ReservaExclusiva() {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [getOfertaById, id])
 
   const total = useMemo(() => (oferta ? oferta.precioOfertaNum * cantidad : 0), [oferta, cantidad])
   const sinStock = !!oferta && oferta.cantidadDisponible <= 0
