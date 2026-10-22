@@ -13,13 +13,16 @@ import {
 import type { CartItem } from '../types/cart'
 import type { ReservaDocument } from '../types/reserva'
 import type { OfertaDocument } from '../types/oferta'
+import type { ProductoDocument } from '../types/producto'
+
 function requiredFirebaseEnv(name: string): string {
-const value = import.meta.env[name]
-if (!value) {
-throw new Error(`Missing Firebase environment variable: ${name}`)
+  const value = import.meta.env[name]
+  if (!value) {
+    throw new Error(`Missing Firebase environment variable: ${name}`)
   }
   return value
 }
+
 function getDb() {
   const firebaseConfig = {
     apiKey: requiredFirebaseEnv('VITE_FIREBASE_API_KEY'),
@@ -33,13 +36,14 @@ function getDb() {
   const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig)
   return getFirestore(app)
 }
+
 function generarIdReserva(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID()
   }
   return `res_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`
 }
-// Comprueba que la oferta se pueda reservar.
+
 function validarOferta(oferta: OfertaDocument, cantidad: number): void {
   if (!Number.isSafeInteger(cantidad) || cantidad <= 0) {
     throw new Error('La cantidad solicitada no es válida.')
@@ -51,14 +55,23 @@ function validarOferta(oferta: OfertaDocument, cantidad: number): void {
   if (typeof fechaLimite !== 'number' || fechaLimite <= Date.now()) {
     throw new Error('Esta oferta ya venció.')
   }
-  if (
-    !Number.isSafeInteger(oferta.cantidad_disponible) ||
-    oferta.cantidad_disponible < cantidad
-  ) {
+  if (!Number.isSafeInteger(oferta.cantidad_disponible) || oferta.cantidad_disponible < cantidad) {
     throw new Error('No hay suficientes unidades disponibles.')
   }
 }
-/** Crea una reserva y descuenta la cantidad de la oferta. */
+
+function validarProducto(producto: ProductoDocument, oferta: OfertaDocument, cantidad: number): void {
+  if (producto.id_producto !== oferta.id_producto || producto.id_comercio !== oferta.id_comercio) {
+    throw new Error('El producto no corresponde a esta oferta.')
+  }
+  if (producto.estado !== 'activo') {
+    throw new Error('El producto no está disponible.')
+  }
+  if (!Number.isSafeInteger(producto.stock) || producto.stock < cantidad) {
+    throw new Error('No hay suficiente stock del producto.')
+  }
+}
+
 export async function crearReserva(
   idUsuario: string,
   emailUsuario: string,
@@ -70,20 +83,42 @@ export async function crearReserva(
   if (!item.id || !Number.isSafeInteger(item.quantity) || item.quantity <= 0) {
     throw new Error('Los datos de la reserva no son válidos.')
   }
+
   const db = getDb()
   const idReserva = generarIdReserva()
   const ofertaRef = doc(db, 'ofertas', item.id)
   const reservaRef = doc(db, 'reservas', idReserva)
+
   await runTransaction(db, async (transaction) => {
-  const ofertaSnap = await transaction.get(ofertaRef)
-  if (!ofertaSnap.exists()) {
-  throw new Error('La oferta ya no está disponible.')
+    const ofertaSnap = await transaction.get(ofertaRef)
+    if (!ofertaSnap.exists()) {
+      throw new Error('La oferta ya no está disponible.')
     }
+
     const oferta = ofertaSnap.data() as OfertaDocument
     validarOferta(oferta, item.quantity)
+
+    const productoRef = oferta.id_producto
+      ? doc(db, 'productos', oferta.id_producto)
+      : null
+    const productoSnap = productoRef ? await transaction.get(productoRef) : null
+    const producto = productoSnap?.exists() ? (productoSnap.data() as ProductoDocument) : null
+
+    if (producto) {
+      validarProducto(producto, oferta, item.quantity)
+    }
+
     transaction.update(ofertaRef, {
       cantidad_disponible: oferta.cantidad_disponible - item.quantity,
     })
+
+    if (productoRef && producto) {
+      transaction.update(productoRef, {
+        stock: producto.stock - item.quantity,
+        updatedAt: serverTimestamp(),
+      })
+    }
+
     transaction.set(reservaRef, {
       id_reserva: idReserva,
       id_usuario: idUsuario,
@@ -94,9 +129,10 @@ export async function crearReserva(
       estado_reserva: 'pendiente',
     })
   })
+
   return idReserva
 }
-/** Procesa las reservas del carrito una por una. */
+
 export async function crearReservasDesdeCarrito(
   idUsuario: string,
   emailUsuario: string,
@@ -108,41 +144,65 @@ export async function crearReservasDesdeCarrito(
   }
   return idsReservas
 }
+
 export interface ReservaConOferta extends ReservaDocument {
   nombre_producto: string
   imagen_url: string | null
   precio_oferta: number
   horario_recojo: string
 }
-/** Cancela una reserva y devuelve las unidades disponibles. */
+
 export async function cancelarReserva(reserva: ReservaConOferta): Promise<void> {
   const db = getDb()
   const reservaRef = doc(db, 'reservas', reserva.id_reserva)
+
   await runTransaction(db, async (transaction) => {
     const reservaSnap = await transaction.get(reservaRef)
     if (!reservaSnap.exists()) {
       throw new Error('La reserva ya fue cancelada o no existe.')
     }
+
     const reservaActual = reservaSnap.data() as ReservaDocument
     if (reservaActual.estado_reserva !== 'pendiente') {
       throw new Error('Solo puedes cancelar reservas pendientes.')
     }
+
     const ofertaRef = doc(db, 'ofertas', reservaActual.id_producto)
     const ofertaSnap = await transaction.get(ofertaRef)
     if (!ofertaSnap.exists()) {
       throw new Error('No se encontró la oferta de esta reserva.')
     }
+
     const oferta = ofertaSnap.data() as OfertaDocument
+    const productoRef = oferta.id_producto
+      ? doc(db, 'productos', oferta.id_producto)
+      : null
+    const productoSnap = productoRef ? await transaction.get(productoRef) : null
+    const producto = productoSnap?.exists() ? (productoSnap.data() as ProductoDocument) : null
+
+    if (producto && (
+      producto.id_producto !== oferta.id_producto ||
+      producto.id_comercio !== oferta.id_comercio
+    )) {
+      throw new Error('El producto no corresponde a esta oferta.')
+    }
+
     transaction.update(ofertaRef, {
       cantidad_disponible: oferta.cantidad_disponible + reservaActual.cantidad,
     })
+
+    if (productoRef && producto) {
+      transaction.update(productoRef, {
+        stock: producto.stock + reservaActual.cantidad,
+        updatedAt: serverTimestamp(),
+      })
+    }
+
     transaction.delete(reservaRef)
   })
 }
-/** Obtiene las reservas del consumidor con los datos de sus ofertas. */
-export async function getReservasByUsuario(
-  idUsuario: string,
-): Promise<ReservaConOferta[]> {
+
+export async function getReservasByUsuario(idUsuario: string): Promise<ReservaConOferta[]> {
   const db = getDb()
   const reservasQuery = query(
     collection(db, 'reservas'),
@@ -150,19 +210,21 @@ export async function getReservasByUsuario(
   )
   const snapshot = await getDocs(reservasQuery)
   const cacheOfertas = new Map<string, Promise<OfertaDocument | null>>()
+
   const reservas = await Promise.all(
-  snapshot.docs.map(async (docSnap) => {
-  const reserva = docSnap.data() as ReservaDocument
-   if (!cacheOfertas.has(reserva.id_producto)) {
-   const ofertaPromise = getDoc(
-   doc(db, 'ofertas', reserva.id_producto),
-    ).then((ofertaSnap) =>
-    ofertaSnap.exists()
-    ? (ofertaSnap.data() as OfertaDocument)
-    : null,
-       )
-       cacheOfertas.set(reserva.id_producto, ofertaPromise)
+    snapshot.docs.map(async (docSnap) => {
+      const reserva = docSnap.data() as ReservaDocument
+      if (!cacheOfertas.has(reserva.id_producto)) {
+        const ofertaPromise = getDoc(
+          doc(db, 'ofertas', reserva.id_producto),
+        ).then((ofertaSnap) =>
+          ofertaSnap.exists()
+            ? (ofertaSnap.data() as OfertaDocument)
+            : null,
+        )
+        cacheOfertas.set(reserva.id_producto, ofertaPromise)
       }
+
       const oferta = await cacheOfertas.get(reserva.id_producto)!
       return {
         ...reserva,
@@ -173,6 +235,7 @@ export async function getReservasByUsuario(
       }
     }),
   )
+
   return reservas.sort(
     (a, b) =>
       (b.fecha_reserva?.toMillis?.() ?? 0) -
