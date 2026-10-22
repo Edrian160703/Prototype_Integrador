@@ -1,8 +1,11 @@
+
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import MapaNegocio from '../components/MapaNegocio'
 
 export default function RegistroNegocio() {
   const [sent, setSent] = useState(false)
+  const [ubicacion, setUbicacion] = useState<{ lat: number; lng: number } | null>(null)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -56,6 +59,16 @@ export default function RegistroNegocio() {
             <label>Dirección</label>
             <input placeholder="Av. Principal 123" required />
           </div>
+
+          <MapaNegocio
+            onSeleccionar={(lat, lng) => setUbicacion({ lat, lng })}
+          />
+          {ubicacion && (
+            <p>
+              Ubicación seleccionada: {ubicacion.lat.toFixed(6)}, {ubicacion.lng.toFixed(6)}
+            </p>
+          )}
+
           <div className="field-row">
             <div className="field">
               <label>Distrito</label>

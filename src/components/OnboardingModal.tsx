@@ -1,7 +1,9 @@
+
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getCurrentUser, updateUserProfile } from '../services/authService'
 import type { ConsumerProfile, PickupSchedule, StoreProfile, UserRole } from '../types/user'
+import MapaNegocio from './MapaNegocio'
 
 type ConsumerForm = Required<Pick<ConsumerProfile, 'phone' | 'habitualLocation'>> & {
   dietaryPreferences: string[]
@@ -38,6 +40,7 @@ export default function OnboardingModal() {
   const role: UserRole = routeRole === 'comercio' || routeRole === 'store' ? 'store' : 'consumer'
   const [consumerForm, setConsumerForm] = useState(initialConsumerForm)
   const [storeForm, setStoreForm] = useState(initialStoreForm)
+  const [ubicacion, setUbicacion] = useState<{ lat: number; lng: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -92,10 +95,22 @@ export default function OnboardingModal() {
       return
     }
 
+    if (role === 'store' && !ubicacion) {
+      setError('Selecciona la ubicación de tu negocio en el mapa.')
+      return
+    }
+
     setLoading(true)
 
     try {
-      const profile = role === 'consumer' ? consumerForm : storeForm
+      const profile = role === 'consumer'
+        ? consumerForm
+        : {
+            ...storeForm,
+            latitude: ubicacion!.lat,
+            longitude: ubicacion!.lng,
+          }
+
       await updateUserProfile(currentUser.uid, role, profile)
       navigate(role === 'store' ? '/registro-negocio' : '/')
     } catch (submissionError) {
@@ -153,6 +168,16 @@ export default function OnboardingModal() {
               <div className="field">
                 <label htmlFor="store-address">Dirección exacta del local</label>
                 <input id="store-address" required value={storeForm.address} onChange={(event) => updateStoreField('address', event.target.value)} placeholder="Calle, número y distrito" />
+              </div>
+              <div className="field">
+                <MapaNegocio
+                  onSeleccionar={(lat, lng) => setUbicacion({ lat, lng })}
+                />
+                {ubicacion && (
+                  <p>
+                    Ubicación seleccionada: {ubicacion.lat.toFixed(6)}, {ubicacion.lng.toFixed(6)}
+                  </p>
+                )}
               </div>
               <div className="field">
                 <label htmlFor="store-reference">Punto en el mapa o referencia</label>

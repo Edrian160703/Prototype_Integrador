@@ -24,6 +24,8 @@ export interface StoreProfile {
   address?: string
   district?: string
   reference?: string
+  latitude?: number
+  longitude?: number
   pickupSchedule?: PickupSchedule[]
   businessCategory?: string
   verificationStatus?: 'pending' | 'verified' | 'rejected'
