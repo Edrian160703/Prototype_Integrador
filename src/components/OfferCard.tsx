@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 interface OfferCardProps {
+  id: string
   image?: string
   discount?: string
   title: string
@@ -11,7 +13,7 @@ interface OfferCardProps {
   price: string
 }
 
-export default function OfferCard({ image, discount, title, place, rating, reviews, distance, price }: OfferCardProps) {
+export default function OfferCard({ id, image, discount, title, place, rating, reviews, distance, price }: OfferCardProps) {
   const [fav, setFav] = useState(false)
 
   return (
@@ -43,6 +45,9 @@ export default function OfferCard({ image, discount, title, place, rating, revie
           <span className="offer-card-dist">📍 {distance}</span>
           <span className="offer-card-price">S/ {price}</span>
         </div>
+        <Link to={`/reserva/${id}`} className="btn btn-primary btn-block offer-card-reserve">
+          Reservar
+        </Link>
       </div>
     </article>
   )

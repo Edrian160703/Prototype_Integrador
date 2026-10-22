@@ -137,3 +137,48 @@ html[data-theme="dark"] .oferta-estado-badge {
 html[data-theme="dark"] .oferta-actions {
   background: var(--surface);
 }
+
+.oferta-horario-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.oferta-horario-row input[type="time"] {
+  flex: 1;
+}
+.oferta-horario-separador {
+  color: var(--text-gray);
+  font-size: 13px;
+}
+
+.oferta-fecha-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.oferta-fecha-row input[type="number"] {
+  width: 56px;
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.oferta-fecha-row input#oferta-fecha-anio {
+  width: 72px;
+}
+.oferta-fecha-row input[type="time"] {
+  margin-left: 8px;
+  flex: 1;
+  min-width: 90px;
+}
+.oferta-fecha-row input[type="number"]::-webkit-outer-spin-button,
+.oferta-fecha-row input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.oferta-fecha-row input[type="number"] {
+  -moz-appearance: textfield;
+}
+.oferta-fecha-separador {
+  color: var(--text-gray);
+  font-size: 13px;
+}

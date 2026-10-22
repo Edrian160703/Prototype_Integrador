@@ -10,6 +10,12 @@ import {
   type ManagedAccount,
   type AccountStatus,
 } from "../services/accounts";
+import {
+  getAllProductosForAdmin,
+  updateProductoEstado,
+  deleteProducto,
+} from "../services/productoService";
+import type { ProductStatus } from "../components/admin/ProductsPanel";
 import "../styles/admin-dashboard.css";
 
 type TabKey = "usuarios" | "comercios" | "productos";
@@ -28,19 +34,21 @@ export default function AdminDashboard() {
   const [stores, setStores] = useState<ManagedAccount[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [sampleProducts] = useState<Product[] | null>(null);
+  const [products, setProducts] = useState<Product[] | null>(null);
 
   useEffect(() => {
     let active = true;
     async function load() {
       try {
-        const [usersData, storesData] = await Promise.all([
+        const [usersData, storesData, productsData] = await Promise.all([
           listUsers(),
           listStores(),
+          getAllProductosForAdmin(),
         ]);
         if (active) {
           setUsers(usersData);
           setStores(storesData);
+          setProducts(productsData);
         }
       } catch (e) {
         if (active) {
@@ -69,6 +77,12 @@ export default function AdminDashboard() {
   }
   async function handleStoreDelete(id: string) {
     await deleteAccountDocument(id, "store");
+  }
+  async function handleProductStatusChange(id: string, status: ProductStatus) {
+    await updateProductoEstado(id, status);
+  }
+  async function handleProductDelete(id: string) {
+    await deleteProducto(id);
   }
 
   return (
@@ -130,10 +144,14 @@ export default function AdminDashboard() {
         ))}
 
       {activeTab === "productos" &&
-        (sampleProducts === null ? (
+        (products === null ? (
           <p className="admin-loading">Cargando productos…</p>
         ) : (
-          <ProductsPanel initialProducts={sampleProducts} />
+          <ProductsPanel
+            initialProducts={products}
+            onStatusChange={handleProductStatusChange}
+            onDelete={handleProductDelete}
+          />
         ))}
     </section>
   );
