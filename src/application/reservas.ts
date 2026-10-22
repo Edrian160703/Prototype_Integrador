@@ -25,8 +25,8 @@ export async function crearReservasDesdeCarrito(
   return idsReservas
 }
 
-export function cancelarReserva(repository: ReservaDeleter, reserva: ReservaConOferta): Promise<void> {
-  return repository.delete(reserva.id_reserva)
+export function cancelarReserva(repository: ReservaDeleter, idReserva: string): Promise<void> {
+  return repository.delete(idReserva)
 }
 
 export async function getReservasByUsuario(

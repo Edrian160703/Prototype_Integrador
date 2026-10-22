@@ -1,38 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useOfferEditing, useOfferOwnerQuery } from '../context/ApplicationContext'
-import type { OfertaPayload } from '../types/oferta'
 import type { OwnedOferta } from '../types/oferta'
-
-export interface PublicacionEditValues {
-  nombre_producto: string
-  id_categoria: string
-  descripcion: string
-  precio_original: string
-  precio_oferta: string
-  cantidad_disponible: string
-  horario_recojo: string
-  fecha_limite: string
-  imagen_url: string
-}
-
-function toLocalDateTime(value: Date): string {
-  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
-}
-
-function valuesFor(oferta: OwnedOferta): PublicacionEditValues {
-  const data = oferta.data
-  return {
-    nombre_producto: data.nombre_producto,
-    id_categoria: data.id_categoria,
-    descripcion: data.descripcion,
-    precio_original: String(data.precio_original),
-    precio_oferta: String(data.precio_oferta),
-    cantidad_disponible: String(data.cantidad_disponible),
-    horario_recojo: data.horario_recojo,
-    fecha_limite: toLocalDateTime(data.fecha_limite),
-    imagen_url: data.imagen_url ?? '',
-  }
-}
+import {
+  preparePublicacionEdit,
+  toPublicacionEditValues,
+  type PublicacionEditValues,
+} from '../utils/publicacionEditor'
 
 interface UseMisPublicacionesResult {
   publicaciones: OwnedOferta[]
@@ -40,13 +13,14 @@ interface UseMisPublicacionesResult {
   values: PublicacionEditValues | null
   loading: boolean
   saving: boolean
+  deletingId: string | null
   message: string
   error: string
   loadPublicaciones: () => Promise<void>
   selectOferta: (oferta: OwnedOferta) => void
   closeEditor: () => void
   submitEdit: (event: FormEvent<HTMLFormElement>) => Promise<void>
-  removeOferta: (oferta: OwnedOferta) => Promise<void>
+  removeOferta: (idOferta: string) => Promise<void>
   updateValue: (field: keyof PublicacionEditValues, value: string) => void
 }
 
@@ -58,6 +32,7 @@ export default function useMisPublicaciones(uid: string): UseMisPublicacionesRes
   const [values, setValues] = useState<PublicacionEditValues | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const requestId = useRef(0)
@@ -109,7 +84,7 @@ export default function useMisPublicaciones(uid: string): UseMisPublicacionesRes
 
   const selectOferta = (oferta: OwnedOferta) => {
     setSeleccionada(oferta)
-    setValues(valuesFor(oferta))
+    setValues(toPublicacionEditValues(oferta))
     setMessage('')
     setError('')
   }
@@ -122,8 +97,9 @@ export default function useMisPublicaciones(uid: string): UseMisPublicacionesRes
   const submitEdit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!seleccionada || !values) return
-    if (Number(values.precio_oferta) >= Number(values.precio_original)) {
-      setError('El precio de oferta debe ser menor al precio original.')
+    const result = preparePublicacionEdit(values)
+    if (!result.valid) {
+      setError(result.message)
       return
     }
 
@@ -131,16 +107,7 @@ export default function useMisPublicaciones(uid: string): UseMisPublicacionesRes
     setError('')
     setMessage('')
     try {
-      const payload: Omit<OfertaPayload, 'estado'> = {
-        ...values,
-        nombre_producto: values.nombre_producto.trim(),
-        descripcion: values.descripcion.trim(),
-        precio_original: Number(values.precio_original),
-        precio_oferta: Number(values.precio_oferta),
-        cantidad_disponible: Number(values.cantidad_disponible),
-        horario_recojo: values.horario_recojo.trim(),
-      }
-      await updateOferta(seleccionada.id, uid, payload)
+      await updateOferta(seleccionada.id, uid, result.payload)
       closeEditor()
       setMessage('Publicación actualizada correctamente.')
       await loadPublicaciones()
@@ -151,19 +118,20 @@ export default function useMisPublicaciones(uid: string): UseMisPublicacionesRes
     }
   }
 
-  const removeOferta = async (oferta: OwnedOferta) => {
-    const confirmed = window.confirm(`¿Eliminar "${oferta.data.nombre_producto}"? Esta acción no se puede deshacer.`)
-    if (!confirmed) return
-
+  const removeOferta = async (idOferta: string) => {
+    if (deletingId) return
+    setDeletingId(idOferta)
     setError('')
     setMessage('')
     try {
-      await deleteOferta(oferta.id, uid)
-      if (seleccionada?.id === oferta.id) closeEditor()
+      await deleteOferta(idOferta, uid)
+      if (seleccionada?.id === idOferta) closeEditor()
       setMessage('Publicación eliminada.')
       await loadPublicaciones()
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'No se pudo eliminar la publicación.')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -177,6 +145,7 @@ export default function useMisPublicaciones(uid: string): UseMisPublicacionesRes
     values,
     loading,
     saving,
+    deletingId,
     message,
     error,
     loadPublicaciones,

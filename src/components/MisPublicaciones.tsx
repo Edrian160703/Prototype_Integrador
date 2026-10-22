@@ -1,21 +1,22 @@
+import { useState } from 'react'
 import useMisPublicaciones from '../hooks/useMisPublicaciones'
 import { CATEGORIAS_VISUALES } from '../config/ofertaCategories'
+import type { OwnedOferta } from '../types/oferta'
+import { toLocalDateTime } from '../utils/publicacionEditor'
 
 interface Props {
   uid: string
 }
 
-function toLocalDateTime(value: Date): string {
-  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
-}
-
 export default function MisPublicaciones({ uid }: Props) {
+  const [ofertaAEliminar, setOfertaAEliminar] = useState<OwnedOferta | null>(null)
   const {
     publicaciones,
     seleccionada,
     values,
     loading,
     saving,
+    deletingId,
     message,
     error,
     selectOferta,
@@ -60,7 +61,12 @@ export default function MisPublicaciones({ uid }: Props) {
                 <button type="button" className="btn btn-outline" onClick={() => selectOferta(oferta)}>
                   Modificar
                 </button>
-                <button type="button" className="btn btn-outline profile-delete-button" onClick={() => void removeOferta(oferta)}>
+                <button
+                  type="button"
+                  className="btn btn-outline profile-delete-button"
+                  onClick={() => setOfertaAEliminar(oferta)}
+                  disabled={deletingId !== null}
+                >
                   Eliminar
                 </button>
               </div>
@@ -124,6 +130,45 @@ export default function MisPublicaciones({ uid }: Props) {
             <button type="button" className="btn btn-outline" disabled={saving} onClick={closeEditor}>Cancelar</button>
           </div>
         </form>
+      )}
+
+      {ofertaAEliminar && (
+        <div
+          className="profile-confirm-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="publication-delete-title"
+        >
+          <div className="profile-confirm-modal">
+            <h3 id="publication-delete-title" className="profile-confirm-title">
+              ¿Eliminar publicación?
+            </h3>
+            <p className="profile-confirm-body">
+              ¿Eliminar "{ofertaAEliminar.data.nombre_producto}"? Esta acción no se puede deshacer.
+            </p>
+            <div className="profile-confirm-actions">
+              <button
+                type="button"
+                className="profile-confirm-btn profile-confirm-btn-secondary"
+                onClick={() => setOfertaAEliminar(null)}
+                disabled={deletingId !== null}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="profile-confirm-btn profile-confirm-btn-danger"
+                onClick={async () => {
+                  await removeOferta(ofertaAEliminar.id)
+                  setOfertaAEliminar(null)
+                }}
+                disabled={deletingId !== null}
+              >
+                {deletingId === ofertaAEliminar.id ? 'Eliminando...' : 'Sí, eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   )

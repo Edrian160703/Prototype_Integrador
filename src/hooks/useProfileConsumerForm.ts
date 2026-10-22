@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useProfileEditing } from '../context/ApplicationContext'
+import useProfileEditLifecycle, { type ProfileEditStatus } from './useProfileEditLifecycle'
 import type { ConsumerUser } from '../types/user'
 
 export const PREFERENCE_OPTIONS = ['Panaderías', 'Menús', 'Vegano', 'Postres', 'Frutas y verduras']
@@ -13,7 +14,7 @@ export interface ConsumerFormValues {
 }
 
 export type ConsumerFieldErrors = Partial<Record<'firstName' | 'phone' | 'habitualLocation', string>>
-export type ConsumerSaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+export type ConsumerSaveStatus = ProfileEditStatus
 
 function splitDisplayName(displayName: string | null) {
   const [first = '', ...rest] = (displayName ?? '').trim().split(/\s+/).filter(Boolean)
@@ -49,16 +50,10 @@ function isValidPhone(phone: string): boolean {
 
 export function useProfileConsumerForm(profile: ConsumerUser, onSaved: () => Promise<void>) {
   const { saveProfileChanges } = useProfileEditing()
-  const [baseline, setBaseline] = useState(() => toFormValues(profile))
-  const [form, setForm] = useState(baseline)
+  const lifecycle = useProfileEditLifecycle(toFormValues(profile))
+  const { form, setForm, status, errorMessage, dirty, saving, touch, discard, beginSave, saveSucceeded, saveFailed } =
+    lifecycle
   const [errors, setErrors] = useState<ConsumerFieldErrors>({})
-  const [status, setStatus] = useState<ConsumerSaveStatus>('idle')
-  const [errorMessage, setErrorMessage] = useState('')
-
-  const dirty = JSON.stringify(form) !== JSON.stringify(baseline)
-  const saving = status === 'saving'
-
-  const touch = () => setStatus((current) => (current === 'saving' ? current : 'idle'))
 
   const updateField = (field: 'firstName' | 'lastName' | 'phone' | 'habitualLocation', value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -91,9 +86,8 @@ export function useProfileConsumerForm(profile: ConsumerUser, onSaved: () => Pro
   }
 
   const handleDiscard = () => {
-    setForm(baseline)
+    discard()
     setErrors({})
-    setStatus('idle')
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -101,19 +95,15 @@ export function useProfileConsumerForm(profile: ConsumerUser, onSaved: () => Pro
     const values = cleanValues(form)
     if (!validate(values)) return
 
-    setStatus('saving')
-    setErrorMessage('')
+    beginSave()
 
     try {
       const displayName = [values.firstName, values.lastName].filter(Boolean).join(' ')
       await saveProfileChanges(profile.uid, profile.role, values, displayName)
-      setBaseline(values)
-      setForm(values)
-      setStatus('saved')
+      saveSucceeded(values)
       await onSaved()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No pudimos guardar tus cambios. Inténtalo nuevamente.')
-      setStatus('error')
+      saveFailed(error, 'No pudimos guardar tus cambios. Inténtalo nuevamente.')
     }
   }
 

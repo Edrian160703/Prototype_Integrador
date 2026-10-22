@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useCurrentUserQuery, useProfileOnboarding } from '../context/ApplicationContext'
 import ConsumerOnboardingForm from './ConsumerOnboardingForm'
 import StoreOnboardingForm from './StoreOnboardingForm'
-import type { ConsumerProfile, StoreProfile, UserRole } from '../types/user'
+import type { ConsumerProfile, StoreProfile } from '../types/user'
+import { resolveOnboardingRole } from '../strategies/userRoleStrategies'
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'No pudimos guardar tu perfil. Inténtalo nuevamente.'
@@ -14,11 +15,13 @@ export default function OnboardingModal() {
   const { updateUserProfile } = useProfileOnboarding()
   const navigate = useNavigate()
   const { role: routeRole } = useParams<{ role: string }>()
-  const role: UserRole = routeRole === 'comercio' || routeRole === 'store' ? 'store' : 'consumer'
+  const role = resolveOnboardingRole(routeRole)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleProfileSubmit = async (profileData: ConsumerProfile | StoreProfile) => {
+    if (!role) return
+
     setError('')
     const currentUser = getCurrentUser()
 
@@ -38,6 +41,8 @@ export default function OnboardingModal() {
       setLoading(false)
     }
   }
+
+  if (!role) return <Navigate to="/registro" replace />
 
   return (
     <div className="modal-overlay onboarding-overlay">

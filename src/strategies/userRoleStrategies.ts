@@ -5,6 +5,19 @@ import type {
 
 export type SignupRole = 'consumer' | 'business'
 
+export function resolveOnboardingRole(segment: unknown): UserRole | null {
+  switch (segment) {
+    case 'consumer':
+    case 'consumidor':
+      return 'consumer'
+    case 'store':
+    case 'comercio':
+      return 'store'
+    default:
+      return null
+  }
+}
+
 export interface SignupPresentation {
   signupRole: SignupRole
   title: string
@@ -57,7 +70,7 @@ class BusinessRoleStrategy implements UserSignupStrategy {
     onboardingPath: '/onboarding/comercio',
   }
 
-  createInitialProfile(_fullName: string): InitialUserProfile {
+  createInitialProfile(): InitialUserProfile {
     return {}
   }
 }

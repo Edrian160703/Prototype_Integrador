@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useProfileEditing } from '../context/ApplicationContext'
+import useProfileEditLifecycle, { type ProfileEditStatus } from './useProfileEditLifecycle'
 import type { PickupSchedule, StoreUser } from '../types/user'
 
 export const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
@@ -13,7 +14,7 @@ export interface StoreFormValues {
 }
 
 export type StoreFieldErrors = Partial<Record<'businessName' | 'ruc' | 'address' | 'reference' | 'pickupSchedule', string>>
-export type StoreSaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+export type StoreSaveStatus = ProfileEditStatus
 
 function toFormValues(profile: StoreUser): StoreFormValues {
   return {
@@ -47,17 +48,11 @@ function validateSchedule(schedule: PickupSchedule): string {
 
 export function useProfileStoreForm(profile: StoreUser, onSaved: () => Promise<void>) {
   const { saveProfileChanges } = useProfileEditing()
-  const [baseline, setBaseline] = useState(() => toFormValues(profile))
-  const [form, setForm] = useState(baseline)
+  const lifecycle = useProfileEditLifecycle(toFormValues(profile))
+  const { form, setForm, status, errorMessage, dirty, saving, touch, discard, beginSave, saveSucceeded, saveFailed } =
+    lifecycle
   const [errors, setErrors] = useState<StoreFieldErrors>({})
   const [scheduleErrors, setScheduleErrors] = useState<Record<number, string>>({})
-  const [status, setStatus] = useState<StoreSaveStatus>('idle')
-  const [errorMessage, setErrorMessage] = useState('')
-
-  const dirty = JSON.stringify(form) !== JSON.stringify(baseline)
-  const saving = status === 'saving'
-
-  const touch = () => setStatus((current) => (current === 'saving' ? current : 'idle'))
 
   const updateField = (field: 'businessName' | 'ruc' | 'address' | 'reference', value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -118,10 +113,9 @@ export function useProfileStoreForm(profile: StoreUser, onSaved: () => Promise<v
   }
 
   const handleDiscard = () => {
-    setForm(baseline)
+    discard()
     setErrors({})
     setScheduleErrors({})
-    setStatus('idle')
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -129,18 +123,14 @@ export function useProfileStoreForm(profile: StoreUser, onSaved: () => Promise<v
     const values = cleanValues(form)
     if (!validate(values)) return
 
-    setStatus('saving')
-    setErrorMessage('')
+    beginSave()
 
     try {
       await saveProfileChanges(profile.uid, profile.role, values, values.businessName)
-      setBaseline(values)
-      setForm(values)
-      setStatus('saved')
+      saveSucceeded(values)
       await onSaved()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No pudimos guardar tus cambios. Inténtalo nuevamente.')
-      setStatus('error')
+      saveFailed(error, 'No pudimos guardar tus cambios. Inténtalo nuevamente.')
     }
   }
 

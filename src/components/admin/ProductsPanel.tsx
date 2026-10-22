@@ -3,6 +3,11 @@ import ConfirmDialog from "./ConfirmDialog";
 import { formatCurrency, formatRelative } from "../../utils/adminFormatters";
 import type { ProductoEstado } from "../../types/producto";
 import type { ProductoAdminItem } from "../../types/productoAdmin";
+import {
+  countAdminStatuses,
+  filterAdminItems,
+  paginateAdminItems,
+} from "../../utils/adminPanelData";
 
 type ProductStatus = ProductoEstado;
 
@@ -52,29 +57,26 @@ export default function ProductsPanel({
     [products],
   );
 
-  const filtered = useMemo(() => {
-    return products.filter((p) => {
-      const matchesQuery =
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.storeName.toLowerCase().includes(query.toLowerCase());
-      const matchesStatus =
-        statusFilter === "todos" || p.status === statusFilter;
-      const matchesStore =
-        storeFilter === "todos" || p.storeName === storeFilter;
-      return matchesQuery && matchesStatus && matchesStore;
-    });
-  }, [products, query, statusFilter, storeFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const filtered = useMemo(
+    () =>
+      filterAdminItems(
+        products,
+        query,
+        (product) => [product.name, product.storeName],
+        (product) =>
+          (statusFilter === "todos" || product.status === statusFilter) &&
+          (storeFilter === "todos" || product.storeName === storeFilter),
+      ),
+    [products, query, statusFilter, storeFilter],
+  );
+  const { pageItems, currentPage, totalPages } = paginateAdminItems(
+    filtered,
+    page,
+    PAGE_SIZE,
+  );
 
   const counts = useMemo(
-    () => ({
-      total: products.length,
-      activos: products.filter((p) => p.status === "activo").length,
-      pausados: products.filter((p) => p.status === "pausado").length,
-      agotados: products.filter((p) => p.status === "agotado").length,
-    }),
+    () => countAdminStatuses(products, STATUSES, (product) => product.status),
     [products],
   );
 
@@ -116,7 +118,7 @@ export default function ProductsPanel({
             📦
           </span>
           <div>
-            <p className="stat-value">{counts.total}</p>
+            <p className="stat-value">{products.length}</p>
             <p className="stat-label">Total de productos</p>
           </div>
         </div>
@@ -125,7 +127,7 @@ export default function ProductsPanel({
             🟢
           </span>
           <div>
-            <p className="stat-value">{counts.activos}</p>
+            <p className="stat-value">{counts.get("activo")}</p>
             <p className="stat-label">Activos</p>
           </div>
         </div>
@@ -134,7 +136,7 @@ export default function ProductsPanel({
             🕓
           </span>
           <div>
-            <p className="stat-value">{counts.pausados}</p>
+            <p className="stat-value">{counts.get("pausado")}</p>
             <p className="stat-label">Pausados</p>
           </div>
         </div>
@@ -143,7 +145,7 @@ export default function ProductsPanel({
             🔴
           </span>
           <div>
-            <p className="stat-value">{counts.agotados}</p>
+            <p className="stat-value">{counts.get("agotado")}</p>
             <p className="stat-label">Agotados</p>
           </div>
         </div>
@@ -272,21 +274,21 @@ export default function ProductsPanel({
 
         <div className="admin-pagination">
           <p>
-            Mostrando {pageItems.length ? (page - 1) * PAGE_SIZE + 1 : 0}–
-            {(page - 1) * PAGE_SIZE + pageItems.length} de {filtered.length}
+            Mostrando {pageItems.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
+            {(currentPage - 1) * PAGE_SIZE + pageItems.length} de {filtered.length}
           </p>
           <div className="pagination-controls">
             <button
               type="button"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
+              onClick={() => setPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
             >
               ◀
             </button>
             <button
               type="button"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
+              onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
             >
               ▶
             </button>

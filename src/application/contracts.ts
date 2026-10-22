@@ -63,7 +63,7 @@ export interface ReservationCheckoutApplication {
 }
 
 export interface ReservationManagementApplication {
-  cancelarReserva(reserva: ReservaConOferta): Promise<void>
+  cancelarReserva(idReserva: string): Promise<void>
 }
 
 export interface ReservationHistoryApplication {

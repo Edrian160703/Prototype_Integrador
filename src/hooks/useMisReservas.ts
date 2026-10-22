@@ -64,7 +64,7 @@ export default function useMisReservas(idUsuario: string): UseMisReservasResult 
     setErrorCancelId(null)
     setCancelandoId(reserva.id_reserva)
     try {
-      await cancelarReserva(reserva)
+      await cancelarReserva(reserva.id_reserva)
       setReservas((current) => current.filter((item) => item.id_reserva !== reserva.id_reserva))
       setReservaAEliminar(null)
     } catch (reason) {
