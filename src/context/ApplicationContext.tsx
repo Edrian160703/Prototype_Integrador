@@ -24,6 +24,7 @@ import type {
   ProfileEditingApplication,
   ProfileOnboardingApplication,
   ReservationApplication,
+  ReservationAdminApplication,
   ReservationCheckoutApplication,
   ReservationHistoryApplication,
   ReservationManagementApplication,
@@ -146,6 +147,10 @@ export function useReservationManagement(): ReservationManagementApplication {
 }
 
 export function useReservationHistory(): ReservationHistoryApplication {
+  return useReservations()
+}
+
+export function useReservationAdmin(): ReservationAdminApplication {
   return useReservations()
 }
 

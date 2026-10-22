@@ -15,6 +15,7 @@ const Onboarding = lazy(() => import('./pages/Onboarding'))
 const Perfil = lazy(() => import('./pages/Perfil'))
 const Publicar = lazy(() => import('./pages/Publicar'))
 const ReservaExclusiva = lazy(() => import('./pages/ReservaExclusiva'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false)
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/publicar" element={<Publicar />} />
             <Route path="/reserva/:id" element={<ReservaExclusiva />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </Suspense>
       </main>

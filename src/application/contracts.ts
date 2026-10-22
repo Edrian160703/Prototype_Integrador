@@ -4,7 +4,7 @@ import type { CreateOfertaParams, OfertaConComercio, OfertaPayload, OwnedOferta 
 import type { ProductoEstado, ProductoPayload } from '../types/producto'
 import type { InitialUserData, InitialUserProfile, UserDocument, UserRole } from '../types/user'
 import type { CartItem } from '../types/cart'
-import type { ReservaConOferta } from '../types/reserva'
+import type { EstadoReserva, ReservaConOferta, ReservaDocument } from '../types/reserva'
 import type { ProductoAdminRecord } from '../types/productoAdmin'
 import type { ProductoDocument } from '../types/producto'
 
@@ -64,6 +64,12 @@ export interface ReservationCheckoutApplication {
 
 export interface ReservationManagementApplication {
   cancelarReserva(idReserva: string): Promise<void>
+}
+
+export interface ReservationAdminApplication {
+  getAllReservasForAdmin(): Promise<ReservaDocument[]>
+  updateReservaEstado(idReserva: string, estado: EstadoReserva): Promise<void>
+  deleteReserva(idReserva: string): Promise<void>
 }
 
 export interface ReservationHistoryApplication {
@@ -137,7 +143,8 @@ export interface AccountApplication extends
 export interface ReservationApplication extends
   ReservationCheckoutApplication,
   ReservationManagementApplication,
-  ReservationHistoryApplication {}
+  ReservationHistoryApplication,
+  ReservationAdminApplication {}
 
 export interface AuthenticationApplication extends
   CurrentUserQueryApplication,
@@ -169,4 +176,5 @@ export type {
   OwnedOferta,
   ProductoAdminRecord,
   ReservaConOferta,
+  ReservaDocument,
 }

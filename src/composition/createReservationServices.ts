@@ -6,13 +6,16 @@ import {
 import type { ReservationApplication } from '../application/contracts'
 import type { OfertaByIdReader } from '../ports/ofertaRepository'
 import type {
+  ReservaAdminReader,
   ReservaCreator,
   ReservaDeleter,
   ReservaReader,
+  ReservaStateWriter,
 } from '../ports/reservaRepository'
 import type { CartItem } from '../types/cart'
 
-type ReservationRepository = ReservaCreator & ReservaReader & ReservaDeleter
+type ReservationRepository = ReservaCreator & ReservaReader & ReservaAdminReader
+  & ReservaDeleter & ReservaStateWriter
 
 interface ReservationServiceDependencies {
   reservations: () => Promise<ReservationRepository>
@@ -35,5 +38,9 @@ export function createReservationServices({
       const [reservationRepository, offerRepository] = await Promise.all([reservations(), offers()])
       return getReservasByUsuario(reservationRepository, offerRepository, idUsuario)
     },
+    getAllReservasForAdmin: async () => (await reservations()).listAll(),
+    updateReservaEstado: async (idReserva, estado) =>
+      (await reservations()).updateEstado(idReserva, estado),
+    deleteReserva: async (idReserva) => (await reservations()).delete(idReserva),
   }
 }

@@ -11,23 +11,29 @@ afterEach(cleanup);
 const accounts: ManagedAccount[] = [
   {
     id: "account-1",
+    role: "consumer",
     displayName: "Ada Lovelace",
     email: "ada@example.com",
     status: "activa",
+    createdAt: new Date("2025-01-01T00:00:00Z"),
     lastActiveAt: new Date("2025-01-01T00:00:00Z"),
   },
   {
     id: "account-2",
+    role: "consumer",
     displayName: "Grace Hopper",
     email: "grace@example.com",
     status: "suspendida",
+    createdAt: new Date("2025-01-02T00:00:00Z"),
     lastActiveAt: new Date("2025-01-02T00:00:00Z"),
   },
   {
     id: "account-3",
+    role: "consumer",
     displayName: "Katherine Johnson",
     email: "katherine@example.com",
     status: "pendiente",
+    createdAt: new Date("2025-01-03T00:00:00Z"),
     lastActiveAt: new Date("2025-01-03T00:00:00Z"),
   },
 ];
@@ -41,6 +47,7 @@ const products: ProductoAdminItem[] = [
     price: 5,
     stock: 10,
     status: "activo",
+    createdAt: new Date("2025-01-01T00:00:00Z"),
     updatedAt: new Date("2025-01-01T00:00:00Z"),
   },
   {
@@ -51,6 +58,7 @@ const products: ProductoAdminItem[] = [
     price: 4,
     stock: 0,
     status: "agotado",
+    createdAt: new Date("2025-01-02T00:00:00Z"),
     updatedAt: new Date("2025-01-02T00:00:00Z"),
   },
   {
@@ -61,6 +69,7 @@ const products: ProductoAdminItem[] = [
     price: 3,
     stock: 5,
     status: "pausado",
+    createdAt: new Date("2025-01-03T00:00:00Z"),
     updatedAt: new Date("2025-01-03T00:00:00Z"),
   },
 ];
@@ -72,6 +81,8 @@ describe("panel de cuentas", () => {
         entityLabel="usuario"
         entityLabelPlural="usuarios"
         initialAccounts={accounts}
+        onStatusChange={vi.fn()}
+        onDelete={vi.fn()}
       />,
     );
 
@@ -82,12 +93,12 @@ describe("panel de cuentas", () => {
     fireEvent.change(screen.getByPlaceholderText("Buscar usuarios por nombre o correo"), {
       target: { value: "ada@example.com" },
     });
-    fireEvent.change(screen.getByRole("combobox"), {
+    fireEvent.change(screen.getByLabelText("Filtrar cuentas por estado"), {
       target: { value: "suspendida" },
     });
     expect(screen.getByText("No hay usuarios que coincidan con los filtros.")).toBeTruthy();
 
-    fireEvent.change(screen.getByRole("combobox"), {
+    fireEvent.change(screen.getByLabelText("Filtrar cuentas por estado"), {
       target: { value: "todas" },
     });
     expect(screen.getByText("Ada Lovelace")).toBeTruthy();
@@ -101,6 +112,7 @@ describe("panel de cuentas", () => {
         entityLabelPlural="usuarios"
         initialAccounts={[accounts[2]]}
         onStatusChange={onStatusChange}
+        onDelete={vi.fn()}
       />,
     );
 
@@ -126,6 +138,7 @@ describe("panel de cuentas", () => {
         entityLabelPlural="usuarios"
         initialAccounts={[accounts[2]]}
         onStatusChange={onStatusChange}
+        onDelete={vi.fn()}
       />,
     );
 
@@ -147,7 +160,8 @@ describe("panel de productos", () => {
     fireEvent.change(screen.getByPlaceholderText("Buscar producto o comercio"), {
       target: { value: "pan" },
     });
-    const [storeFilter, statusFilter] = screen.getAllByRole("combobox");
+    const storeFilter = screen.getByLabelText("Filtrar productos por comercio");
+    const statusFilter = screen.getByLabelText("Filtrar productos por estado");
     fireEvent.change(storeFilter, { target: { value: "La Esquina" } });
     fireEvent.change(statusFilter, { target: { value: "activo" } });
     expect(screen.getByText("Pan integral")).toBeTruthy();
@@ -159,7 +173,11 @@ describe("panel de productos", () => {
   it("elimina el producto únicamente después de confirmar", async () => {
     const onDelete = vi.fn().mockResolvedValue(undefined);
     render(
-      <ProductsPanel initialProducts={[products[0]]} onDelete={onDelete} />,
+      <ProductsPanel
+        initialProducts={[products[0]]}
+        onDelete={onDelete}
+        onStatusChange={vi.fn()}
+      />,
     );
 
     fireEvent.click(screen.getByTitle("Eliminar producto"));
@@ -176,7 +194,13 @@ describe("panel de productos", () => {
 
   it("cancela la confirmación de eliminación sin borrar el producto", () => {
     const onDelete = vi.fn().mockResolvedValue(undefined);
-    render(<ProductsPanel initialProducts={[products[0]]} onDelete={onDelete} />);
+    render(
+      <ProductsPanel
+        initialProducts={[products[0]]}
+        onDelete={onDelete}
+        onStatusChange={vi.fn()}
+      />,
+    );
 
     fireEvent.click(screen.getByTitle("Eliminar producto"));
     fireEvent.click(screen.getByText("Cancelar"));

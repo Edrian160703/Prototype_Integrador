@@ -197,6 +197,29 @@ html[data-theme="dark"] .admin-page {
   color: var(--admin-ink);
 }
 
+.creation-date-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--admin-muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.creation-date-filter select,
+.row-actions select {
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg);
+  color: var(--admin-ink);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.82rem;
+}
+
+.admin-global-stats {
+  margin-bottom: 1.5rem;
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -298,7 +321,7 @@ html[data-theme="dark"] .admin-page {
 
 .row-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 0.25rem;
 }
 

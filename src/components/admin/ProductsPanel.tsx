@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import ConfirmDialog from "./ConfirmDialog";
+import CreationDateFilter from "./CreationDateFilter";
 import { formatCurrency, formatRelative } from "../../utils/adminFormatters";
 import type { ProductoEstado } from "../../types/producto";
 import type { ProductoAdminItem } from "../../types/productoAdmin";
@@ -8,6 +9,10 @@ import {
   filterAdminItems,
   paginateAdminItems,
 } from "../../utils/adminPanelData";
+import {
+  matchesCreationDateRange,
+  type CreationDateRange,
+} from "../../utils/adminDateFilter";
 
 type ProductStatus = ProductoEstado;
 
@@ -33,14 +38,16 @@ type PendingAction = {
 
 interface ProductsPanelProps {
   initialProducts: ProductoAdminItem[];
-  onStatusChange?: (id: string, status: ProductStatus) => Promise<void>;
-  onDelete?: (id: string) => Promise<void>;
+  onStatusChange: (id: string, status: ProductStatus) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onProductsChange?: (products: ProductoAdminItem[]) => void;
 }
 
 export default function ProductsPanel({
   initialProducts,
   onStatusChange,
   onDelete,
+  onProductsChange,
 }: ProductsPanelProps) {
   const [products, setProducts] = useState<ProductoAdminItem[]>(initialProducts);
   const [query, setQuery] = useState("");
@@ -48,9 +55,12 @@ export default function ProductsPanel({
     "todos",
   );
   const [storeFilter, setStoreFilter] = useState("todos");
+  const [creationDateRange, setCreationDateRange] =
+    useState<CreationDateRange>("todos");
   const [page, setPage] = useState(1);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [loading, setLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const stores = useMemo(
     () => Array.from(new Set(products.map((p) => p.storeName))).sort(),
@@ -65,9 +75,10 @@ export default function ProductsPanel({
         (product) => [product.name, product.storeName],
         (product) =>
           (statusFilter === "todos" || product.status === statusFilter) &&
-          (storeFilter === "todos" || product.storeName === storeFilter),
+          (storeFilter === "todos" || product.storeName === storeFilter) &&
+          matchesCreationDateRange(product.createdAt, creationDateRange),
       ),
-    [products, query, statusFilter, storeFilter],
+    [products, query, statusFilter, storeFilter, creationDateRange],
   );
   const { pageItems, currentPage, totalPages } = paginateAdminItems(
     filtered,
@@ -90,21 +101,26 @@ export default function ProductsPanel({
   async function applyAction() {
     if (!pending) return;
     setLoading(true);
+    setActionError(null);
     try {
+      let updatedProducts: ProductoAdminItem[];
       if (pending.action === "eliminar") {
-        await onDelete?.(pending.product.id);
-        setProducts((prev) => prev.filter((p) => p.id !== pending.product.id));
+        await onDelete(pending.product.id);
+        updatedProducts = products.filter((p) => p.id !== pending.product.id);
       } else {
         const newStatus: ProductStatus =
           pending.action === "pausar" ? "pausado" : "activo";
-        await onStatusChange?.(pending.product.id, newStatus);
-        setProducts((prev) =>
-          prev.map((p) =>
+        await onStatusChange(pending.product.id, newStatus);
+        updatedProducts = products.map((p) =>
             p.id === pending.product.id ? { ...p, status: newStatus } : p,
-          ),
         );
       }
+      setProducts(updatedProducts);
+      onProductsChange?.(updatedProducts);
       setPending(null);
+    } catch (error) {
+      console.error("No se pudo actualizar el producto desde el panel administrativo.", error);
+      setActionError("No se pudo completar la acción. Verifica tus permisos e inténtalo de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -162,7 +178,12 @@ export default function ProductsPanel({
             />
           </div>
           <div className="toolbar-filters">
+            <CreationDateFilter
+              value={creationDateRange}
+              onChange={(value) => updateFilter(setCreationDateRange)(value)}
+            />
             <select
+              aria-label="Filtrar productos por comercio"
               value={storeFilter}
               onChange={(e) => updateFilter(setStoreFilter)(e.target.value)}
             >
@@ -174,6 +195,7 @@ export default function ProductsPanel({
               ))}
             </select>
             <select
+              aria-label="Filtrar productos por estado"
               value={statusFilter}
               onChange={(e) =>
                 updateFilter(setStatusFilter)(
@@ -190,6 +212,12 @@ export default function ProductsPanel({
             </select>
           </div>
         </div>
+
+        {actionError && (
+          <div className="admin-error-banner" role="alert">
+            {actionError}
+          </div>
+        )}
 
         <div className="table-wrap">
           <table className="accounts-table">
@@ -209,7 +237,7 @@ export default function ProductsPanel({
                   <td>
                     <p className="account-name">{p.name}</p>
                     <p className="account-email">
-                      {p.category} · actualizado {formatRelative(p.updatedAt)}
+                      {p.category} · creado {formatRelative(p.createdAt)}
                     </p>
                   </td>
                   <td>{p.storeName}</td>

@@ -26,6 +26,7 @@ export class FirebaseAccountRepository implements AccountReader, AccountWriter {
         status: data.accountStatus === 'suspendida' || data.accountStatus === 'pendiente'
           ? data.accountStatus
           : 'activa',
+        createdAt: toDate(data.createdAt ?? data.updatedAt),
         lastActiveAt: toDate(data.updatedAt ?? data.createdAt ?? new Date()),
       }
     })

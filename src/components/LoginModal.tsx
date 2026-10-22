@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useEmailSignIn, useGoogleSignIn } from '../context/ApplicationContext'
+import { getFirebaseAuth } from '../infrastructure/firebase/firebaseClient'
 
 interface LoginModalProps {
   onClose: () => void
@@ -24,25 +25,45 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     if (e.target === e.currentTarget) onClose()
   }
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  async function finishSignIn() {
+    try {
+      const user = getFirebaseAuth().currentUser
+      if (!user) throw new Error('La sesión de Firebase no está disponible.')
+
+      const token = await user.getIdTokenResult(true)
+      if (token.claims.admin === true) navigate('/admin')
+      onClose()
+    } catch (error) {
+      console.error('No se pudo verificar el acceso administrativo tras iniciar sesión.', error)
+      setAuthError('Iniciaste sesión, pero no pudimos verificar tus permisos. Inténtalo de nuevo.')
+    }
+  }
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setAuthError('')
     setLoading(true)
-    signInWithEmail(email, password)
-      .then(() => onClose())
-      .catch((error: unknown) => {
-        setAuthError(error instanceof Error ? 'Correo o contraseña incorrectos.' : 'No pudimos iniciar sesión.')
-      })
-      .finally(() => setLoading(false))
+    try {
+      await signInWithEmail(email, password)
+      await finishSignIn()
+    } catch (error) {
+      setAuthError(error instanceof Error ? 'Correo o contraseña incorrectos.' : 'No pudimos iniciar sesión.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     setAuthError('')
     setGoogleLoading(true)
-    loginWithGoogle()
-      .then(() => onClose())
-      .catch(() => setAuthError('No pudimos conectar con Google.'))
-      .finally(() => setGoogleLoading(false))
+    try {
+      await loginWithGoogle()
+      await finishSignIn()
+    } catch {
+      setAuthError('No pudimos conectar con Google.')
+    } finally {
+      setGoogleLoading(false)
+    }
   }
 
   return (
