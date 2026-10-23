@@ -10,7 +10,7 @@ import type {
 } from '../ports/userProfileRepository'
 import type { InitialUserData, UserRole } from '../types/user'
 
-function getDisplayName(profile: InitialUserData['profile']): string | null {
+export function getDisplayName(profile: InitialUserData['profile']): string | null {
   if (profile && 'firstName' in profile) {
     return [profile.firstName, profile.lastName].filter(Boolean).join(' ') || null
   }

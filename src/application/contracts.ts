@@ -92,6 +92,25 @@ export interface AuthRegistrationApplication {
   signInWithGoogle(role: UserRole, profile?: InitialUserData['profile']): Promise<AuthIdentity>
 }
 
+export interface SignupStartApplication {
+  startEmailSignup(input: {
+    email: string
+    password: string
+    role: UserRole
+    profile?: InitialUserProfile
+  }): void
+  startGoogleSignup(role: UserRole, profile?: InitialUserProfile): Promise<AuthIdentity>
+}
+
+export interface PendingSignupQueryApplication {
+  getPendingSignupRole(): UserRole | null
+}
+
+export interface SignupCompletionApplication {
+  completeSignup(profile: InitialUserProfile): Promise<AuthIdentity>
+  cancelSignup(): Promise<void>
+}
+
 export interface EmailSignInApplication {
   signInWithEmail(email: string, password: string): Promise<AuthIdentity>
 }
@@ -143,6 +162,9 @@ export interface AuthenticationApplication extends
   CurrentUserQueryApplication,
   AuthStateSubscriptionApplication,
   AuthRegistrationApplication,
+  SignupStartApplication,
+  PendingSignupQueryApplication,
+  SignupCompletionApplication,
   EmailSignInApplication,
   GoogleSignInApplication,
   SignOutApplication {}

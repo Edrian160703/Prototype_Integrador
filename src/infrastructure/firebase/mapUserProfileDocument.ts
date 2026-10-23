@@ -98,6 +98,7 @@ export function mapUserProfileDocument(
       role,
       firstName: optionalString(data.firstName, 'firstName', uid),
       lastName: optionalString(data.lastName, 'lastName', uid),
+      dni: optionalString(data.dni, 'dni', uid),
       phone: optionalString(data.phone, 'phone', uid),
       district: optionalString(data.district, 'district', uid),
       habitualLocation: optionalString(data.habitualLocation, 'habitualLocation', uid),

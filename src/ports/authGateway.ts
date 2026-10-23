@@ -23,6 +23,10 @@ export interface IAuthProfileUpdater {
   updateDisplayName(uid: string, displayName: string): Promise<void>
 }
 
+export interface IAuthAccountDeleter {
+  deleteCurrentAccount(): Promise<void>
+}
+
 export interface IAuthSignOut {
   signOut(): Promise<void>
 }

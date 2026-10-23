@@ -1,6 +1,7 @@
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -11,6 +12,7 @@ import {
 import type { Auth } from 'firebase/auth'
 import type {
   AuthIdentity,
+  IAuthAccountDeleter,
   IAuthProfileUpdater,
   IAuthRegistrar,
   IAuthSession,
@@ -32,6 +34,7 @@ export class FirebaseAuthGateway implements
   IAuthRegistrar,
   IAuthSignIn,
   IAuthProfileUpdater,
+  IAuthAccountDeleter,
   IAuthSignOut {
   constructor(private readonly auth: Auth) {}
 
@@ -63,6 +66,11 @@ export class FirebaseAuthGateway implements
   async updateDisplayName(uid: string, displayName: string): Promise<void> {
     const user = this.auth.currentUser
     if (user?.uid === uid) await updateProfile(user, { displayName })
+  }
+
+  async deleteCurrentAccount(): Promise<void> {
+    const user = this.auth.currentUser
+    if (user) await deleteUser(user)
   }
 
   async signOut(): Promise<void> {
