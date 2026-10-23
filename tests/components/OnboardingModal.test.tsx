@@ -58,7 +58,9 @@ describe('OnboardingModal', () => {
     ['/onboarding/comercio', 'Completa tu comercio'],
     ['/onboarding/store', 'Completa tu comercio'],
   ])('mantiene el flujo del segmento válido %s', (path, heading) => {
-    mocks.getPendingSignupRole.mockReturnValue(path.endsWith('consumidor') || path.endsWith('consumer') ? 'consumer' : 'store')
+    mocks.getPendingSignupRole.mockReturnValue(
+      path.endsWith('consumidor') || path.endsWith('consumer') ? 'consumer' : 'store',
+    )
     renderOnboarding(path)
 
     expect(screen.getByRole('heading', { name: heading })).toBeTruthy()
@@ -71,7 +73,6 @@ describe('OnboardingModal', () => {
     expect(screen.getByText('Registro seguro')).toBeTruthy()
     expect(updateUserProfile).not.toHaveBeenCalled()
   })
-
   it('sin registro pendiente ni sesión vuelve al registro', () => {
     mocks.getPendingSignupRole.mockReturnValue(null)
     renderOnboarding('/onboarding/consumidor')
