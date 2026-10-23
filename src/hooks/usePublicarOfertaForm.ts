@@ -24,16 +24,6 @@ const INITIAL_VALUES: OfertaFormValues = {
 export default function usePublicarOfertaForm() {
   const [form, setForm] = useState<OfertaFormValues>(INITIAL_VALUES)
 
-  const clearFieldError = (field: keyof OfertaFormValues) => {
-    submission.clearErrorsFor(field)
-  }
-
-  const updateField = <K extends keyof OfertaFormValues>(field: K, value: OfertaFormValues[K]) => {
-    setForm((current) => ({ ...current, [field]: value }))
-    clearFieldError(field)
-    submission.clearStatus()
-  }
-
   const {
     horarioInicio,
     horarioFin,
@@ -92,6 +82,19 @@ export default function usePublicarOfertaForm() {
     form.precio_original,
     form.precio_oferta,
   )
+
+  function clearFieldError(field: keyof OfertaFormValues) {
+    submission.clearErrorsFor(field)
+  }
+
+  function updateField<K extends keyof OfertaFormValues>(
+    field: K,
+    value: OfertaFormValues[K],
+  ) {
+    setForm((current) => ({ ...current, [field]: value }))
+    clearFieldError(field)
+    submission.clearStatus()
+  }
 
   function resetForm() {
     setForm(INITIAL_VALUES)

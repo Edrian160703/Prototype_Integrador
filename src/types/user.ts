@@ -9,6 +9,7 @@ export interface PickupSchedule {
 export interface ConsumerProfile {
   firstName?: string
   lastName?: string
+  dni?: string
   phone?: string
   district?: string
   habitualLocation?: string
@@ -56,4 +57,5 @@ export interface InitialUserData {
   displayName?: string | null
   photoURL?: string | null
   profile?: InitialUserProfile
+  onboardingCompleted?: boolean
 }

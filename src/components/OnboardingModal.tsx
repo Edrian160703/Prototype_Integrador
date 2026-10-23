@@ -1,43 +1,15 @@
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useCurrentUserQuery, useProfileOnboarding } from '../context/ApplicationContext'
+import { Navigate, useParams } from 'react-router-dom'
 import ConsumerOnboardingForm from './ConsumerOnboardingForm'
 import StoreOnboardingForm from './StoreOnboardingForm'
-import type { ConsumerProfile, StoreProfile, UserRole } from '../types/user'
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'No pudimos guardar tu perfil. Inténtalo nuevamente.'
-}
+import useOnboardingSubmission from '../hooks/useOnboardingSubmission'
+import { resolveOnboardingRole } from '../strategies/userRoleStrategies'
 
 export default function OnboardingModal() {
-  const { getCurrentUser } = useCurrentUserQuery()
-  const { updateUserProfile } = useProfileOnboarding()
-  const navigate = useNavigate()
   const { role: routeRole } = useParams<{ role: string }>()
-  const role: UserRole = routeRole === 'comercio' || routeRole === 'store' ? 'store' : 'consumer'
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const role = resolveOnboardingRole(routeRole)
+  const { submit, goBack, canContinue, loading, error } = useOnboardingSubmission(role)
 
-  const handleProfileSubmit = async (profileData: ConsumerProfile | StoreProfile) => {
-    setError('')
-    const currentUser = getCurrentUser()
-
-    if (!currentUser) {
-      setError('Tu sesión expiró. Regístrate o inicia sesión nuevamente.')
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      await updateUserProfile(currentUser.uid, role, profileData)
-      navigate(role === 'store' ? '/registro-negocio' : '/')
-    } catch (submissionError) {
-      setError(getErrorMessage(submissionError))
-    } finally {
-      setLoading(false)
-    }
-  }
+  if (!role || !canContinue) return <Navigate to="/registro" replace />
 
   return (
     <div className="modal-overlay onboarding-overlay">
@@ -63,12 +35,16 @@ export default function OnboardingModal() {
         </p>
 
         {role === 'consumer' ? (
-          <ConsumerOnboardingForm loading={loading} onSubmit={handleProfileSubmit} />
+          <ConsumerOnboardingForm loading={loading} onSubmit={submit} />
         ) : (
-          <StoreOnboardingForm loading={loading} onSubmit={handleProfileSubmit} />
+          <StoreOnboardingForm loading={loading} onSubmit={submit} />
         )}
 
         {error && <p className="field-error onboarding-error" role="alert">{error}</p>}
+
+        <button type="button" className="btn btn-ghost btn-block" onClick={() => void goBack()} disabled={loading}>
+          Volver al paso 1
+        </button>
       </div>
     </div>
   )

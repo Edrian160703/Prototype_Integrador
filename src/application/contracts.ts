@@ -63,7 +63,7 @@ export interface ReservationCheckoutApplication {
 }
 
 export interface ReservationManagementApplication {
-  cancelarReserva(reserva: ReservaConOferta): Promise<void>
+  cancelarReserva(idReserva: string): Promise<void>
 }
 
 export interface ReservationHistoryApplication {
@@ -90,6 +90,25 @@ export interface AuthRegistrationApplication {
     profile?: InitialUserData['profile'],
   ): Promise<AuthIdentity>
   signInWithGoogle(role: UserRole, profile?: InitialUserData['profile']): Promise<AuthIdentity>
+}
+
+export interface SignupStartApplication {
+  startEmailSignup(input: {
+    email: string
+    password: string
+    role: UserRole
+    profile?: InitialUserProfile
+  }): void
+  startGoogleSignup(role: UserRole, profile?: InitialUserProfile): Promise<AuthIdentity>
+}
+
+export interface PendingSignupQueryApplication {
+  getPendingSignupRole(): UserRole | null
+}
+
+export interface SignupCompletionApplication {
+  completeSignup(profile: InitialUserProfile): Promise<AuthIdentity>
+  cancelSignup(): Promise<void>
 }
 
 export interface EmailSignInApplication {
@@ -143,6 +162,9 @@ export interface AuthenticationApplication extends
   CurrentUserQueryApplication,
   AuthStateSubscriptionApplication,
   AuthRegistrationApplication,
+  SignupStartApplication,
+  PendingSignupQueryApplication,
+  SignupCompletionApplication,
   EmailSignInApplication,
   GoogleSignInApplication,
   SignOutApplication {}

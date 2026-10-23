@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useProfileEditing } from '../context/ApplicationContext'
+import useProfileEditLifecycle, { type ProfileEditStatus } from './useProfileEditLifecycle'
 import type { ConsumerUser } from '../types/user'
+import { isValidPhone, normalizePhone, PHONE_LENGTH } from '../validation/phone'
 
 export const PREFERENCE_OPTIONS = ['Panaderías', 'Menús', 'Vegano', 'Postres', 'Frutas y verduras']
 
@@ -13,7 +15,7 @@ export interface ConsumerFormValues {
 }
 
 export type ConsumerFieldErrors = Partial<Record<'firstName' | 'phone' | 'habitualLocation', string>>
-export type ConsumerSaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+export type ConsumerSaveStatus = ProfileEditStatus
 
 function splitDisplayName(displayName: string | null) {
   const [first = '', ...rest] = (displayName ?? '').trim().split(/\s+/).filter(Boolean)
@@ -26,7 +28,7 @@ function toFormValues(profile: ConsumerUser): ConsumerFormValues {
   return {
     firstName: profile.firstName ?? fallback.first,
     lastName: profile.lastName ?? fallback.last,
-    phone: profile.phone ?? '',
+    phone: normalizePhone(profile.phone ?? ''),
     habitualLocation: profile.habitualLocation ?? '',
     dietaryPreferences: profile.dietaryPreferences ?? [],
   }
@@ -42,23 +44,12 @@ function cleanValues(values: ConsumerFormValues): ConsumerFormValues {
   }
 }
 
-function isValidPhone(phone: string): boolean {
-  const digits = phone.replace(/\D/g, '')
-  return digits.length === 9 || (digits.length === 11 && digits.startsWith('51'))
-}
-
 export function useProfileConsumerForm(profile: ConsumerUser, onSaved: () => Promise<void>) {
   const { saveProfileChanges } = useProfileEditing()
-  const [baseline, setBaseline] = useState(() => toFormValues(profile))
-  const [form, setForm] = useState(baseline)
+  const lifecycle = useProfileEditLifecycle(toFormValues(profile))
+  const { form, setForm, status, errorMessage, dirty, saving, touch, discard, beginSave, saveSucceeded, saveFailed } =
+    lifecycle
   const [errors, setErrors] = useState<ConsumerFieldErrors>({})
-  const [status, setStatus] = useState<ConsumerSaveStatus>('idle')
-  const [errorMessage, setErrorMessage] = useState('')
-
-  const dirty = JSON.stringify(form) !== JSON.stringify(baseline)
-  const saving = status === 'saving'
-
-  const touch = () => setStatus((current) => (current === 'saving' ? current : 'idle'))
 
   const updateField = (field: 'firstName' | 'lastName' | 'phone' | 'habitualLocation', value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -84,16 +75,15 @@ export function useProfileConsumerForm(profile: ConsumerUser, onSaved: () => Pro
   const validate = (values: ConsumerFormValues): boolean => {
     const nextErrors: ConsumerFieldErrors = {}
     if (!values.firstName) nextErrors.firstName = 'Ingresa tu nombre.'
-    if (!isValidPhone(values.phone)) nextErrors.phone = 'Ingresa un celular válido de 9 dígitos.'
+    if (!isValidPhone(values.phone)) nextErrors.phone = `Ingresa un celular válido de ${PHONE_LENGTH} dígitos.`
     if (!values.habitualLocation) nextErrors.habitualLocation = 'Ingresa tu dirección o ubicación habitual.'
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
 
   const handleDiscard = () => {
-    setForm(baseline)
+    discard()
     setErrors({})
-    setStatus('idle')
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -101,19 +91,15 @@ export function useProfileConsumerForm(profile: ConsumerUser, onSaved: () => Pro
     const values = cleanValues(form)
     if (!validate(values)) return
 
-    setStatus('saving')
-    setErrorMessage('')
+    beginSave()
 
     try {
       const displayName = [values.firstName, values.lastName].filter(Boolean).join(' ')
       await saveProfileChanges(profile.uid, profile.role, values, displayName)
-      setBaseline(values)
-      setForm(values)
-      setStatus('saved')
+      saveSucceeded(values)
       await onSaved()
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No pudimos guardar tus cambios. Inténtalo nuevamente.')
-      setStatus('error')
+      saveFailed(error, 'No pudimos guardar tus cambios. Inténtalo nuevamente.')
     }
   }
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useAuthRegistration } from '../context/ApplicationContext'
+import { useSignupStart } from '../context/ApplicationContext'
 import {
   getSignupRoleStrategy,
   USER_SIGNUP_STRATEGIES,
@@ -15,15 +15,14 @@ import {
 const INITIAL_VALUES: SignupFormValues = { fullName: '', email: '', password: '' }
 
 interface SignupFormOptions {
-  onRegistrationComplete: (onboardingPath: string) => void
+  onStepCompleted: (onboardingPath: string) => void
 }
 
-export default function useSignupForm({ onRegistrationComplete }: SignupFormOptions) {
-  const { registerWithEmail, signInWithGoogle } = useAuthRegistration()
+export default function useSignupForm({ onStepCompleted }: SignupFormOptions) {
+  const { startEmailSignup, startGoogleSignup } = useSignupStart()
   const [role, setRole] = useState<SignupRole>('consumer')
   const [values, setValues] = useState<SignupFormValues>(INITIAL_VALUES)
   const [errors, setErrors] = useState<SignupFormErrors>({})
-  const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [authError, setAuthError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -36,34 +35,28 @@ export default function useSignupForm({ onRegistrationComplete }: SignupFormOpti
     setErrors((current) => ({ ...current, [field]: undefined }))
   }
 
-  const submitWithEmail = async () => {
+  // Paso 1: solo valida y recuerda los datos en memoria. La cuenta se crea al terminar el paso 2.
+  const submitWithEmail = () => {
     const nextErrors = validateSignupForm(values, roleStrategy.presentation.missingNameMessage)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    setLoading(true)
     setAuthError('')
-    try {
-      await registerWithEmail(
-        values.email,
-        values.password,
-        roleStrategy.userRole,
-        roleStrategy.createInitialProfile(values.fullName),
-      )
-      onRegistrationComplete(roleStrategy.presentation.onboardingPath)
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : 'No pudimos crear tu cuenta.')
-    } finally {
-      setLoading(false)
-    }
+    startEmailSignup({
+      email: values.email,
+      password: values.password,
+      role: roleStrategy.userRole,
+      profile: roleStrategy.createInitialProfile(values.fullName),
+    })
+    onStepCompleted(roleStrategy.presentation.onboardingPath)
   }
 
   const submitWithGoogle = async () => {
     setGoogleLoading(true)
     setAuthError('')
     try {
-      await signInWithGoogle(roleStrategy.userRole)
-      onRegistrationComplete(roleStrategy.presentation.onboardingPath)
+      await startGoogleSignup(roleStrategy.userRole)
+      onStepCompleted(roleStrategy.presentation.onboardingPath)
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'No pudimos conectar con Google.')
     } finally {
@@ -76,7 +69,6 @@ export default function useSignupForm({ onRegistrationComplete }: SignupFormOpti
     setRole,
     values,
     errors,
-    loading,
     googleLoading,
     authError,
     showPassword,

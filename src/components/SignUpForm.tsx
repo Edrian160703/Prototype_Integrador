@@ -9,7 +9,6 @@ export default function SignUpForm() {
     setRole,
     values,
     errors,
-    loading,
     googleLoading,
     authError,
     showPassword: formShowPassword,
@@ -21,12 +20,12 @@ export default function SignUpForm() {
     submitWithEmail,
     submitWithGoogle,
   } = useSignupForm({
-    onRegistrationComplete: (onboardingPath) => navigate(onboardingPath),
+    onStepCompleted: (onboardingPath) => navigate(onboardingPath),
   })
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    void submitWithEmail()
+    submitWithEmail()
   }
 
   const handleGoogle = () => void submitWithGoogle()
@@ -79,11 +78,11 @@ export default function SignUpForm() {
 
           {authError && <p className="field-error" role="alert">{authError}</p>}
 
-          <button type="submit" className="btn btn-primary btn-block signup-submit" disabled={loading || googleLoading}>{loading ? 'Creando cuenta...' : 'Continuar'}</button>
+          <button type="submit" className="btn btn-primary btn-block signup-submit" disabled={googleLoading}>Continuar</button>
         </form>
 
         <div className="divider-text">— o continúa con —</div>
-        <button type="button" className="google-btn" onClick={handleGoogle} disabled={loading || googleLoading}>{googleLoading ? 'Conectando...' : '🔴 Continuar con Google'}</button>
+        <button type="button" className="google-btn" onClick={handleGoogle} disabled={googleLoading}>{googleLoading ? 'Conectando...' : '🔴 Continuar con Google'}</button>
         <p className="signup-terms">Al continuar aceptas nuestros términos de servicio y política de privacidad.</p>
       </div>
     </section>

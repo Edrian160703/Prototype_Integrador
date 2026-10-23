@@ -3,28 +3,28 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import useSignupForm from '../../src/hooks/useSignupForm'
 
 const mocks = vi.hoisted(() => ({
-  registerWithEmail: vi.fn(),
-  signInWithGoogle: vi.fn(),
+  startEmailSignup: vi.fn(),
+  startGoogleSignup: vi.fn(),
 }))
 
 vi.mock('../../src/context/ApplicationContext', () => ({
-  useAuthRegistration: () => ({
-    registerWithEmail: mocks.registerWithEmail,
-    signInWithGoogle: mocks.signInWithGoogle,
+  useSignupStart: () => ({
+    startEmailSignup: mocks.startEmailSignup,
+    startGoogleSignup: mocks.startGoogleSignup,
   }),
 }))
 
 describe('useSignupForm', () => {
   beforeEach(() => {
-    mocks.registerWithEmail.mockReset().mockResolvedValue(undefined)
-    mocks.signInWithGoogle.mockReset().mockResolvedValue(undefined)
+    mocks.startEmailSignup.mockReset()
+    mocks.startGoogleSignup.mockReset().mockResolvedValue(undefined)
   })
 
   afterEach(() => cleanup())
 
-  it('registra por correo con el rol seleccionado y delega navegación al consumidor', async () => {
-    const onRegistrationComplete = vi.fn()
-    const { result } = renderHook(() => useSignupForm({ onRegistrationComplete }))
+  it('guarda el registro por correo con el rol seleccionado y delega navegación al consumidor', () => {
+    const onStepCompleted = vi.fn()
+    const { result } = renderHook(() => useSignupForm({ onStepCompleted }))
 
     act(() => {
       result.current.setRole('business')
@@ -32,57 +32,52 @@ describe('useSignupForm', () => {
       result.current.updateField('email', 'ana@example.com')
       result.current.updateField('password', 'ClaveSegura1!')
     })
-    await act(async () => result.current.submitWithEmail())
+    act(() => result.current.submitWithEmail())
 
-    expect(mocks.registerWithEmail).toHaveBeenCalledWith(
-      'ana@example.com',
-      'ClaveSegura1!',
-      'store',
-      {},
-    )
-    expect(onRegistrationComplete).toHaveBeenCalledWith('/onboarding/comercio')
+    expect(mocks.startEmailSignup).toHaveBeenCalledWith({
+      email: 'ana@example.com',
+      password: 'ClaveSegura1!',
+      role: 'store',
+      profile: {},
+    })
+    expect(onStepCompleted).toHaveBeenCalledWith('/onboarding/comercio')
   })
 
   it('muestra validaciones y no intenta registrar datos inválidos', async () => {
     const { result } = renderHook(() => useSignupForm({
-      onRegistrationComplete: vi.fn(),
+      onStepCompleted: vi.fn(),
     }))
 
-    await act(async () => result.current.submitWithEmail())
+    act(() => result.current.submitWithEmail())
 
     expect(result.current.errors).toEqual({
       fullName: 'Ingresa tu nombre completo.',
       email: 'Ingresa un correo electrónico válido.',
       password: 'Usa al menos 8 caracteres.',
     })
-    expect(mocks.registerWithEmail).not.toHaveBeenCalled()
+    expect(mocks.startEmailSignup).not.toHaveBeenCalled()
   })
 
-  it('mantiene errores y estados de carga al fallar el registro', async () => {
-    mocks.registerWithEmail.mockRejectedValueOnce(new Error('Cuenta existente'))
+  it('muestra el error y restablece la carga si falla el registro con Google', async () => {
+    mocks.startGoogleSignup.mockRejectedValueOnce(new Error('Cuenta existente'))
     const { result } = renderHook(() => useSignupForm({
-      onRegistrationComplete: vi.fn(),
+      onStepCompleted: vi.fn(),
     }))
 
-    act(() => {
-      result.current.updateField('fullName', 'Ana García')
-      result.current.updateField('email', 'ana@example.com')
-      result.current.updateField('password', 'ClaveSegura1!')
-    })
-    await act(async () => result.current.submitWithEmail())
+    await act(async () => result.current.submitWithGoogle())
 
     expect(result.current.authError).toBe('Cuenta existente')
-    expect(result.current.loading).toBe(false)
+    expect(result.current.googleLoading).toBe(false)
   })
 
   it('registra con Google usando el rol seleccionado', async () => {
-    const onRegistrationComplete = vi.fn()
-    const { result } = renderHook(() => useSignupForm({ onRegistrationComplete }))
+    const onStepCompleted = vi.fn()
+    const { result } = renderHook(() => useSignupForm({ onStepCompleted }))
 
     act(() => result.current.setRole('business'))
     await act(async () => result.current.submitWithGoogle())
 
-    expect(mocks.signInWithGoogle).toHaveBeenCalledWith('store')
-    expect(onRegistrationComplete).toHaveBeenCalledWith('/onboarding/comercio')
+    expect(mocks.startGoogleSignup).toHaveBeenCalledWith('store')
+    expect(onStepCompleted).toHaveBeenCalledWith('/onboarding/comercio')
   })
 })

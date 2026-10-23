@@ -7,6 +7,7 @@ import { createUserProfileService } from './composition/createUserProfileService
 import type { ApplicationServices } from './application/contracts'
 import { FirebaseAuthGateway } from './infrastructure/firebase/FirebaseAuthGateway'
 import { createFirebaseRepositories } from './infrastructure/firebase/createFirebaseRepositories'
+import { InMemorySignupDraftStore } from './infrastructure/InMemorySignupDraftStore'
 import { createCryptoIdGenerator } from './infrastructure/cryptoIdGenerator'
 import { getFirebaseAuth } from './infrastructure/firebase/firebaseClient'
 
@@ -34,6 +35,7 @@ export function createFoodBackApplication(): ApplicationServices {
     authentication: createAuthenticationService({
       auth: authGateway,
       profiles: repositories.userProfiles,
+      signupDrafts: new InMemorySignupDraftStore(),
     }),
     userProfiles: createUserProfileService({
       authSession: authGateway,

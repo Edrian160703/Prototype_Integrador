@@ -2905,3 +2905,22 @@ html[data-theme="dark"] .form-section-title {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.phone-input {
+  position: relative;
+}
+.phone-input-prefix {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.phone-input input {
+  padding-left: 48px;
+}
+.field input[aria-invalid="true"] {
+  border-color: #d95656;
+}

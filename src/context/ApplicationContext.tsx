@@ -17,6 +17,7 @@ import type {
   OfferListQueryApplication,
   OfferOwnerQueryApplication,
   OfferPublishingApplication,
+  PendingSignupQueryApplication,
   ProductAdminQueryApplication,
   ProductApplication,
   ProductCatalogApplication,
@@ -28,6 +29,8 @@ import type {
   ReservationHistoryApplication,
   ReservationManagementApplication,
   SignOutApplication,
+  SignupCompletionApplication,
+  SignupStartApplication,
   UserProfileApplication,
   UserProfileQueryApplication,
 } from '../application/contracts'
@@ -162,6 +165,18 @@ export function useUserProfileQuery(): UserProfileQueryApplication {
 }
 
 export function useAuthRegistration(): AuthRegistrationApplication {
+  return useAuthentication()
+}
+
+export function useSignupStart(): SignupStartApplication {
+  return useAuthentication()
+}
+
+export function usePendingSignupQuery(): PendingSignupQueryApplication {
+  return useAuthentication()
+}
+
+export function useSignupCompletion(): SignupCompletionApplication {
   return useAuthentication()
 }
 

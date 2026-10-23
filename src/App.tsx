@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 
@@ -33,6 +33,7 @@ export default function App() {
             <Route path="/para-negocios" element={<ParaNegocios />} />
             <Route path="/registro-negocio" element={<RegistroNegocio />} />
             <Route path="/registro" element={<SignUpForm />} />
+            <Route path="/onboarding" element={<Navigate to="/registro" replace />} />
             <Route path="/onboarding/:role" element={<Onboarding />} />
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/publicar" element={<Publicar />} />
