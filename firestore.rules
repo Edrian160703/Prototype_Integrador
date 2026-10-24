@@ -1,0 +1,494 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.keys().hasAny(['admin'])
+        && request.auth.token.admin == true;
+    }
+
+    function validStock(value) {
+      return value is int && value >= 0 && value <= 9007199254740991;
+    }
+
+    function validQuantity(value) {
+      return value is int && value > 0 && value <= 9007199254740991;
+    }
+
+    function productPath(productId) {
+      return /databases/$(database)/documents/productos/$(productId);
+    }
+
+    function offerPath(offerId) {
+      return /databases/$(database)/documents/ofertas/$(offerId);
+    }
+
+    function reservationPath(reservationId) {
+      return /databases/$(database)/documents/reservas/$(reservationId);
+    }
+
+    function ledgerPath(operationId) {
+      return /databases/$(database)/documents/inventario_movimientos/$(operationId);
+    }
+
+    function isStoreOwner(uid) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/comercios/$(uid))
+        && get(/databases/$(database)/documents/comercios/$(uid)).data.uid == uid
+        && get(/databases/$(database)/documents/comercios/$(uid)).data.role == 'store';
+    }
+
+    function validLedgerBase(operationId) {
+      return signedIn()
+        && request.resource.data.id_operacion == operationId
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.id_producto is string
+        && request.resource.data.id_oferta is string;
+    }
+
+    function validOfferLink(operationId, movement) {
+      let productBefore = get(productPath(movement.id_producto)).data;
+      let productAfter = getAfter(productPath(movement.id_producto)).data;
+      let offerAfter = getAfter(offerPath(movement.id_oferta)).data;
+      return movement.tipo == 'oferta_vinculada'
+        && movement.cantidad == 0
+        && movement.stock_producto_antes == movement.stock_producto_despues
+        && movement.stock_oferta_antes == movement.stock_oferta_despues
+        && exists(productPath(movement.id_producto))
+        && existsAfter(productPath(movement.id_producto))
+        && existsAfter(offerPath(movement.id_oferta))
+        && productBefore.inventory_version == 1
+        && productBefore.inventory_offer_id == null
+        && productAfter.inventory_offer_id == movement.id_oferta
+        && productAfter.last_inventory_operation_id == operationId
+        && (isAdmin() || productBefore.id_comercio == movement.uid)
+        && productBefore.stock == movement.stock_producto_antes
+        && productAfter.stock == movement.stock_producto_despues
+        && offerAfter.id_producto == movement.id_producto
+        && offerAfter.id_comercio == productBefore.id_comercio
+        && offerAfter.inventory_version == 1
+        && offerAfter.last_inventory_operation_id == operationId
+        && offerAfter.cantidad_disponible == movement.stock_oferta_despues
+        && offerAfter.estado == 'disponible'
+        && offerAfter.fecha_limite is timestamp
+        && offerAfter.fecha_limite > request.time
+        && validStock(offerAfter.cantidad_disponible)
+        && movement.stock_producto_antes == movement.stock_oferta_antes;
+    }
+
+    function validReservationCreation(operationId, movement) {
+      let productBefore = get(productPath(movement.id_producto)).data;
+      let productAfter = getAfter(productPath(movement.id_producto)).data;
+      let offerBefore = get(offerPath(movement.id_oferta)).data;
+      let offerAfter = getAfter(offerPath(movement.id_oferta)).data;
+      let reservationAfter = getAfter(reservationPath(movement.id_reserva)).data;
+      return movement.tipo == 'reserva_creada'
+        && validQuantity(movement.cantidad)
+        && movement.uid == request.auth.uid
+        && movement.id_reserva is string
+        && movement.id_usuario_reserva == request.auth.uid
+        && exists(productPath(movement.id_producto))
+        && exists(offerPath(movement.id_oferta))
+        && existsAfter(productPath(movement.id_producto))
+        && existsAfter(offerPath(movement.id_oferta))
+        && existsAfter(reservationPath(movement.id_reserva))
+        && productBefore.inventory_version == 1
+        && productBefore.inventory_offer_id == movement.id_oferta
+        && productBefore.id_producto == movement.id_producto
+        && productBefore.estado == 'activo'
+        && offerBefore.id_comercio == productBefore.id_comercio
+        && !productBefore.keys().hasAny(['archivedAt'])
+        && offerBefore.inventory_version == 1
+        && offerBefore.id_producto == movement.id_producto
+        && offerBefore.id_comercio == productBefore.id_comercio
+        && offerBefore.estado == 'disponible'
+        && offerBefore.fecha_limite is timestamp
+        && offerBefore.fecha_limite > request.time
+        && validStock(productBefore.stock)
+        && validStock(offerBefore.cantidad_disponible)
+        && productBefore.stock == offerBefore.cantidad_disponible
+        && productBefore.stock == movement.stock_producto_antes
+        && offerBefore.cantidad_disponible == movement.stock_oferta_antes
+        && movement.stock_producto_despues == movement.stock_producto_antes - movement.cantidad
+        && movement.stock_oferta_despues == movement.stock_oferta_antes - movement.cantidad
+        && productAfter.stock == movement.stock_producto_despues
+        && productAfter.last_inventory_operation_id == operationId
+        && validStock(productAfter.stock)
+        && offerAfter.cantidad_disponible == movement.stock_oferta_despues
+        && offerAfter.last_inventory_operation_id == operationId
+        && validStock(offerAfter.cantidad_disponible)
+        && reservationAfter.id_reserva == movement.id_reserva
+        && reservationAfter.id_usuario == request.auth.uid
+        && reservationAfter.email_usuario == request.auth.token.email
+        && reservationAfter.id_producto == movement.id_oferta
+        && reservationAfter.id_producto_catalogo == movement.id_producto
+        && reservationAfter.cantidad == movement.cantidad
+        && reservationAfter.estado_reserva == 'pendiente'
+        && reservationAfter.inventory_creation_operation_id == operationId
+        && reservationAfter.inventory_last_operation_id == operationId
+        && reservationAfter.fecha_reserva == request.time;
+    }
+
+    function validReservationCancellation(operationId, movement) {
+      let productBefore = get(productPath(movement.id_producto)).data;
+      let productAfter = getAfter(productPath(movement.id_producto)).data;
+      let offerBefore = get(offerPath(movement.id_oferta)).data;
+      let offerAfter = getAfter(offerPath(movement.id_oferta)).data;
+      let reservationBefore = get(reservationPath(movement.id_reserva)).data;
+      let reservationAfter = getAfter(reservationPath(movement.id_reserva)).data;
+      return movement.tipo == 'reserva_cancelada'
+        && validQuantity(movement.cantidad)
+        && movement.uid == request.auth.uid
+        && movement.id_usuario_reserva == reservationBefore.id_usuario
+        && movement.id_reserva is string
+        && reservationBefore.inventory_creation_operation_id is string
+        && (isAdmin() || reservationBefore.id_usuario == request.auth.uid)
+        && reservationBefore.estado_reserva in ['pendiente', 'confirmada']
+        && reservationBefore.id_producto == movement.id_oferta
+        && reservationBefore.id_producto_catalogo == movement.id_producto
+        && reservationBefore.cantidad == movement.cantidad
+        && reservationAfter.estado_reserva == 'cancelada'
+        && reservationAfter.inventory_creation_operation_id == reservationBefore.inventory_creation_operation_id
+        && reservationAfter.inventory_last_operation_id == operationId
+        && productBefore.inventory_version == 1
+        && productBefore.inventory_offer_id == movement.id_oferta
+        && offerBefore.inventory_version == 1
+        && offerBefore.id_producto == movement.id_producto
+        && validStock(productBefore.stock)
+        && validStock(offerBefore.cantidad_disponible)
+        && productBefore.stock == offerBefore.cantidad_disponible
+        && productBefore.stock == movement.stock_producto_antes
+        && offerBefore.cantidad_disponible == movement.stock_oferta_antes
+        && movement.stock_producto_despues == movement.stock_producto_antes + movement.cantidad
+        && movement.stock_oferta_despues == movement.stock_oferta_antes + movement.cantidad
+        && validStock(movement.stock_producto_despues)
+        && validStock(movement.stock_oferta_despues)
+        && productAfter.stock == movement.stock_producto_despues
+        && productAfter.last_inventory_operation_id == operationId
+        && offerAfter.cantidad_disponible == movement.stock_oferta_despues
+        && offerAfter.last_inventory_operation_id == operationId;
+    }
+
+    function validStockAdjustment(operationId, movement) {
+      let productBefore = get(productPath(movement.id_producto)).data;
+      let productAfter = getAfter(productPath(movement.id_producto)).data;
+      let offerBefore = get(offerPath(movement.id_oferta)).data;
+      let offerAfter = getAfter(offerPath(movement.id_oferta)).data;
+      return movement.tipo == 'stock_ajustado'
+        && exists(productPath(movement.id_producto))
+        && exists(offerPath(movement.id_oferta))
+        && existsAfter(productPath(movement.id_producto))
+        && existsAfter(offerPath(movement.id_oferta))
+        && productBefore.inventory_version == 1
+        && productBefore.inventory_offer_id == movement.id_oferta
+        && offerBefore.inventory_version == 1
+        && offerBefore.id_producto == movement.id_producto
+        && offerBefore.id_comercio == productBefore.id_comercio
+        && (isAdmin() || productBefore.id_comercio == request.auth.uid)
+        && productBefore.stock == offerBefore.cantidad_disponible
+        && productBefore.stock == movement.stock_producto_antes
+        && offerBefore.cantidad_disponible == movement.stock_oferta_antes
+        && validStock(movement.stock_producto_despues)
+        && validStock(movement.stock_oferta_despues)
+        && movement.stock_producto_despues == movement.stock_oferta_despues
+        && movement.stock_producto_despues == movement.cantidad
+        && productAfter.stock == movement.stock_producto_despues
+        && productAfter.last_inventory_operation_id == operationId
+        && offerAfter.cantidad_disponible == movement.stock_oferta_despues
+        && offerAfter.last_inventory_operation_id == operationId
+        && offerAfter.fecha_limite is timestamp
+        && offerAfter.fecha_limite > request.time;
+    }
+
+    function validProductStockWrite(productId) {
+      let operationId = request.resource.data.last_inventory_operation_id;
+      let movement = getAfter(ledgerPath(operationId)).data;
+      let offerAfter = getAfter(offerPath(movement.id_oferta)).data;
+      return resource.data.inventory_version == 1
+        && request.resource.data.inventory_version == 1
+        && validStock(request.resource.data.stock)
+        && request.resource.data.inventory_offer_id == resource.data.inventory_offer_id
+        && movement.id_operacion == operationId
+        && movement.id_producto == productId
+        && movement.id_oferta == resource.data.inventory_offer_id
+        && movement.stock_producto_antes == resource.data.stock
+        && movement.stock_producto_despues == request.resource.data.stock
+        && movement.stock_oferta_despues == offerAfter.cantidad_disponible
+        && offerAfter.last_inventory_operation_id == operationId
+        && movement.uid == request.auth.uid;
+    }
+
+    function validProductOfferLink(productId) {
+      let operationId = request.resource.data.last_inventory_operation_id;
+      let movement = getAfter(ledgerPath(operationId)).data;
+      let productAfter = getAfter(productPath(productId)).data;
+      let offerAfter = getAfter(offerPath(movement.id_oferta)).data;
+      return resource.data.inventory_version == 1
+        && resource.data.inventory_offer_id == null
+        && request.resource.data.inventory_version == 1
+        && request.resource.data.inventory_offer_id == movement.id_oferta
+        && movement.tipo == 'oferta_vinculada'
+        && movement.id_operacion == operationId
+        && movement.id_producto == productId
+        && movement.uid == request.auth.uid
+        && (isAdmin() || resource.data.id_comercio == request.auth.uid)
+        && resource.data.stock == request.resource.data.stock
+        && movement.stock_producto_antes == resource.data.stock
+        && offerAfter.id_producto == productId
+        && offerAfter.id_comercio == resource.data.id_comercio
+        && productAfter.estado == 'activo'
+        && !productAfter.keys().hasAny(['archivedAt'])
+        && offerAfter.last_inventory_operation_id == operationId;
+    }
+
+    function validOfferStockWrite(offerId) {
+      let operationId = request.resource.data.last_inventory_operation_id;
+      let movement = getAfter(ledgerPath(operationId)).data;
+      let productBefore = get(productPath(movement.id_producto)).data;
+      let productAfter = getAfter(productPath(movement.id_producto)).data;
+      return resource.data.inventory_version == 1
+        && request.resource.data.inventory_version == 1
+        && validStock(request.resource.data.cantidad_disponible)
+        && resource.data.id_producto == movement.id_producto
+        && movement.id_operacion == operationId
+        && movement.id_oferta == offerId
+        && movement.stock_producto_antes == productBefore.stock
+        && movement.stock_producto_despues == productAfter.stock
+        && productAfter.last_inventory_operation_id == operationId
+        && movement.uid == request.auth.uid
+        && movement.stock_oferta_antes == resource.data.cantidad_disponible
+        && movement.stock_oferta_despues == request.resource.data.cantidad_disponible
+        && (
+          (movement.tipo == 'stock_ajustado'
+            && validOfferFields(request.resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'cantidad_disponible', 'last_inventory_operation_id',
+              'nombre_producto', 'id_categoria', 'descripcion',
+              'precio_original', 'precio_oferta', 'horario_recojo',
+              'fecha_limite', 'imagen_url'
+            ]))
+          || (movement.tipo in ['reserva_creada', 'reserva_cancelada']
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['cantidad_disponible', 'last_inventory_operation_id']))
+        );
+    }
+
+    function validOfferFields(data) {
+      return data.nombre_producto is string
+        && data.nombre_producto.size() > 0
+        && data.id_categoria is string
+        && data.descripcion is string
+        && data.precio_original is number
+        && data.precio_oferta is number
+        && data.precio_original >= 0
+        && data.precio_oferta >= 0
+        && data.precio_oferta <= data.precio_original
+        && data.horario_recojo is string
+        && data.fecha_limite is timestamp
+        && data.fecha_limite > request.time
+        && (data.imagen_url == null || data.imagen_url is string);
+    }
+
+    function validReservationCancelUpdate(reservationId) {
+      let operationId = request.resource.data.inventory_last_operation_id;
+      let movement = getAfter(ledgerPath(operationId)).data;
+      return movement.tipo == 'reserva_cancelada'
+        && movement.id_operacion == operationId
+        && movement.id_reserva == reservationId
+        && movement.id_usuario_reserva == resource.data.id_usuario
+        && movement.id_oferta == resource.data.id_producto
+        && movement.id_producto == resource.data.id_producto_catalogo
+        && movement.cantidad == resource.data.cantidad
+        && (isAdmin() || resource.data.id_usuario == request.auth.uid)
+        && request.resource.data.estado_reserva == 'cancelada'
+        && request.resource.data.inventory_creation_operation_id == resource.data.inventory_creation_operation_id
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['estado_reserva', 'inventory_last_operation_id', 'updatedAt', 'deletedAt'])
+        && (
+          !request.resource.data.keys().hasAny(['deletedAt'])
+          || isAdmin()
+        );
+    }
+
+    function validInventoryMovement(operationId, movement) {
+      return (movement.tipo == 'oferta_vinculada'
+          && validOfferLink(operationId, movement))
+        || (movement.tipo == 'reserva_creada'
+          && validReservationCreation(operationId, movement))
+        || (movement.tipo == 'reserva_cancelada'
+          && validReservationCancellation(operationId, movement))
+        || (movement.tipo == 'stock_ajustado'
+          && validStockAdjustment(operationId, movement));
+    }
+
+    match /consumidores/{documentId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isAdmin() || (
+        signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == 'consumer'
+        && !request.resource.data.keys().hasAny(['admin'])
+      );
+      allow update: if isAdmin() || (
+        signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['accountStatus', 'admin'])
+        && !request.resource.data.keys().hasAny(['admin'])
+      );
+      allow delete: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    match /comercios/{documentId} {
+      allow read: if true;
+      allow create: if isAdmin() || (
+        signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == 'store'
+        && !request.resource.data.keys().hasAny(['admin'])
+      );
+      allow update: if isAdmin() || (
+        signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['accountStatus', 'admin'])
+        && !request.resource.data.keys().hasAny(['admin'])
+      );
+      allow delete: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    match /productos/{productId} {
+      allow read: if true;
+      allow create: if (isAdmin() || isStoreOwner(request.auth.uid))
+        && request.resource.data.id_producto == productId
+        && request.resource.data.id_comercio is string
+        && (isAdmin() || request.resource.data.id_comercio == request.auth.uid)
+        && validStock(request.resource.data.stock)
+        && request.resource.data.inventory_version == 1
+        && validStock(request.resource.data.stock)
+        && request.resource.data.inventory_offer_id == null
+        && request.resource.data.estado in ['activo', 'pausado', 'agotado'];
+      allow update: if request.resource.data.id_producto == resource.data.id_producto
+        && request.resource.data.id_comercio == resource.data.id_comercio
+        && (
+          (request.resource.data.stock != resource.data.stock
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['stock', 'last_inventory_operation_id', 'updatedAt'])
+            && validProductStockWrite(productId))
+          || (request.resource.data.inventory_offer_id != resource.data.inventory_offer_id
+            && request.resource.data.stock == resource.data.stock
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['inventory_offer_id', 'last_inventory_operation_id', 'updatedAt'])
+            && validProductOfferLink(productId))
+          || (isAdmin()
+            && request.resource.data.stock == resource.data.stock
+            && request.resource.data.inventory_version == resource.data.inventory_version
+            && request.resource.data.inventory_offer_id == resource.data.inventory_offer_id
+            && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['id_producto', 'id_comercio', 'stock', 'inventory_version', 'inventory_offer_id', 'last_inventory_operation_id']))
+        );
+      allow delete: if false;
+    }
+
+    match /ofertas/{offerId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.last_inventory_operation_id is string
+        && request.resource.data.inventory_version == 1
+        && validStock(request.resource.data.cantidad_disponible)
+        && request.resource.data.id_producto is string
+        && (isAdmin() || request.resource.data.id_comercio == request.auth.uid)
+        && request.resource.data.estado == 'disponible'
+        && validStock(request.resource.data.cantidad_disponible)
+        && validOfferFields(request.resource.data)
+        && getAfter(ledgerPath(request.resource.data.last_inventory_operation_id)).data.tipo == 'oferta_vinculada'
+        && getAfter(ledgerPath(request.resource.data.last_inventory_operation_id)).data.id_operacion
+          == request.resource.data.last_inventory_operation_id
+        && getAfter(ledgerPath(request.resource.data.last_inventory_operation_id)).data.id_oferta == offerId
+        && getAfter(ledgerPath(request.resource.data.last_inventory_operation_id)).data.id_producto
+          == request.resource.data.id_producto
+        && getAfter(productPath(request.resource.data.id_producto)).data.inventory_offer_id == offerId
+        && request.resource.data.id_comercio
+          == getAfter(productPath(request.resource.data.id_producto)).data.id_comercio;
+      allow update: if request.resource.data.id_producto == resource.data.id_producto
+        && request.resource.data.id_comercio == resource.data.id_comercio
+        && request.resource.data.inventory_version == resource.data.inventory_version
+        && (
+          (request.resource.data.cantidad_disponible != resource.data.cantidad_disponible
+            && validOfferStockWrite(offerId))
+          || (request.resource.data.cantidad_disponible == resource.data.cantidad_disponible
+
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['estado', 'archivedAt'])
+            && (
+              (request.resource.data.estado == 'archivada'
+                && (isAdmin() || resource.data.id_comercio == request.auth.uid))
+              || (resource.data.estado == 'archivada' && request.resource.data.estado == 'disponible' && isAdmin())
+            ))
+        );
+      allow delete: if false;
+    }
+
+    match /reservas/{reservationId} {
+      allow read: if isAdmin() || (
+        signedIn() && resource.data.id_usuario == request.auth.uid
+      );
+      allow create: if signedIn()
+        && request.resource.data.id_reserva == reservationId
+        && request.resource.data.id_usuario == request.auth.uid
+        && request.resource.data.estado_reserva == 'pendiente'
+        && validQuantity(request.resource.data.cantidad)
+        && request.resource.data.inventory_creation_operation_id is string
+        && getAfter(ledgerPath(request.resource.data.inventory_creation_operation_id)).data.tipo == 'reserva_creada'
+        && getAfter(ledgerPath(request.resource.data.inventory_creation_operation_id)).data.id_reserva == reservationId
+        && getAfter(ledgerPath(request.resource.data.inventory_creation_operation_id)).data.id_oferta
+          == request.resource.data.id_producto
+        && getAfter(ledgerPath(request.resource.data.inventory_creation_operation_id)).data.id_producto
+          == request.resource.data.id_producto_catalogo;
+      allow update: if (
+        isAdmin()
+        && resource.data.estado_reserva == 'pendiente'
+        && request.resource.data.estado_reserva == 'confirmada'
+        && request.resource.data.id_usuario == resource.data.id_usuario
+        && request.resource.data.id_producto == resource.data.id_producto
+        && request.resource.data.id_producto_catalogo == resource.data.id_producto_catalogo
+        && request.resource.data.cantidad == resource.data.cantidad
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado_reserva', 'updatedAt'])
+      ) || (
+        resource.data.estado_reserva in ['pendiente', 'confirmada']
+        && validReservationCancelUpdate(reservationId)
+      ) || (
+        isAdmin()
+        && resource.data.estado_reserva == 'cancelada'
+        && request.resource.data.estado_reserva == 'cancelada'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedAt', 'updatedAt'])
+        && request.resource.data.deletedAt == request.time
+      );
+      allow delete: if false;
+    }
+
+    match /inventario_movimientos/{operationId} {
+      allow read: if isAdmin() || (
+        signedIn()
+        && (resource.data.uid == request.auth.uid
+          || resource.data.id_usuario_reserva == request.auth.uid)
+      );
+      allow create: if validLedgerBase(operationId)
+        && validInventoryMovement(operationId, request.resource.data);
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
