@@ -59,7 +59,12 @@ export interface AccountManagementApplication {
 }
 
 export interface ReservationCheckoutApplication {
-  crearReservasDesdeCarrito(idUsuario: string, emailUsuario: string, items: CartItem[]): Promise<string[]>
+  crearReservasDesdeCarrito(
+    idUsuario: string,
+    emailUsuario: string,
+    items: CartItem[],
+    nombreUsuario?: string | null,
+  ): Promise<string[]>
 }
 
 export interface ReservationManagementApplication {

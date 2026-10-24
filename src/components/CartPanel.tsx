@@ -32,7 +32,7 @@ export default function CartPanel({ open, onClose }: CartPanelProps) {
     setError(null)
     setComprando(true)
     try {
-      await crearReservasDesdeCarrito(user.uid, user.email ?? '', items)
+      await crearReservasDesdeCarrito(user.uid, user.email ?? '', items, user.displayName)
       clearCart()
       onClose()
     } catch (err) {

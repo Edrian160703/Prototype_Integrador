@@ -18,10 +18,11 @@ import type {
   ReservaDeleter,
   ReservaReader,
 } from '../../ports/reservaRepository'
-import type { IdGenerator } from '../../ports/idGenerator'
+import type { IdGenerator, NamedIdGenerator } from '../../ports/idGenerator'
 import type { CartItem } from '../../types/cart'
 import type { ReservaDocument, EstadoReserva } from '../../types/reserva'
 import { createCryptoIdGenerator } from '../cryptoIdGenerator'
+import { createReadableIdGenerator } from '../readableIdGenerator'
 import { toDate } from './firestoreDates'
 import {
   assertPositiveQuantity,
@@ -82,16 +83,22 @@ export class FirebaseReservaRepository implements
     private readonly db: Firestore,
     private readonly idGenerator: IdGenerator = createCryptoIdGenerator(),
     private readonly adminAuthorizer: ReservaAdminAuthorizer = DEFAULT_ADMIN_AUTHORIZER,
+    private readonly reservationIds: NamedIdGenerator = createReadableIdGenerator(idGenerator, 'reserva'),
   ) {}
 
-  async create(idUsuario: string, emailUsuario: string, item: CartItem): Promise<string> {
+  async create(
+    idUsuario: string,
+    emailUsuario: string,
+    item: CartItem,
+    nombreUsuario?: string | null,
+  ): Promise<string> {
     if (!idUsuario.trim() || !emailUsuario.trim()) {
       throw new Error('Debes iniciar sesión para reservar.')
     }
     if (!item.id.trim()) throw new Error('Los datos de la reserva no son válidos.')
     assertPositiveQuantity(item.quantity)
 
-    const reservationId = this.idGenerator.next()
+    const reservationId = this.reservationIds.next(nombreUsuario?.trim() || emailUsuario.split('@')[0])
     const operationId = this.idGenerator.next()
     const reservationRef = doc(collection(this.db, 'reservas'), reservationId)
     const operationRef = doc(collection(this.db, INVENTORY_LEDGER_COLLECTION), operationId)

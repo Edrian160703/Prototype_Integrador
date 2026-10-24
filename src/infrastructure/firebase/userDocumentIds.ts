@@ -1,4 +1,5 @@
 import type { InitialUserProfile } from '../../types/user'
+import { toSlug } from '../../utils/slug'
 
 export interface NewUserDocumentInput {
   uid: string
@@ -20,16 +21,8 @@ export class UidDocumentIdStrategy implements UserDocumentIdStrategy {
 
 export const READABLE_ID_UID_LENGTH = 5
 const READABLE_ID_MAX_NAME_LENGTH = 60
-const READABLE_ID_FALLBACK_NAME = 'consumidor'
-
-function toSlug(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-}
+const CONSUMER_FALLBACK_NAME = 'consumidor'
+export const STORE_FALLBACK_NAME = 'comercio'
 
 function readNames(input: NewUserDocumentInput): string {
   const { profile, displayName } = input
@@ -40,11 +33,14 @@ function readNames(input: NewUserDocumentInput): string {
 
 /** Ej.: Alex Perez + uid "PhQft0D8..." -> "alex_perez_phqft". El sufijo del uid evita duplicados. */
 export class ReadableNameDocumentIdStrategy implements UserDocumentIdStrategy {
-  constructor(private readonly uidLength: number = READABLE_ID_UID_LENGTH) {}
+  constructor(
+    private readonly uidLength: number = READABLE_ID_UID_LENGTH,
+    private readonly fallbackName: string = CONSUMER_FALLBACK_NAME,
+  ) {}
 
   createId(input: NewUserDocumentInput): string {
     const name = toSlug(readNames(input)).slice(0, READABLE_ID_MAX_NAME_LENGTH).replace(/_+$/, '')
     const suffix = toSlug(input.uid).slice(0, this.uidLength)
-    return [name || READABLE_ID_FALLBACK_NAME, suffix].join('_')
+    return [name || this.fallbackName, suffix].join('_')
   }
 }

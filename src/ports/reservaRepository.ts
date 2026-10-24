@@ -2,7 +2,12 @@ import type { CartItem } from '../types/cart'
 import type { EstadoReserva, ReservaDocument } from '../types/reserva'
 
 export interface ReservaCreator {
-  create(idUsuario: string, emailUsuario: string, item: CartItem): Promise<string>
+  create(
+    idUsuario: string,
+    emailUsuario: string,
+    item: CartItem,
+    nombreUsuario?: string | null,
+  ): Promise<string>
 }
 
 export interface ReservaReader {

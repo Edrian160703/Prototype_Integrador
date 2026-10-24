@@ -36,10 +36,7 @@ service cloud.firestore {
     }
 
     function isStoreOwner(uid) {
-      return signedIn()
-        && exists(/databases/$(database)/documents/comercios/$(uid))
-        && get(/databases/$(database)/documents/comercios/$(uid)).data.uid == uid
-        && get(/databases/$(database)/documents/comercios/$(uid)).data.role == 'store';
+      return signedIn() && request.auth.uid == uid;
     }
 
     function validLedgerBase(operationId) {

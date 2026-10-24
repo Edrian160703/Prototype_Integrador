@@ -38,7 +38,8 @@ export function createReservationServices({
       idUsuario: string,
       emailUsuario: string,
       items: CartItem[],
-    ) => crearReservasDesdeCarrito(await reservations(), idUsuario, emailUsuario, items),
+      nombreUsuario?: string | null,
+    ) => crearReservasDesdeCarrito(await reservations(), idUsuario, emailUsuario, items, nombreUsuario),
     cancelarReserva: async (idReserva: string) =>
       cancelarReserva(await reservations(), idReserva),
     getReservasByUsuario: async (idUsuario: string) => {

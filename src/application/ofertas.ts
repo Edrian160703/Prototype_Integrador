@@ -7,7 +7,7 @@ import type {
 } from '../ports/ofertaRepository'
 import type { ComercioReader } from '../ports/comercioRepository'
 import type { ProductoCreator } from '../ports/productoRepository'
-import type { IdGenerator } from '../ports/idGenerator'
+import type { IdGenerator, NamedIdGenerator } from '../ports/idGenerator'
 import type {
   CreateOfertaParams,
   OfertaConComercio,
@@ -20,16 +20,17 @@ export function createOferta(
   repository: OfertaCreator,
   { uid, payload }: CreateOfertaParams,
   idGenerator: IdGenerator,
+  offerIds: NamedIdGenerator,
 ): Promise<string> {
   const idProducto = idGenerator.next()
-  return repository.create(uid, payload, idProducto)
+  return repository.create(uid, payload, idProducto, offerIds.next(payload.nombre_producto))
 }
 
 export async function createOfertaConProducto(
   { uid, payload }: CreateOfertaParams,
   productoCreator: ProductoCreator,
   ofertaCreator: OfertaCreator,
-  idGenerator: IdGenerator,
+  offerIds: NamedIdGenerator,
 ): Promise<string> {
   const idProducto = await productoCreator.create(
     {
@@ -43,7 +44,7 @@ export async function createOfertaConProducto(
     },
     uid,
   )
-  return ofertaCreator.create(uid, payload, idProducto, idGenerator.next())
+  return ofertaCreator.create(uid, payload, idProducto, offerIds.next(payload.nombre_producto))
 }
 
 export async function getOfertas(

@@ -86,14 +86,16 @@ const cartItem: CartItem = {
 }
 
 function setup(assertAdmin = vi.fn(async () => undefined)) {
-  const ids = ['reservation-1', 'movement-1']
+  const ids = ['movement-1', 'movement-2']
   const idGenerator = { next: () => ids.shift() ?? 'unexpected-id' }
+  const reservationIds = { next: vi.fn(() => 'reservation-1') }
   const repository = new FirebaseReservaRepository(
     {} as Firestore,
     idGenerator,
     { assertAdmin },
+    reservationIds,
   )
-  return { repository, assertAdmin }
+  return { repository, assertAdmin, reservationIds }
 }
 
 function seedManagedPair() {
@@ -124,10 +126,11 @@ beforeEach(() => {
 describe('FirebaseReservaRepository client transactions', () => {
   it('creates a reservation and decrements the managed product and offer together', async () => {
     seedManagedPair()
-    const { repository } = setup()
+    const { repository, reservationIds } = setup()
 
-    await expect(repository.create('user-1', 'user@example.com', cartItem))
+    await expect(repository.create('user-1', 'user@example.com', cartItem, 'maria perez'))
       .resolves.toBe('reservation-1')
+    expect(reservationIds.next).toHaveBeenCalledWith('maria perez')
 
     expect(firestoreMocks.documents['productos/product-1'].stock).toBe(2)
     expect(firestoreMocks.documents['ofertas/offer-1'].cantidad_disponible).toBe(2)
