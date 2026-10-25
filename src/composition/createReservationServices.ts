@@ -14,7 +14,6 @@ import type {
   ReservaCreator,
   ReservaDeleter,
   ReservaReader,
-  ReservaStateWriter,
 } from '../ports/reservaRepository'
 import type { CartItem } from '../types/cart'
 
@@ -42,6 +41,8 @@ export function createReservationServices({
       nombreUsuario?: string | null,
     ) => crearReservasDesdeCarrito(await reservations(), idUsuario, emailUsuario, items, nombreUsuario),
     cancelarReserva: async (idReserva: string) =>
+      cancelarReserva(await reservations(), idReserva),
+    deleteReserva: async (idReserva: string) =>
       cancelarReserva(await reservations(), idReserva),
     getReservasByUsuario: async (idUsuario: string) => {
       const [reservationRepository, offerRepository] = await Promise.all([reservations(), offers()])

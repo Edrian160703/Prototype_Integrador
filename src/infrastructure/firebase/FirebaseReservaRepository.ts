@@ -17,7 +17,6 @@ import type {
   ReservaCreator,
   ReservaDeleter,
   ReservaReader,
-  ReservaStateWriter,
 } from '../../ports/reservaRepository'
 import type { IdGenerator, NamedIdGenerator } from '../../ports/idGenerator'
 import type { CartItem } from '../../types/cart'
