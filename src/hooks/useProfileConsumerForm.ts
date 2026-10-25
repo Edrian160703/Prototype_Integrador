@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useProfileEditing } from '../context/ApplicationContext'
 import useProfileEditLifecycle, { type ProfileEditStatus } from './useProfileEditLifecycle'
 import type { ConsumerUser } from '../types/user'
+import { isValidPhone, normalizePhone, PHONE_LENGTH } from '../validation/phone'
 
 export const PREFERENCE_OPTIONS = ['Panaderías', 'Menús', 'Vegano', 'Postres', 'Frutas y verduras']
 
@@ -27,7 +28,7 @@ function toFormValues(profile: ConsumerUser): ConsumerFormValues {
   return {
     firstName: profile.firstName ?? fallback.first,
     lastName: profile.lastName ?? fallback.last,
-    phone: profile.phone ?? '',
+    phone: normalizePhone(profile.phone ?? ''),
     habitualLocation: profile.habitualLocation ?? '',
     dietaryPreferences: profile.dietaryPreferences ?? [],
   }
@@ -41,11 +42,6 @@ function cleanValues(values: ConsumerFormValues): ConsumerFormValues {
     phone: values.phone.trim(),
     habitualLocation: values.habitualLocation.trim(),
   }
-}
-
-function isValidPhone(phone: string): boolean {
-  const digits = phone.replace(/\D/g, '')
-  return digits.length === 9 || (digits.length === 11 && digits.startsWith('51'))
 }
 
 export function useProfileConsumerForm(profile: ConsumerUser, onSaved: () => Promise<void>) {
@@ -79,7 +75,7 @@ export function useProfileConsumerForm(profile: ConsumerUser, onSaved: () => Pro
   const validate = (values: ConsumerFormValues): boolean => {
     const nextErrors: ConsumerFieldErrors = {}
     if (!values.firstName) nextErrors.firstName = 'Ingresa tu nombre.'
-    if (!isValidPhone(values.phone)) nextErrors.phone = 'Ingresa un celular válido de 9 dígitos.'
+    if (!isValidPhone(values.phone)) nextErrors.phone = `Ingresa un celular válido de ${PHONE_LENGTH} dígitos.`
     if (!values.habitualLocation) nextErrors.habitualLocation = 'Ingresa tu dirección o ubicación habitual.'
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0

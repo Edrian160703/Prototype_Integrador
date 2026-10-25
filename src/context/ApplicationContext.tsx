@@ -3,6 +3,7 @@ import type {
   AccountApplication,
   AccountManagementApplication,
   AccountQueryApplication,
+  AdminClaimQueryApplication,
   ApplicationServices,
   AuthenticationApplication,
   AuthRegistrationApplication,
@@ -17,6 +18,7 @@ import type {
   OfferListQueryApplication,
   OfferOwnerQueryApplication,
   OfferPublishingApplication,
+  PendingSignupQueryApplication,
   ProductAdminQueryApplication,
   ProductApplication,
   ProductCatalogApplication,
@@ -29,6 +31,8 @@ import type {
   ReservationHistoryApplication,
   ReservationManagementApplication,
   SignOutApplication,
+  SignupCompletionApplication,
+  SignupStartApplication,
   UserProfileApplication,
   UserProfileQueryApplication,
 } from '../application/contracts'
@@ -170,11 +174,27 @@ export function useAuthRegistration(): AuthRegistrationApplication {
   return useAuthentication()
 }
 
+export function useSignupStart(): SignupStartApplication {
+  return useAuthentication()
+}
+
+export function usePendingSignupQuery(): PendingSignupQueryApplication {
+  return useAuthentication()
+}
+
+export function useSignupCompletion(): SignupCompletionApplication {
+  return useAuthentication()
+}
+
 export function useEmailSignIn(): EmailSignInApplication {
   return useAuthentication()
 }
 
 export function useGoogleSignIn(): GoogleSignInApplication {
+  return useAuthentication()
+}
+
+export function useAdminClaimQuery(): AdminClaimQueryApplication {
   return useAuthentication()
 }
 

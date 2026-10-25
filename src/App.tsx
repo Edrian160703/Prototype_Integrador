@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import AdminRoute from './components/admin/AdminRoute'
 
 const LoginModal = lazy(() => import('./components/LoginModal'))
 const SignUpForm = lazy(() => import('./components/SignUpForm'))
@@ -39,7 +40,11 @@ export default function App() {
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/publicar" element={<Publicar />} />
             <Route path="/reserva/:id" element={<ReservaExclusiva />} />
+<<<<<<< HEAD
             <Route path="/admin" element={<AdminDashboard />} />
+=======
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+>>>>>>> rama-diego
           </Routes>
         </Suspense>
       </main>

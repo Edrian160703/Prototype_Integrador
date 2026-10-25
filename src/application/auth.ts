@@ -1,5 +1,6 @@
 import type {
   AuthIdentity,
+  IAuthAdminClaimReader,
   IAuthRegistrar,
   IAuthSession,
   IAuthSignIn,
@@ -10,7 +11,7 @@ import type {
 } from '../ports/userProfileRepository'
 import type { InitialUserData, UserRole } from '../types/user'
 
-function getDisplayName(profile: InitialUserData['profile']): string | null {
+export function getDisplayName(profile: InitialUserData['profile']): string | null {
   if (profile && 'firstName' in profile) {
     return [profile.firstName, profile.lastName].filter(Boolean).join(' ') || null
   }
@@ -63,6 +64,10 @@ export function subscribeToAuthChanges(
 
 export function signInWithEmail(auth: IAuthSignIn, email: string, password: string): Promise<AuthIdentity> {
   return auth.signInWithEmail(email, password)
+}
+
+export function hasAdminClaim(auth: IAuthAdminClaimReader): Promise<boolean> {
+  return auth.hasAdminClaim(true)
 }
 
 export async function loginWithGoogle(auth: IAuthSignIn, profiles: IProfileCreator): Promise<AuthIdentity> {

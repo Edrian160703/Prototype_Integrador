@@ -1401,6 +1401,40 @@ img {
   padding: 0;
   margin: 22px 0;
 }
+.business-map {
+  margin: 12px 0 18px;
+}
+.business-map > p {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+.business-map-canvas {
+  height: 320px;
+  width: 100%;
+  border-radius: 10px;
+  z-index: 0;
+}
+.business-map-marker {
+  width: 18px !important;
+  height: 18px !important;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--green-primary);
+  box-shadow: 0 1px 6px #0008;
+}
+.business-map-message {
+  position: absolute;
+  z-index: 1000;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  color: #b91c1c;
+  box-shadow: 0 2px 8px #0002;
+  font-size: 12px;
+}
 .onboarding-preferences legend,
 .onboarding-schedule legend {
   font-size: 12.5px;
@@ -2904,4 +2938,23 @@ html[data-theme="dark"] .form-section-title {
   .admin-stats {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+.phone-input {
+  position: relative;
+}
+.phone-input-prefix {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.phone-input input {
+  padding-left: 48px;
+}
+.field input[aria-invalid="true"] {
+  border-color: #d95656;
 }

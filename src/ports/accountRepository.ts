@@ -8,7 +8,7 @@ export interface ManagedAccount {
   displayName: string
   email: string
   status: AccountStatus
-  createdAt: Date
+  createdAt: Date | null
   lastActiveAt: Date
 }
 

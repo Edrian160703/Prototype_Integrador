@@ -15,7 +15,7 @@ const accounts: ManagedAccount[] = [
     displayName: "Ada Lovelace",
     email: "ada@example.com",
     status: "activa",
-    createdAt: new Date("2025-01-01T00:00:00Z"),
+    createdAt: new Date("2024-01-01T00:00:00Z"),
     lastActiveAt: new Date("2025-01-01T00:00:00Z"),
   },
   {
@@ -24,7 +24,7 @@ const accounts: ManagedAccount[] = [
     displayName: "Grace Hopper",
     email: "grace@example.com",
     status: "suspendida",
-    createdAt: new Date("2025-01-02T00:00:00Z"),
+    createdAt: new Date("2024-01-02T00:00:00Z"),
     lastActiveAt: new Date("2025-01-02T00:00:00Z"),
   },
   {
@@ -33,7 +33,7 @@ const accounts: ManagedAccount[] = [
     displayName: "Katherine Johnson",
     email: "katherine@example.com",
     status: "pendiente",
-    createdAt: new Date("2025-01-03T00:00:00Z"),
+    createdAt: new Date("2024-01-03T00:00:00Z"),
     lastActiveAt: new Date("2025-01-03T00:00:00Z"),
   },
 ];
@@ -47,7 +47,7 @@ const products: ProductoAdminItem[] = [
     price: 5,
     stock: 10,
     status: "activo",
-    createdAt: new Date("2025-01-01T00:00:00Z"),
+    createdAt: new Date("2024-01-01T00:00:00Z"),
     updatedAt: new Date("2025-01-01T00:00:00Z"),
   },
   {
@@ -58,7 +58,7 @@ const products: ProductoAdminItem[] = [
     price: 4,
     stock: 0,
     status: "agotado",
-    createdAt: new Date("2025-01-02T00:00:00Z"),
+    createdAt: new Date("2024-01-02T00:00:00Z"),
     updatedAt: new Date("2025-01-02T00:00:00Z"),
   },
   {
@@ -69,7 +69,7 @@ const products: ProductoAdminItem[] = [
     price: 3,
     stock: 5,
     status: "pausado",
-    createdAt: new Date("2025-01-03T00:00:00Z"),
+    createdAt: new Date("2024-01-03T00:00:00Z"),
     updatedAt: new Date("2025-01-03T00:00:00Z"),
   },
 ];
@@ -93,12 +93,15 @@ describe("panel de cuentas", () => {
     fireEvent.change(screen.getByPlaceholderText("Buscar usuarios por nombre o correo"), {
       target: { value: "ada@example.com" },
     });
-    fireEvent.change(screen.getByLabelText("Filtrar cuentas por estado"), {
+    fireEvent.change(screen.getByLabelText("Filtrar por fecha de creación"), {
+      target: { value: "todos" },
+    });
+    fireEvent.change(screen.getByLabelText("Filtrar usuarios por estado"), {
       target: { value: "suspendida" },
     });
     expect(screen.getByText("No hay usuarios que coincidan con los filtros.")).toBeTruthy();
 
-    fireEvent.change(screen.getByLabelText("Filtrar cuentas por estado"), {
+    fireEvent.change(screen.getByLabelText("Filtrar usuarios por estado"), {
       target: { value: "todas" },
     });
     expect(screen.getByText("Ada Lovelace")).toBeTruthy();
@@ -147,6 +150,46 @@ describe("panel de cuentas", () => {
 
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(onStatusChange).not.toHaveBeenCalled();
+  });
+
+  it("filtra por fecha de creación sin confundirla con la última actividad", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-23T12:00:00"));
+    render(
+      <AccountsPanel
+        entityLabel="usuario"
+        entityLabelPlural="usuarios"
+        initialAccounts={[
+          { ...accounts[0], createdAt: new Date("2026-10-23T11:30:00"), lastActiveAt: new Date("2020-01-01") },
+          { ...accounts[1], createdAt: new Date("2020-01-01"), lastActiveAt: new Date("2026-10-23T11:45:00") },
+        ]}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Filtrar por fecha de creación"), {
+      target: { value: "ultima-hora" },
+    });
+    expect(screen.getByText("Ada Lovelace")).toBeTruthy();
+    expect(screen.queryByText("Grace Hopper")).toBeNull();
+    vi.useRealTimers();
+  });
+
+  it("presenta error administrativo sin actualizar optimistamente una cuenta", async () => {
+    const onStatusChange = vi.fn().mockRejectedValue(new Error("permission denied"));
+    render(
+      <AccountsPanel
+        entityLabel="usuario"
+        entityLabelPlural="usuarios"
+        initialAccounts={[accounts[2]]}
+        onStatusChange={onStatusChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByTitle("Activar usuario"));
+    fireEvent.click(screen.getByText("Confirmar"));
+
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.getByText("Pendiente", { selector: ".status-badge" })).toBeTruthy();
   });
 });
 
@@ -207,5 +250,36 @@ describe("panel de productos", () => {
 
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it("filtra por fecha de creación del producto", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-23T12:00:00"));
+    render(
+      <ProductsPanel
+        initialProducts={[
+          { ...products[0], createdAt: new Date("2026-10-23T11:30:00") },
+          { ...products[1], createdAt: new Date("2020-01-01") },
+        ]}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Filtrar por fecha de creación"), {
+      target: { value: "ultima-hora" },
+    });
+    expect(screen.getByText("Pan integral")).toBeTruthy();
+    expect(screen.queryByText("Leche fresca")).toBeNull();
+    vi.useRealTimers();
+  });
+
+  it("presenta error administrativo sin eliminar optimistamente el producto", async () => {
+    const onDelete = vi.fn().mockRejectedValue(new Error("permission denied"));
+    render(<ProductsPanel initialProducts={[products[0]]} onDelete={onDelete} />);
+
+    fireEvent.click(screen.getByTitle("Eliminar producto"));
+    fireEvent.click(screen.getByText("Confirmar"));
+
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.getByText("Pan integral")).toBeTruthy();
   });
 });

@@ -18,9 +18,7 @@ export default function useAdminDashboard() {
     stores: accounts.stores,
     products: products.products,
     reservations: reservations.reservations,
-    loadError: [accounts.loadError, products.loadError, reservations.loadError]
-      .filter(Boolean)
-      .join(' ') || null,
+    loadError: [accounts.loadError, products.loadError, reservations.loadError].filter(Boolean).join(' ') || null,
     handleUserStatusChange: accounts.handleUserStatusChange,
     handleUserDelete: accounts.handleUserDelete,
     handleStoreStatusChange: accounts.handleStoreStatusChange,

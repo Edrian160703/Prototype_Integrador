@@ -51,6 +51,12 @@ const store: StoreUser = {
   pickupSchedule: [{ day: 'Lunes', startTime: '17:00', endTime: '20:00' }],
 }
 
+const storeWithCoordinates: StoreUser = {
+  ...store,
+  latitude: -12.03,
+  longitude: -77.01,
+}
+
 function submitEvent(): FormEvent<HTMLFormElement> {
   return { preventDefault: vi.fn() } as unknown as FormEvent<HTMLFormElement>
 }
@@ -113,6 +119,38 @@ describe('ciclo de edición de perfiles', () => {
     expect(result.current.dirty).toBe(false)
   })
 
+  it('restaura y vuelve a guardar las coordenadas existentes del comercio', async () => {
+    saveProfileChanges.mockResolvedValue(undefined)
+    const { result } = renderHook(() => useProfileStoreForm(storeWithCoordinates, vi.fn()))
+
+    expect(result.current.form).toMatchObject({ latitude: -12.03, longitude: -77.01 })
+    act(() => result.current.updateField('businessName', 'Panadería actualizada'))
+    await act(async () => {
+      await result.current.handleSubmit(submitEvent())
+    })
+
+    expect(saveProfileChanges).toHaveBeenCalledWith(
+      'store-1',
+      'store',
+      expect.objectContaining({ latitude: -12.03, longitude: -77.01 }),
+      'Panadería actualizada',
+    )
+  })
+
+  it('permite guardar perfiles antiguos sin coordenadas ni escribir valores incompletos', async () => {
+    saveProfileChanges.mockResolvedValue(undefined)
+    const { result } = renderHook(() => useProfileStoreForm(store, vi.fn()))
+
+    act(() => result.current.updateField('businessName', 'Panadería actualizada'))
+    await act(async () => {
+      await result.current.handleSubmit(submitEvent())
+    })
+
+    const savedProfile = saveProfileChanges.mock.calls[0][2] as Record<string, unknown>
+    expect(savedProfile).not.toHaveProperty('latitude')
+    expect(savedProfile).not.toHaveProperty('longitude')
+  })
+
   it('conserva los cambios realizados mientras el guardado anterior está en curso', async () => {
     let resolveSave!: () => void
     saveProfileChanges.mockReturnValue(
@@ -150,6 +188,19 @@ describe('ciclo de edición de perfiles', () => {
     expect(result.current.status).toBe('error')
     expect(result.current.statusMessage).toBe('Firestore no disponible')
     expect(result.current.dirty).toBe(true)
+  })
+
+  it('expone los errores de persistencia al guardar un perfil de comercio', async () => {
+    saveProfileChanges.mockRejectedValue(new Error('Firestore no disponible'))
+    const { result } = renderHook(() => useProfileStoreForm(store, vi.fn()))
+
+    act(() => result.current.updateField('businessName', 'Panadería actualizada'))
+    await act(async () => {
+      await result.current.handleSubmit(submitEvent())
+    })
+
+    expect(result.current.status).toBe('error')
+    expect(result.current.statusMessage).toBe('Firestore no disponible')
   })
 
   it('mantiene la validación de horario específica del perfil de comercio', async () => {

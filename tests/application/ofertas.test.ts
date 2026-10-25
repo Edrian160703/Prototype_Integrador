@@ -52,18 +52,20 @@ function oferta(overrides: Partial<OfertaDocument> = {}): OfertaDocument {
 
 describe('casos de uso de ofertas', () => {
   it('crea una oferta delegando la persistencia al repositorio', async () => {
-    const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
+    const idGenerator = { next: vi.fn().mockReturnValue('product-id') }
+    const offerIds = { next: vi.fn().mockReturnValue('ofertas_pan_del_dia_abc12345') }
     const repository: OfertaCreator = {
       create: vi.fn().mockResolvedValue('offer-1'),
     }
 
-    await expect(createOferta(repository, { uid: 'user-1', payload }, idGenerator)).resolves.toBe('offer-1')
+    await expect(createOferta(repository, { uid: 'user-1', payload }, idGenerator, offerIds)).resolves.toBe('offer-1')
     expect(idGenerator.next).toHaveBeenCalledOnce()
-    expect(repository.create).toHaveBeenCalledWith('user-1', payload, 'offer-id')
+    expect(offerIds.next).toHaveBeenCalledWith(payload.nombre_producto)
+    expect(repository.create).toHaveBeenCalledWith('user-1', payload, 'product-id', 'ofertas_pan_del_dia_abc12345')
   })
 
   it('crea el producto antes de crear la oferta asociada', async () => {
-    const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
+    const offerIds = { next: vi.fn().mockReturnValue('offer-id') }
     const productoCreator: ProductoCreator = {
       create: vi.fn().mockResolvedValue('product-1'),
     }
@@ -72,7 +74,7 @@ describe('casos de uso de ofertas', () => {
     }
 
     await expect(
-      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, idGenerator),
+      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, offerIds),
     ).resolves.toBe('offer-1')
 
     expect(productoCreator.create).toHaveBeenCalledWith({
@@ -90,11 +92,12 @@ describe('casos de uso de ofertas', () => {
       'product-1',
       'offer-id',
     )
-    expect(idGenerator.next).toHaveBeenCalledOnce()
+    expect(offerIds.next).toHaveBeenCalledOnce()
+    expect(offerIds.next).toHaveBeenCalledWith(payload.nombre_producto)
   })
 
   it('no intenta guardar la oferta si falla la creación del producto', async () => {
-    const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
+    const offerIds = { next: vi.fn().mockReturnValue('offer-id') }
     const productoCreator: ProductoCreator = {
       create: vi.fn().mockRejectedValue(new Error('falló el producto')),
     }
@@ -103,7 +106,7 @@ describe('casos de uso de ofertas', () => {
     }
 
     await expect(
-      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, idGenerator),
+      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, offerIds),
     ).rejects.toThrow('falló el producto')
     expect(ofertaCreator.create).not.toHaveBeenCalled()
   })

@@ -8,6 +8,7 @@ interface UseMisReservasResult {
   error: string
   cancelandoId: string | null
   errorCancelId: string | null
+  errorCancelMessage: string | null
   reservaAEliminar: ReservaConOferta | null
   selectReservaToDelete: (reserva: ReservaConOferta) => void
   closeDeleteConfirmation: () => void
@@ -22,6 +23,7 @@ export default function useMisReservas(idUsuario: string): UseMisReservasResult 
   const [error, setError] = useState('')
   const [cancelandoId, setCancelandoId] = useState<string | null>(null)
   const [errorCancelId, setErrorCancelId] = useState<string | null>(null)
+  const [errorCancelMessage, setErrorCancelMessage] = useState<string | null>(null)
   const [reservaAEliminar, setReservaAEliminar] = useState<ReservaConOferta | null>(null)
 
   useEffect(() => {
@@ -62,6 +64,7 @@ export default function useMisReservas(idUsuario: string): UseMisReservasResult 
     if (!reserva) return
 
     setErrorCancelId(null)
+    setErrorCancelMessage(null)
     setCancelandoId(reserva.id_reserva)
     try {
       await cancelarReserva(reserva.id_reserva)
@@ -69,6 +72,9 @@ export default function useMisReservas(idUsuario: string): UseMisReservasResult 
       setReservaAEliminar(null)
     } catch (reason) {
       setErrorCancelId(reserva.id_reserva)
+      setErrorCancelMessage(reason instanceof Error
+        ? reason.message
+        : 'No se pudo cancelar la reserva.')
       console.error('Error al cancelar la reserva', reason)
       setReservaAEliminar(null)
     } finally {
@@ -82,6 +88,7 @@ export default function useMisReservas(idUsuario: string): UseMisReservasResult 
     error,
     cancelandoId,
     errorCancelId,
+    errorCancelMessage,
     reservaAEliminar,
     selectReservaToDelete,
     closeDeleteConfirmation,

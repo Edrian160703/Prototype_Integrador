@@ -29,6 +29,18 @@ export function getFirebaseAuth() {
   return getAuth(getFirebaseApp())
 }
 
+export async function assertFirebaseAdmin(): Promise<void> {
+  const user = getFirebaseAuth().currentUser
+  if (!user) {
+    throw new Error('Debes iniciar sesión para acceder a las operaciones administrativas.')
+  }
+
+  const token = await user.getIdTokenResult(true)
+  if (token.claims.admin !== true) {
+    throw new Error('No tienes permiso para ejecutar operaciones administrativas.')
+  }
+}
+
 export async function getFirebaseFirestore() {
   const { getFirestore } = await import('firebase/firestore')
   return getFirestore(getFirebaseApp())

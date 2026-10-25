@@ -24,6 +24,9 @@ export default function HeaderActions({
       {!loading && profile?.role === 'store' && (
         <Link to="/publicar" className="btn btn-publish">+ Publicar</Link>
       )}
+      {!loading && profile?.role === 'store' && (
+        <Link to="/publicar" className="btn btn-publish">+ Publicar</Link>
+      )}
       <span className="location-pill"> Lima, Perú</span>
       <button className="icon-btn" aria-label="Favoritos">♡</button>
       {!loading && (

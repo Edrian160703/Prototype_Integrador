@@ -7,8 +7,12 @@ import { createUserProfileService } from './composition/createUserProfileService
 import type { ApplicationServices } from './application/contracts'
 import { FirebaseAuthGateway } from './infrastructure/firebase/FirebaseAuthGateway'
 import { createFirebaseRepositories } from './infrastructure/firebase/createFirebaseRepositories'
+import { InMemorySignupDraftStore } from './infrastructure/InMemorySignupDraftStore'
 import { createCryptoIdGenerator } from './infrastructure/cryptoIdGenerator'
+import { createReadableIdGenerator } from './infrastructure/readableIdGenerator'
 import { getFirebaseAuth } from './infrastructure/firebase/firebaseClient'
+
+const OFFER_ID_PREFIX = 'ofertas'
 
 export function createFoodBackApplication(): ApplicationServices {
   const idGenerator = createCryptoIdGenerator()
@@ -25,6 +29,7 @@ export function createFoodBackApplication(): ApplicationServices {
       products: repositories.products,
       commerces: repositories.commerces,
       idGenerator,
+      offerIds: createReadableIdGenerator(idGenerator, OFFER_ID_PREFIX),
     }),
     accounts: createAccountServices(repositories.accounts),
     reservations: createReservationServices({
@@ -34,6 +39,7 @@ export function createFoodBackApplication(): ApplicationServices {
     authentication: createAuthenticationService({
       auth: authGateway,
       profiles: repositories.userProfiles,
+      signupDrafts: new InMemorySignupDraftStore(),
     }),
     userProfiles: createUserProfileService({
       authSession: authGateway,

@@ -19,8 +19,16 @@ export interface IAuthSignIn {
   signInWithGoogle(): Promise<AuthIdentity>
 }
 
+export interface IAuthAdminClaimReader {
+  hasAdminClaim(forceRefresh?: boolean): Promise<boolean>
+}
+
 export interface IAuthProfileUpdater {
   updateDisplayName(uid: string, displayName: string): Promise<void>
+}
+
+export interface IAuthAccountDeleter {
+  deleteCurrentAccount(): Promise<void>
 }
 
 export interface IAuthSignOut {

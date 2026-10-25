@@ -1,7 +1,10 @@
 import { useState, type FormEvent, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useEmailSignIn, useGoogleSignIn } from '../context/ApplicationContext'
-import { getFirebaseAuth } from '../infrastructure/firebase/firebaseClient'
+import {
+  useAdminClaimQuery,
+  useEmailSignIn,
+  useGoogleSignIn,
+} from '../context/ApplicationContext'
 
 interface LoginModalProps {
   onClose: () => void
@@ -12,6 +15,7 @@ type Tab = 'login' | 'register'
 export default function LoginModal({ onClose }: LoginModalProps) {
   const { loginWithGoogle } = useGoogleSignIn()
   const { signInWithEmail } = useEmailSignIn()
+  const { hasAdminClaim } = useAdminClaimQuery()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('login')
   const [showPass, setShowPass] = useState(false)
@@ -27,15 +31,14 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
   async function finishSignIn() {
     try {
-      const user = getFirebaseAuth().currentUser
-      if (!user) throw new Error('La sesión de Firebase no está disponible.')
-
-      const token = await user.getIdTokenResult(true)
-      if (token.claims.admin === true) navigate('/admin')
+      const isAdmin = await hasAdminClaim()
+      if (isAdmin) navigate('/admin')
       onClose()
     } catch (error) {
-      console.error('No se pudo verificar el acceso administrativo tras iniciar sesión.', error)
-      setAuthError('Iniciaste sesión, pero no pudimos verificar tus permisos. Inténtalo de nuevo.')
+      console.error('No se pudieron verificar los permisos tras iniciar sesión.', error)
+      setAuthError(
+        'Iniciaste sesión, pero no pudimos verificar tus permisos. Comprueba la conexión e inténtalo de nuevo.',
+      )
     }
   }
 
@@ -45,12 +48,14 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     setLoading(true)
     try {
       await signInWithEmail(email, password)
-      await finishSignIn()
     } catch (error) {
       setAuthError(error instanceof Error ? 'Correo o contraseña incorrectos.' : 'No pudimos iniciar sesión.')
-    } finally {
       setLoading(false)
+      return
     }
+
+    await finishSignIn()
+    setLoading(false)
   }
 
   const handleGoogle = async () => {
@@ -58,12 +63,14 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     setGoogleLoading(true)
     try {
       await loginWithGoogle()
-      await finishSignIn()
     } catch {
       setAuthError('No pudimos conectar con Google.')
-    } finally {
       setGoogleLoading(false)
+      return
     }
+
+    await finishSignIn()
+    setGoogleLoading(false)
   }
 
   return (

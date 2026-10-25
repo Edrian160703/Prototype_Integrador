@@ -28,6 +28,7 @@ export default function MisReservas({ idUsuario }: MisReservasProps) {
     error,
     cancelandoId,
     errorCancelId,
+    errorCancelMessage,
     reservaAEliminar,
     selectReservaToDelete,
     closeDeleteConfirmation,
@@ -87,7 +88,7 @@ export default function MisReservas({ idUsuario }: MisReservasProps) {
                   {cancelandoId === reserva.id_reserva ? '...' : '🗑'}
                 </button>
                 {errorCancelId === reserva.id_reserva && (
-                  <span className="field-error">No se pudo eliminar. Intenta de nuevo.</span>
+                  <span className="field-error">{errorCancelMessage ?? 'No se pudo cancelar la reserva.'}</span>
                 )}
               </div>
             </div>

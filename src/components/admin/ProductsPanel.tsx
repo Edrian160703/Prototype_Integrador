@@ -9,6 +9,7 @@ import {
   filterAdminItems,
   paginateAdminItems,
 } from "../../utils/adminPanelData";
+import CreationDateFilter from "./CreationDateFilter";
 import {
   matchesCreationDateRange,
   type CreationDateRange,
@@ -95,6 +96,7 @@ export default function ProductsPanel({
     return (value: T) => {
       setter(value);
       setPage(1);
+      setActionError(null);
     };
   }
 
@@ -119,8 +121,9 @@ export default function ProductsPanel({
       onProductsChange?.(updatedProducts);
       setPending(null);
     } catch (error) {
-      console.error("No se pudo actualizar el producto desde el panel administrativo.", error);
+      console.error("No se pudo completar la acción administrativa sobre el producto.", error);
       setActionError("No se pudo completar la acción. Verifica tus permisos e inténtalo de nuevo.");
+      setPending(null);
     } finally {
       setLoading(false);
     }
@@ -237,7 +240,7 @@ export default function ProductsPanel({
                   <td>
                     <p className="account-name">{p.name}</p>
                     <p className="account-email">
-                      {p.category} · creado {formatRelative(p.createdAt)}
+                      {p.category} · creado {formatRelative(p.createdAt)} · actualizado {formatRelative(p.updatedAt)}
                     </p>
                   </td>
                   <td>{p.storeName}</td>

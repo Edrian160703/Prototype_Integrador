@@ -25,6 +25,7 @@ export interface ProductManagementApplication {
 
 export interface OfferListQueryApplication {
   getOfertas(): Promise<OfertaConComercio[]>
+  getOfertasVigentes(): Promise<OfertaConComercio[]>
 }
 
 export interface OfferDetailsQueryApplication {
@@ -59,7 +60,12 @@ export interface AccountManagementApplication {
 }
 
 export interface ReservationCheckoutApplication {
-  crearReservasDesdeCarrito(idUsuario: string, emailUsuario: string, items: CartItem[]): Promise<string[]>
+  crearReservasDesdeCarrito(
+    idUsuario: string,
+    emailUsuario: string,
+    items: CartItem[],
+    nombreUsuario?: string | null,
+  ): Promise<string[]>
 }
 
 export interface ReservationManagementApplication {
@@ -74,6 +80,12 @@ export interface ReservationAdminApplication {
 
 export interface ReservationHistoryApplication {
   getReservasByUsuario(idUsuario: string): Promise<ReservaConOferta[]>
+}
+
+export interface ReservationAdminApplication {
+  getAllReservasForAdmin(): Promise<ReservaDocument[]>
+  updateReservaEstado(idReserva: string, estado: EstadoReserva): Promise<void>
+  deleteReservaForAdmin(idReserva: string): Promise<void>
 }
 
 export interface CurrentUserQueryApplication {
@@ -98,12 +110,35 @@ export interface AuthRegistrationApplication {
   signInWithGoogle(role: UserRole, profile?: InitialUserData['profile']): Promise<AuthIdentity>
 }
 
+export interface SignupStartApplication {
+  startEmailSignup(input: {
+    email: string
+    password: string
+    role: UserRole
+    profile?: InitialUserProfile
+  }): void
+  startGoogleSignup(role: UserRole, profile?: InitialUserProfile): Promise<AuthIdentity>
+}
+
+export interface PendingSignupQueryApplication {
+  getPendingSignupRole(): UserRole | null
+}
+
+export interface SignupCompletionApplication {
+  completeSignup(profile: InitialUserProfile): Promise<AuthIdentity>
+  cancelSignup(): Promise<void>
+}
+
 export interface EmailSignInApplication {
   signInWithEmail(email: string, password: string): Promise<AuthIdentity>
 }
 
 export interface GoogleSignInApplication {
   loginWithGoogle(): Promise<AuthIdentity>
+}
+
+export interface AdminClaimQueryApplication {
+  hasAdminClaim(): Promise<boolean>
 }
 
 export interface SignOutApplication {
@@ -150,8 +185,12 @@ export interface AuthenticationApplication extends
   CurrentUserQueryApplication,
   AuthStateSubscriptionApplication,
   AuthRegistrationApplication,
+  SignupStartApplication,
+  PendingSignupQueryApplication,
+  SignupCompletionApplication,
   EmailSignInApplication,
   GoogleSignInApplication,
+  AdminClaimQueryApplication,
   SignOutApplication {}
 
 export interface UserProfileApplication extends

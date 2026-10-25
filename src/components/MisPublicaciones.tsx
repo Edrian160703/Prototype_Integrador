@@ -144,7 +144,7 @@ export default function MisPublicaciones({ uid }: Props) {
               ¿Eliminar publicación?
             </h3>
             <p className="profile-confirm-body">
-              ¿Eliminar "{ofertaAEliminar.data.nombre_producto}"? Esta acción no se puede deshacer.
+              ¿Archivar "{ofertaAEliminar.data.nombre_producto}"? Dejará de estar disponible para nuevas reservas y se conservará para el historial.
             </p>
             <div className="profile-confirm-actions">
               <button
@@ -164,7 +164,7 @@ export default function MisPublicaciones({ uid }: Props) {
                 }}
                 disabled={deletingId !== null}
               >
-                {deletingId === ofertaAEliminar.id ? 'Eliminando...' : 'Sí, eliminar'}
+                {deletingId === ofertaAEliminar.id ? 'Archivando...' : 'Sí, archivar'}
               </button>
             </div>
           </div>

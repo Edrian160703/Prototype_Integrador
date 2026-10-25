@@ -5,6 +5,7 @@ export interface ReservaDocument {
   id_usuario: string
   email_usuario: string
   id_producto: string
+  id_producto_catalogo?: string
   fecha_reserva: Date
   cantidad: number
   estado_reserva: EstadoReserva

@@ -1,6 +1,7 @@
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -11,6 +12,8 @@ import {
 import type { Auth } from 'firebase/auth'
 import type {
   AuthIdentity,
+  IAuthAccountDeleter,
+  IAuthAdminClaimReader,
   IAuthProfileUpdater,
   IAuthRegistrar,
   IAuthSession,
@@ -32,6 +35,8 @@ export class FirebaseAuthGateway implements
   IAuthRegistrar,
   IAuthSignIn,
   IAuthProfileUpdater,
+  IAuthAccountDeleter,
+  IAuthAdminClaimReader,
   IAuthSignOut {
   constructor(private readonly auth: Auth) {}
 
@@ -60,9 +65,21 @@ export class FirebaseAuthGateway implements
     return toIdentity(user)
   }
 
+  async hasAdminClaim(forceRefresh = false): Promise<boolean> {
+    const user = this.auth.currentUser
+    if (!user) return false
+    const token = await user.getIdTokenResult(forceRefresh)
+    return token.claims.admin === true
+  }
+
   async updateDisplayName(uid: string, displayName: string): Promise<void> {
     const user = this.auth.currentUser
     if (user?.uid === uid) await updateProfile(user, { displayName })
+  }
+
+  async deleteCurrentAccount(): Promise<void> {
+    const user = this.auth.currentUser
+    if (user) await deleteUser(user)
   }
 
   async signOut(): Promise<void> {

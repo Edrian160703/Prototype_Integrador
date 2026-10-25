@@ -6,9 +6,6 @@ import useAdminDashboard, { type AdminTab } from "../hooks/useAdminDashboard";
 import AccountsPanel from "../components/admin/AccountsPanel";
 import ProductsPanel from "../components/admin/ProductsPanel";
 import ReservationsPanel from "../components/admin/ReservationsPanel";
-import type { ManagedAccount } from "../ports/accountRepository";
-import type { ProductoAdminItem } from "../types/productoAdmin";
-import type { ReservaDocument } from "../types/reserva";
 import "../styles/admin-dashboard.css";
 
 const TABS: { key: AdminTab; label: string; icon: string }[] = [
@@ -242,23 +239,19 @@ function AdminDashboardContent() {
             initialProducts={snapshot.products}
             onStatusChange={handleProductStatusChange}
             onDelete={handleProductDelete}
-            onProductsChange={(items) =>
-              setSnapshot((current) => ({ ...current, products: items }))
-            }
           />
         ))}
 
       {activeTab === "reservas" &&
-        (snapshot.reservations === null ? (
-          <p className="admin-loading">Cargando reservas…</p>
+        (reservations === null ? (
+          <p className="admin-loading" role={loadError ? "alert" : undefined}>
+            {loadError ? "No pudimos cargar las reservas." : "Cargando reservas…"}
+          </p>
         ) : (
           <ReservationsPanel
-            initialReservations={snapshot.reservations}
+            initialReservations={reservations}
             onStatusChange={handleReservationStatusChange}
             onDelete={handleReservationDelete}
-            onReservationsChange={(items) =>
-              setSnapshot((current) => ({ ...current, reservations: items }))
-            }
           />
         ))}
     </section>

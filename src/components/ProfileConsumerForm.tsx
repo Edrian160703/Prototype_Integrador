@@ -1,5 +1,8 @@
 import type { ConsumerUser } from '../types/user'
 import { useProfileConsumerForm, PREFERENCE_OPTIONS } from '../hooks/useProfileConsumerForm'
+import { maskDni } from '../utils/dniMask'
+import LockedField from './LockedField'
+import PhoneField from './PhoneField'
 
 interface ProfileConsumerFormProps {
   profile: ConsumerUser
@@ -63,19 +66,24 @@ export default function ProfileConsumerForm({ profile, onSaved }: ProfileConsume
             <input id="profile-email" type="email" value={profile.email} readOnly disabled />
             <small className="field-hint">Es tu usuario de acceso y no se puede modificar.</small>
           </div>
-          <div className="field">
-            <label htmlFor="profile-phone">Teléfono celular</label>
-            <input
-              id="profile-phone"
-              type="tel"
-              autoComplete="tel"
-              value={form.phone}
-              onChange={(event) => updateField('phone', event.target.value)}
-              placeholder="Ej. 987 654 321"
-              aria-invalid={Boolean(errors.phone)}
-            />
-            {errors.phone && <span className="field-error">{errors.phone}</span>}
-          </div>
+          <PhoneField
+            id="profile-phone"
+            label="Teléfono celular"
+            value={form.phone}
+            onChange={(value) => updateField('phone', value)}
+            invalid={Boolean(errors.phone)}
+            error={errors.phone}
+          />
+        </div>
+
+        <div className="field-row">
+          <LockedField
+            id="profile-dni"
+            label="DNI"
+            value={maskDni(profile.dni)}
+            placeholder="Sin registrar"
+            hint="Por seguridad solo mostramos parte de tu DNI y no se puede modificar."
+          />
         </div>
       </section>
 

@@ -6,9 +6,15 @@ export interface PickupSchedule {
   endTime: string
 }
 
+export interface BusinessCoordinates {
+  latitude: number
+  longitude: number
+}
+
 export interface ConsumerProfile {
   firstName?: string
   lastName?: string
+  dni?: string
   phone?: string
   district?: string
   habitualLocation?: string
@@ -22,6 +28,8 @@ export interface StoreProfile {
   address?: string
   district?: string
   reference?: string
+  latitude?: number
+  longitude?: number
   pickupSchedule?: PickupSchedule[]
   businessCategory?: string
   verificationStatus?: 'pending' | 'verified' | 'rejected'
@@ -56,4 +64,5 @@ export interface InitialUserData {
   displayName?: string | null
   photoURL?: string | null
   profile?: InitialUserProfile
+  onboardingCompleted?: boolean
 }

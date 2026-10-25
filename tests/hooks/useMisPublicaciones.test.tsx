@@ -73,7 +73,7 @@ describe('useMisPublicaciones', () => {
     expect(result.current.seleccionada).toBeNull()
   })
 
-  it('elimina por identificador sin solicitar confirmación al navegador', async () => {
+  it('archiva por identificador sin solicitar confirmación al navegador', async () => {
     getOffers.mockResolvedValue([oferta])
     deleteOffer.mockResolvedValue(undefined)
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
@@ -87,7 +87,7 @@ describe('useMisPublicaciones', () => {
     expect(deleteOffer).toHaveBeenCalledWith('offer-1', 'store-1')
     expect(confirm).not.toHaveBeenCalled()
     expect(getOffers).toHaveBeenCalledTimes(2)
-    expect(result.current.message).toBe('Publicación eliminada.')
+    expect(result.current.message).toBe('Publicación archivada. Se conserva para proteger el historial de reservas.')
   })
 
   it('expone el error de eliminación y libera el estado de carga si falla', async () => {

@@ -7,14 +7,14 @@ import {
   filterAdminItems,
   paginateAdminItems,
 } from "../../utils/adminPanelData";
+import type { AccountStatus, ManagedAccount } from "../../ports/accountRepository";
+import CreationDateFilter from "./CreationDateFilter";
 import {
   matchesCreationDateRange,
   type CreationDateRange,
 } from "../../utils/adminDateFilter";
-import type { ManagedAccount } from "../../ports/accountRepository";
-export type { ManagedAccount } from "../../ports/accountRepository";
 
-export type AccountStatus = "activa" | "suspendida" | "pendiente";
+export type { AccountStatus, ManagedAccount } from "../../ports/accountRepository";
 
 const STATUSES: AccountStatus[] = ["activa", "suspendida", "pendiente"];
 const STATUS_LABELS: Record<AccountStatus, string> = {
@@ -88,6 +88,7 @@ export default function AccountsPanel({
     return (value: T) => {
       setter(value);
       setPage(1);
+      setActionError(null);
     };
   }
 
@@ -112,8 +113,9 @@ export default function AccountsPanel({
       onAccountsChange?.(updatedAccounts);
       setPending(null);
     } catch (error) {
-      console.error("No se pudo actualizar la cuenta desde el panel administrativo.", error);
+      console.error("No se pudo completar la acción administrativa sobre la cuenta.", error);
       setActionError("No se pudo completar la acción. Verifica tus permisos e inténtalo de nuevo.");
+      setPending(null);
     } finally {
       setLoading(false);
     }
@@ -176,7 +178,7 @@ export default function AccountsPanel({
               onChange={(value) => updateFilter(setCreationDateRange)(value)}
             />
             <select
-              aria-label="Filtrar cuentas por estado"
+              aria-label={`Filtrar ${entityLabelPlural} por estado`}
               value={statusFilter}
               onChange={(e) =>
                 updateFilter(setStatusFilter)(
@@ -206,7 +208,8 @@ export default function AccountsPanel({
               <tr>
                 <th>{entityLabel[0].toUpperCase() + entityLabel.slice(1)}</th>
                 <th>Estado</th>
-                <th>Creado</th>
+                <th>Creada</th>
+                <th>Última actividad</th>
                 <th className="col-actions">Acciones</th>
               </tr>
             </thead>
@@ -229,6 +232,7 @@ export default function AccountsPanel({
                       {STATUS_LABELS[a.status]}
                     </span>
                   </td>
+                  <td>{a.createdAt ? formatRelative(a.createdAt) : "Sin fecha"}</td>
                   <td className="account-last-active">
                     {formatRelative(a.createdAt)}
                   </td>
@@ -275,7 +279,7 @@ export default function AccountsPanel({
 
               {pageItems.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="table-empty">
+                  <td colSpan={5} className="table-empty">
                     No hay {entityLabelPlural} que coincidan con los filtros.
                   </td>
                 </tr>

@@ -42,6 +42,23 @@ describe('mapUserProfileDocument', () => {
     })
   })
 
+  it('recupera las coordenadas del comercio y conserva perfiles antiguos sin ubicación', () => {
+    const profile = mapUserProfileDocument('store-1', 'comercios', {
+      ...commonDocument,
+      role: 'store',
+      latitude: -12.03,
+      longitude: -77.01,
+    })
+    const legacyProfile = mapUserProfileDocument('store-2', 'comercios', {
+      ...commonDocument,
+      role: 'store',
+    })
+
+    expect(profile).toMatchObject({ latitude: -12.03, longitude: -77.01 })
+    expect(legacyProfile).not.toHaveProperty('latitude')
+    expect(legacyProfile).not.toHaveProperty('longitude')
+  })
+
   it.each([
     ['rol diferente a la colección', 'consumidores', { role: 'store' }, 'no coincide'],
     ['correo ausente', 'consumidores', { email: undefined }, '"email"'],
@@ -52,6 +69,20 @@ describe('mapUserProfileDocument', () => {
       role: 'store',
       pickupSchedule: [{ day: 'Lunes', startTime: 17, endTime: '20:00' }],
     }, 'pickupSchedule'],
+    ['coordenadas incompletas', 'comercios', {
+      role: 'store',
+      latitude: -12.03,
+    }, 'coordenadas'],
+    ['coordenadas no numéricas', 'comercios', {
+      role: 'store',
+      latitude: '-12.03',
+      longitude: -77.01,
+    }, 'coordenadas'],
+    ['coordenadas fuera de rango', 'comercios', {
+      role: 'store',
+      latitude: 91,
+      longitude: -77.01,
+    }, 'coordenadas'],
     ['estado de verificación no permitido', 'comercios', {
       role: 'store',
       verificationStatus: 'approved',

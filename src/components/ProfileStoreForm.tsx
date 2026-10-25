@@ -1,5 +1,6 @@
 import type { StoreUser } from '../types/user'
 import { useProfileStoreForm, WEEK_DAYS } from '../hooks/useProfileStoreForm'
+import MapaNegocio from './MapaNegocio'
 
 interface ProfileStoreFormProps {
   profile: StoreUser
@@ -17,6 +18,7 @@ export default function ProfileStoreForm({ profile, onSaved }: ProfileStoreFormP
     saving,
     statusMessage,
     updateField,
+    updateLocation,
     updateSchedule,
     addSchedule,
     removeSchedule,
@@ -100,6 +102,22 @@ export default function ProfileStoreForm({ profile, onSaved }: ProfileStoreFormP
             aria-invalid={Boolean(errors.reference)}
           />
           {errors.reference && <span className="field-error">{errors.reference}</span>}
+        </div>
+        <div className="field">
+          <MapaNegocio
+            selectedLocation={
+              typeof form.latitude === 'number' && typeof form.longitude === 'number'
+                ? { latitude: form.latitude, longitude: form.longitude }
+                : null
+            }
+            onSelect={updateLocation}
+          />
+          {typeof form.latitude === 'number' && typeof form.longitude === 'number' && (
+            <p className="field-hint">
+              Ubicación seleccionada: {form.latitude.toFixed(6)}, {form.longitude.toFixed(6)}
+            </p>
+          )}
+          {errors.location && <span className="field-error">{errors.location}</span>}
         </div>
       </section>
 
