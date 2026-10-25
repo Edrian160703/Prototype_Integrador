@@ -50,7 +50,7 @@ export function createFirebaseRepositories(idGenerator: IdGenerator = createCryp
       import('./FirebaseAccountRepository'),
       getFirebaseFirestore(),
     ])
-    return new FirebaseAccountRepository(db)
+    return new FirebaseAccountRepository(db, { assertAdmin: assertFirebaseAdmin })
   })
 
   const userProfiles = createLazyRepository(async () => {

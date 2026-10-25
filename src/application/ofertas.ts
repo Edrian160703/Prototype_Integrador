@@ -47,17 +47,30 @@ export async function createOfertaConProducto(
   return ofertaCreator.create(uid, payload, idProducto, offerIds.next(payload.nombre_producto))
 }
 
-export async function getOfertas(
-  repository: OfertaListReader,
+async function enrichOfertas(
+  ofertas: Array<{ id: string; data: OfertaDocument }>,
   comercios: ComercioReader,
 ): Promise<OfertaConComercio[]> {
-  const ofertas = await repository.listAll()
   const cache = new Map<string, Promise<Awaited<ReturnType<ComercioReader['getCommerceById']>>>>()
 
   return Promise.all(ofertas.map(async ({ id, data }) => {
     if (!cache.has(data.id_comercio)) cache.set(data.id_comercio, comercios.getCommerceById(data.id_comercio))
     return { id, data, comercio: await cache.get(data.id_comercio)! }
   }))
+}
+
+export async function getOfertas(
+  repository: OfertaListReader,
+  comercios: ComercioReader,
+): Promise<OfertaConComercio[]> {
+  return enrichOfertas(await repository.listAll(), comercios)
+}
+
+export async function getOfertasVigentes(
+  repository: OfertaListReader,
+  comercios: ComercioReader,
+): Promise<OfertaConComercio[]> {
+  return enrichOfertas(await repository.listByLimitDate(), comercios)
 }
 
 export async function getOfertaById(

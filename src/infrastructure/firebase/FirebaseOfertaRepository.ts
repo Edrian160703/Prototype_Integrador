@@ -7,6 +7,7 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  Timestamp,
   where,
   type Firestore,
 } from 'firebase/firestore'
@@ -120,6 +121,14 @@ export class FirebaseOfertaRepository implements
 
   async listByOwner(uid: string): Promise<Array<{ id: string; data: OfertaDocument }>> {
     const snapshot = await getDocs(query(collection(this.db, 'ofertas'), where('id_comercio', '==', uid)))
+    return snapshot.docs
+      .filter((item) => item.data().estado !== 'archivada')
+      .map((item) => ({ id: item.id, data: mapOfertaDocument(item.data()) }))
+      .sort((left, right) => right.data.fecha_limite.getTime() - left.data.fecha_limite.getTime())
+  }
+
+  async listByLimitDate(): Promise<Array<{ id: string; data: OfertaDocument }>> {
+    const snapshot = await getDocs(query(collection(this.db, 'ofertas'), where('fecha_limite', '>', Timestamp.now())))
     return snapshot.docs
       .filter((item) => item.data().estado !== 'archivada')
       .map((item) => ({ id: item.id, data: mapOfertaDocument(item.data()) }))

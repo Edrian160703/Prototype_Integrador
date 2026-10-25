@@ -25,6 +25,7 @@ export interface ProductManagementApplication {
 
 export interface OfferListQueryApplication {
   getOfertas(): Promise<OfertaConComercio[]>
+  getOfertasVigentes(): Promise<OfertaConComercio[]>
 }
 
 export interface OfferDetailsQueryApplication {

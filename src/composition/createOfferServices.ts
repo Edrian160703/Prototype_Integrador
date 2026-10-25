@@ -4,6 +4,7 @@ import {
   deleteOferta,
   getOfertaById,
   getOfertas,
+  getOfertasVigentes,
   getOfertasByOwner,
   updateOferta,
 } from '../application/ofertas'
@@ -52,6 +53,10 @@ export function createOfferServices({
     getOfertas: async () => {
       const [offerRepository, commerceRepository] = await Promise.all([offers(), commerces()])
       return getOfertas(offerRepository, commerceRepository)
+    },
+    getOfertasVigentes: async () => {
+      const [offerRepository, commerceRepository] = await Promise.all([offers(), commerces()])
+      return getOfertasVigentes(offerRepository, commerceRepository)
     },
     getOfertaById: async (idOferta: string) => {
       const [offerRepository, commerceRepository] = await Promise.all([offers(), commerces()])

@@ -82,6 +82,7 @@ export class FirebaseProductoRepository implements
   }
 
   async updateEstado(idProducto: string, estado: ProductoEstado): Promise<void> {
+    await assertFirebaseAdmin()
     await updateDoc(doc(this.db, 'productos', idProducto), {
       estado,
       updatedAt: serverTimestamp(),
@@ -97,6 +98,7 @@ export class FirebaseProductoRepository implements
   }
 
   async getAll(): Promise<ProductoDocument[]> {
+    await assertFirebaseAdmin()
     const snapshot = await getDocs(collection(this.db, 'productos'))
     return snapshot.docs
       .filter((docSnap) => docSnap.data().archivedAt === undefined)
