@@ -3,16 +3,21 @@ import { Navigate } from "react-router-dom";
 import { useAuthSession } from "../context/AuthContext";
 import { getFirebaseAuth } from "../infrastructure/firebase/firebaseClient";
 import useAdminDashboard, { type AdminTab } from "../hooks/useAdminDashboard";
-import AccountsPanel from "../components/admin/AccountsPanel";
+import AccountsPanel, { ManagedAccount } from "../components/admin/AccountsPanel";
 import ProductsPanel from "../components/admin/ProductsPanel";
 import ReservationsPanel from "../components/admin/ReservationsPanel";
+import OffersPanel from "../components/admin/OffersPanel";
 import "../styles/admin-dashboard.css";
+import { ProductoAdminItem } from "../types/productoAdmin";
+import { ReservaDocument } from "../types/reserva";
+import { OfertaConComercio } from "../types/oferta";
 
 const TABS: { key: AdminTab; label: string; icon: string }[] = [
   { key: "usuarios", label: "Consumidores", icon: "👤" },
   { key: "comercios", label: "Comercios", icon: "🏪" },
   { key: "productos", label: "Productos", icon: "📦" },
   { key: "reservas", label: "Reservas", icon: "🧾" },
+  { key: "ofertas", label: "Ofertas", icon: "🏷️" },
 ];
 
 export default function AdminDashboard() {
@@ -92,6 +97,7 @@ function AdminDashboardContent() {
     stores,
     products,
     reservations,
+    offers,
     loadError,
     handleUserStatusChange,
     handleUserDelete,
@@ -107,16 +113,18 @@ function AdminDashboardContent() {
     stores: ManagedAccount[] | null;
     products: ProductoAdminItem[] | null;
     reservations: ReservaDocument[] | null;
+    offers: OfertaConComercio[] | null;
   }>({
     users: null,
     stores: null,
     products: null,
     reservations: null,
+    offers: null,
   });
 
   useEffect(() => {
-    setSnapshot({ users, stores, products, reservations });
-  }, [users, stores, products, reservations]);
+    setSnapshot({ users, stores, products, reservations, offers });
+  }, [users, stores, products, reservations, offers]);
 
   return (
     <section className="admin-page">
@@ -253,6 +261,15 @@ function AdminDashboardContent() {
             onStatusChange={handleReservationStatusChange}
             onDelete={handleReservationDelete}
           />
+        ))}
+
+      {activeTab === "ofertas" &&
+        (snapshot.offers === null ? (
+          <p className="admin-loading" role={loadError ? "alert" : undefined}>
+            {loadError ? "No pudimos cargar las ofertas." : "Cargando ofertas…"}
+          </p>
+        ) : (
+          <OffersPanel offers={snapshot.offers} />
         ))}
     </section>
   );

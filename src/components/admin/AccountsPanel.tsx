@@ -8,7 +8,6 @@ import {
   paginateAdminItems,
 } from "../../utils/adminPanelData";
 import type { AccountStatus, ManagedAccount } from "../../ports/accountRepository";
-import CreationDateFilter from "./CreationDateFilter";
 import {
   matchesCreationDateRange,
   type CreationDateRange,
@@ -233,9 +232,6 @@ export default function AccountsPanel({
                     </span>
                   </td>
                   <td>{a.createdAt ? formatRelative(a.createdAt) : "Sin fecha"}</td>
-                  <td className="account-last-active">
-                    {formatRelative(a.createdAt)}
-                  </td>
                   <td>
                     <div className="row-actions">
                       {a.status !== "activa" && (

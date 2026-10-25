@@ -5,6 +5,7 @@ import {
   deleteOferta,
   getOfertaById,
   getOfertas,
+  getOfertasVigentes,
   getOfertasByOwner,
   updateOferta,
 } from '../../src/application/ofertas'
@@ -119,6 +120,7 @@ describe('casos de uso de ofertas', () => {
         { id: 'offer-1', data: first },
         { id: 'offer-2', data: second },
       ]),
+      listByLimitDate: vi.fn().mockResolvedValue([]),
     }
     const comercios: ComercioReader = {
       getCommerceById: vi.fn().mockResolvedValue({ businessName: 'Panadería Central' }),
@@ -128,8 +130,27 @@ describe('casos de uso de ofertas', () => {
       { id: 'offer-1', data: first, comercio: { businessName: 'Panadería Central' } },
       { id: 'offer-2', data: second, comercio: { businessName: 'Panadería Central' } },
     ])
+    expect(repository.listAll).toHaveBeenCalledOnce()
+    expect(repository.listByLimitDate).not.toHaveBeenCalled()
     expect(comercios.getCommerceById).toHaveBeenCalledTimes(1)
     expect(comercios.getCommerceById).toHaveBeenCalledWith('store-1')
+  })
+
+  it('enriquece las ofertas vigentes sin sustituir la consulta completa', async () => {
+    const data = oferta()
+    const repository: OfertaListReader = {
+      listAll: vi.fn().mockResolvedValue([]),
+      listByLimitDate: vi.fn().mockResolvedValue([{ id: 'offer-1', data }]),
+    }
+    const comercios: ComercioReader = {
+      getCommerceById: vi.fn().mockResolvedValue({ businessName: 'Panadería Central' }),
+    }
+
+    await expect(getOfertasVigentes(repository, comercios)).resolves.toEqual([
+      { id: 'offer-1', data, comercio: { businessName: 'Panadería Central' } },
+    ])
+    expect(repository.listAll).not.toHaveBeenCalled()
+    expect(repository.listByLimitDate).toHaveBeenCalledOnce()
   })
 
   it('devuelve null si no existe la oferta y no consulta el comercio', async () => {
