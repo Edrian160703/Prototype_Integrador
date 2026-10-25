@@ -10,6 +10,9 @@ describe('createReadableIdGenerator', () => {
   it('antepone el prefijo indicado', () => {
     expect(createReadableIdGenerator(base, 'ofertas').next('Panes Dulces')).toBe('ofertas_panes_dulces_21af1f23')
   })
+  it('arma el ID de compra como COMPRA_<nombre>_<id>', () => {
+    expect(createReadableIdGenerator(base, 'COMPRA').next('Mario')).toBe('COMPRA_mario_21af1f23')
+  })
   it('quita tildes y símbolos', () => {
     expect(createReadableIdGenerator(base).next('Ñoquis / Café')).toBe('noquis_cafe_21af1f23')
   })

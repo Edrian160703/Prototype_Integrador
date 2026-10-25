@@ -4,6 +4,7 @@ import type { CreateOfertaParams, OfertaConComercio, OfertaPayload, OwnedOferta 
 import type { ProductoEstado, ProductoPayload } from '../types/producto'
 import type { InitialUserData, InitialUserProfile, UserDocument, UserRole } from '../types/user'
 import type { CartItem } from '../types/cart'
+import type { CheckoutRequest } from '../types/checkout'
 import type { EstadoReserva, ReservaConOferta, ReservaDocument } from '../types/reserva'
 import type { ProductoAdminRecord } from '../types/productoAdmin'
 import type { ProductoDocument } from '../types/producto'
@@ -64,6 +65,13 @@ export interface ReservationCheckoutApplication {
     idUsuario: string,
     emailUsuario: string,
     items: CartItem[],
+    nombreUsuario?: string | null,
+  ): Promise<string[]>
+  confirmarCheckout(
+    idUsuario: string,
+    emailUsuario: string,
+    items: CartItem[],
+    request: CheckoutRequest,
     nombreUsuario?: string | null,
   ): Promise<string[]>
 }

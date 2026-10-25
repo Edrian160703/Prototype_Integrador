@@ -55,6 +55,8 @@ export default function ReservaExclusiva() {
         id: oferta.id,
         title: oferta.title,
         place: oferta.place,
+        address: oferta.address,
+        reference: oferta.reference,
         image: oferta.image,
         price: oferta.precioOfertaNum,
         maxStock: oferta.cantidadDisponible,

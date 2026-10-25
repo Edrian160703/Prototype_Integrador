@@ -1,4 +1,5 @@
 import type { CartItem } from '../types/cart'
+import type { ReservaCheckoutDetails } from '../types/checkout'
 import type { EstadoReserva, ReservaDocument } from '../types/reserva'
 
 export interface ReservaCreator {
@@ -7,6 +8,7 @@ export interface ReservaCreator {
     emailUsuario: string,
     item: CartItem,
     nombreUsuario?: string | null,
+    checkout?: ReservaCheckoutDetails,
   ): Promise<string>
 }
 

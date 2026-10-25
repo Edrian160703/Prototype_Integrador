@@ -2,7 +2,7 @@ import type { MouseEvent } from 'react'
 import { useState } from 'react'
 import { useCartManagement, useCartSummary } from '../context/CartContext'
 import { useAuthSession } from '../context/AuthContext'
-import { useReservationCheckout } from '../context/ApplicationContext'
+import CheckoutModal from './checkout/CheckoutModal'
 
 interface CartPanelProps {
   open: boolean
@@ -11,10 +11,9 @@ interface CartPanelProps {
 
 export default function CartPanel({ open, onClose }: CartPanelProps) {
   const { items, totalPrice } = useCartSummary()
-  const { updateQuantity, removeFromCart, clearCart } = useCartManagement()
+  const { updateQuantity, removeFromCart } = useCartManagement()
   const { user } = useAuthSession()
-  const { crearReservasDesdeCarrito } = useReservationCheckout()
-  const [comprando, setComprando] = useState(false)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (!open) return null
@@ -23,24 +22,14 @@ export default function CartPanel({ open, onClose }: CartPanelProps) {
     if (e.target === e.currentTarget) onClose()
   }
 
-  const handleComprar = async () => {
+  const handleComprar = () => {
     if (!user) {
       setError('Tenés que iniciar sesión para reservar.')
       return
     }
 
     setError(null)
-    setComprando(true)
-    try {
-      await crearReservasDesdeCarrito(user.uid, user.email ?? '', items, user.displayName)
-      clearCart()
-      onClose()
-    } catch (err) {
-      console.error('Error al registrar la reserva', err)
-      setError(err instanceof Error ? err.message : 'No se pudo registrar la reserva. Intentá de nuevo.')
-    } finally {
-      setComprando(false)
-    }
+    setCheckoutOpen(true)
   }
 
   return (
@@ -105,13 +94,18 @@ export default function CartPanel({ open, onClose }: CartPanelProps) {
               type="button"
               className="btn btn-primary btn-block cart-checkout-btn"
               onClick={handleComprar}
-              disabled={comprando}
             >
-              {comprando ? 'Reservando…' : 'Reservar'}
+              Reservar
             </button>
           </>
         )}
       </div>
+      {checkoutOpen && (
+        <CheckoutModal
+          onClose={() => setCheckoutOpen(false)}
+          onFinished={onClose}
+        />
+      )}
     </div>
   )
 }
