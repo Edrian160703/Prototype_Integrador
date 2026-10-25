@@ -16,16 +16,12 @@ export default function CreationDateFilter({
       <select
         aria-label="Filtrar por fecha de creación"
         value={value}
-<<<<<<< HEAD
-        onChange={(event) => onChange(event.target.value as CreationDateRange)}
-=======
         onChange={(event) => {
           const range = CREATION_DATE_RANGES.find(
             (item) => item.value === event.target.value,
           )
           if (range) onChange(range.value)
         }}
->>>>>>> rama-diego
       >
         {CREATION_DATE_RANGES.map((range) => (
           <option key={range.value} value={range.value}>

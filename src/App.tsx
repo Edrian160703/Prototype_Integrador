@@ -40,11 +40,7 @@ export default function App() {
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/publicar" element={<Publicar />} />
             <Route path="/reserva/:id" element={<ReservaExclusiva />} />
-<<<<<<< HEAD
-            <Route path="/admin" element={<AdminDashboard />} />
-=======
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
->>>>>>> rama-diego
           </Routes>
         </Suspense>
       </main>
