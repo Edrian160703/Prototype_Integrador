@@ -25,6 +25,17 @@ describe('ReadableNameDocumentIdStrategy', () => {
   })
 })
 
+describe('ReadableNameDocumentIdStrategy para comercios', () => {
+  const strategy = new ReadableNameDocumentIdStrategy(5, 'comercio')
+
+  it('usa el displayName del comercio', () => {
+    expect(strategy.createId({ uid: 'HqWVpzBFG2OH1rEUkHZAJhwdzkm1', displayName: 'TOTUS', profile: {} })).toBe('totus_hqwvp')
+  })
+  it('usa un nombre genérico de comercio si no hay datos', () => {
+    expect(strategy.createId({ uid: UID, displayName: null })).toBe('comercio_phqft')
+  })
+})
+
 describe('UidDocumentIdStrategy', () => {
   it('conserva el uid como ID', () => {
     expect(new UidDocumentIdStrategy().createId({ uid: UID, displayName: null })).toBe(UID)

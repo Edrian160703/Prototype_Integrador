@@ -1,90 +1,164 @@
-import { vi } from 'vitest'
-import { runOfertaWriterContract, type OfertaWriterContractFixture } from './ofertaWriterContract'
-import { FirebaseOfertaRepository } from '../../src/infrastructure/firebase/FirebaseOfertaRepository'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Firestore } from 'firebase/firestore'
+import { FirebaseOfertaRepository } from '../../src/infrastructure/firebase/FirebaseOfertaRepository'
+import type { OfertaPayload } from '../../src/types/oferta'
 
-const firestoreMock = vi.hoisted(() => ({
-  documents: new Map<string, Record<string, unknown>>(),
+const firestoreMocks = vi.hoisted(() => ({
+  documents: {} as Record<string, Record<string, unknown>>,
 }))
 
 vi.mock('firebase/firestore', () => {
-  class MockTimestamp {
-    constructor(private readonly date: Date) {}
+  type Ref = { path: string }
+  type Write = { kind: 'set' | 'update'; ref: Ref; data: Record<string, unknown> }
 
-    static fromDate(date: Date) {
-      return new MockTimestamp(date)
+  const snapshot = (ref: Ref) => {
+    const data = firestoreMocks.documents[ref.path]
+    return {
+      exists: () => data !== undefined,
+      data: () => data,
     }
-
-    toDate() {
-      return this.date
-    }
-  }
-
-  function documentKey(collectionName: string, id: string): string {
-    return `${collectionName}/${id}`
   }
 
   return {
-    Timestamp: MockTimestamp,
-    collection: (db: object, name: string) => ({ db, collectionName: name }),
-    doc: (target: { db?: object; collectionName?: string }, nameOrId: string, id?: string) => {
-      if (id) return { key: documentKey(nameOrId, id) }
-      if (!target.collectionName) throw new Error('Invalid collection reference')
-      return { key: documentKey(target.collectionName, nameOrId) }
-    },
-    getDoc: async (reference: { key: string }) => {
-      const data = firestoreMock.documents.get(reference.key)
-      return {
-        exists: () => data !== undefined,
-        data: () => data,
-      }
-    },
-    updateDoc: async (reference: { key: string }, data: Record<string, unknown>) => {
-      const current = firestoreMock.documents.get(reference.key)
-      if (!current) throw new Error('Document does not exist')
-      firestoreMock.documents.set(reference.key, { ...current, ...data })
-    },
-    deleteDoc: async (reference: { key: string }) => {
-      firestoreMock.documents.delete(reference.key)
-    },
-    setDoc: async (reference: { key: string }, data: Record<string, unknown>) => {
-      firestoreMock.documents.set(reference.key, data)
-    },
+    collection: (_db: object, name: string) => ({ path: name }),
+    doc: (parent: { path?: string }, ...segments: string[]) => ({
+      path: [parent.path, ...segments].filter(Boolean).join('/'),
+    }),
+    getDoc: async (ref: Ref) => snapshot(ref),
     getDocs: async () => ({ docs: [] }),
     orderBy: () => ({}),
-    query: () => ({}),
+    query: (ref: Ref) => ref,
+    runTransaction: async (_db: object, callback: (transaction: {
+      get: (ref: Ref) => Promise<ReturnType<typeof snapshot>>
+      set: (ref: Ref, data: Record<string, unknown>) => void
+      update: (ref: Ref, data: Record<string, unknown>) => void
+    }) => Promise<unknown>) => {
+      const writes: Write[] = []
+      const result = await callback({
+        get: async (ref) => snapshot(ref),
+        set: (ref, data) => writes.push({ kind: 'set', ref, data }),
+        update: (ref, data) => writes.push({ kind: 'update', ref, data }),
+      })
+      for (const write of writes) {
+        firestoreMocks.documents[write.ref.path] = write.kind === 'set'
+          ? write.data
+          : { ...firestoreMocks.documents[write.ref.path], ...write.data }
+      }
+      return result
+    },
+    serverTimestamp: () => new Date('2026-01-01T00:00:00.000Z'),
     where: () => ({}),
   }
 })
 
-function createFirebaseFixture(): OfertaWriterContractFixture {
-  firestoreMock.documents.clear()
-  const repository = new FirebaseOfertaRepository({} as Firestore)
+const payload: Omit<OfertaPayload, 'estado'> = {
+  nombre_producto: 'Pan integral',
+  id_categoria: 'panaderia',
+  descripcion: 'Pan recién horneado',
+  precio_original: 16,
+  precio_oferta: 10,
+  cantidad_disponible: 3,
+  horario_recojo: '18:00 - 20:00 hs',
+  fecha_limite: '2027-05-09T19:00',
+  imagen_url: 'https://example.com/pan.jpg',
+}
 
-  return {
-    writer: repository,
-    async seed(ownerId) {
-      const id = 'offer-1'
-      firestoreMock.documents.set(`ofertas/${id}`, {
-        id_producto: 'product-1',
-        id_comercio: ownerId,
-        id_categoria: 'panaderia',
-        nombre_producto: 'Pan del día',
-        descripcion: 'Pan recién horneado',
-        precio_original: 12,
-        precio_oferta: 8,
-        cantidad_disponible: 4,
-        horario_recojo: '17:00 - 19:00 hs',
-        estado: 'disponible',
-        fecha_limite: new Date('2027-04-08T18:00:00'),
-        imagen_url: null,
-      })
-      return id
-    },
-    async read(id) {
-      return firestoreMock.documents.get(`ofertas/${id}`) ?? null
-    },
+function setup(ids = ['movement-12345678']) {
+  const idGenerator = { next: () => ids.shift() ?? 'unexpected-id' }
+  return new FirebaseOfertaRepository({} as Firestore, idGenerator)
+}
+
+function seedUnlinkedProduct() {
+  firestoreMocks.documents['productos/product-1'] = {
+    id_producto: 'product-1',
+    id_comercio: 'store-1',
+    stock: payload.cantidad_disponible,
+    estado: 'activo',
+    inventory_version: 1,
+    inventory_offer_id: null,
   }
 }
 
-runOfertaWriterContract('FirebaseOfertaRepository', createFirebaseFixture)
+function seedManagedOffer() {
+  firestoreMocks.documents['productos/product-1'] = {
+    id_producto: 'product-1',
+    id_comercio: 'store-1',
+    stock: 5,
+    estado: 'activo',
+    inventory_version: 1,
+    inventory_offer_id: 'offer-1',
+  }
+  firestoreMocks.documents['ofertas/offer-1'] = {
+    ...payload,
+    id_producto: 'product-1',
+    id_comercio: 'store-1',
+    cantidad_disponible: 5,
+    estado: 'disponible',
+    inventory_version: 1,
+  }
+}
+
+beforeEach(() => {
+  firestoreMocks.documents = {}
+})
+
+describe('FirebaseOfertaRepository Spark transactions', () => {
+  it('creates the offer, links the product and writes an immutable movement atomically', async () => {
+    seedUnlinkedProduct()
+    const repository = setup()
+
+    await expect(repository.create(
+      'store-1',
+      { ...payload, estado: 'disponible' },
+      'product-1',
+      'offer-1',
+    )).resolves.toBe('offer-1')
+
+    expect(firestoreMocks.documents['productos/product-1'].inventory_offer_id).toBe('offer-1')
+    expect(firestoreMocks.documents['ofertas/offer-1']).toMatchObject({
+      id_producto: 'product-1',
+      id_comercio: 'store-1',
+      cantidad_disponible: 3,
+      inventory_version: 1,
+    })
+    expect(firestoreMocks.documents['inventario_movimientos/movement-12345678'])
+      .toMatchObject({ tipo: 'oferta_vinculada', uid: 'store-1' })
+  })
+
+  it('updates offer and product inventory together and archives offers without deleting them', async () => {
+    seedManagedOffer()
+    const repository = setup(['movement-12345678', 'movement-abcdefgh'])
+
+    await repository.updateOwned('offer-1', 'store-1', {
+      ...payload,
+      cantidad_disponible: 3,
+    })
+    expect(firestoreMocks.documents['productos/product-1'].stock).toBe(3)
+    expect(firestoreMocks.documents['ofertas/offer-1'].cantidad_disponible).toBe(3)
+    expect(firestoreMocks.documents['inventario_movimientos/movement-12345678'])
+      .toMatchObject({ tipo: 'stock_ajustado', cantidad: 3 })
+
+    await repository.deleteOwned('offer-1', 'store-1')
+    expect(firestoreMocks.documents['ofertas/offer-1'].estado).toBe('archivada')
+    expect(firestoreMocks.documents['ofertas/offer-1'].archivedAt).toBeInstanceOf(Date)
+  })
+
+  it('blocks legacy or mismatched inventory without writing', async () => {
+    firestoreMocks.documents['productos/product-1'] = {
+      id_producto: 'product-1',
+      id_comercio: 'store-1',
+      stock: 5,
+      estado: 'activo',
+    }
+    const repository = setup()
+
+    await expect(repository.create(
+      'store-1',
+      { ...payload, estado: 'disponible' },
+      'product-1',
+      'offer-1',
+    )).rejects.toThrow('vincular una oferta')
+    expect(firestoreMocks.documents['ofertas/offer-1']).toBeUndefined()
+    expect(firestoreMocks.documents['inventario_movimientos/movement-12345678']).toBeUndefined()
+  })
+})

@@ -6,6 +6,11 @@ export interface PickupSchedule {
   endTime: string
 }
 
+export interface BusinessCoordinates {
+  latitude: number
+  longitude: number
+}
+
 export interface ConsumerProfile {
   firstName?: string
   lastName?: string
@@ -23,6 +28,8 @@ export interface StoreProfile {
   address?: string
   district?: string
   reference?: string
+  latitude?: number
+  longitude?: number
   pickupSchedule?: PickupSchedule[]
   businessCategory?: string
   verificationStatus?: 'pending' | 'verified' | 'rejected'

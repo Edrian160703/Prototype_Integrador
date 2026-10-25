@@ -50,7 +50,7 @@ describe('MisPublicaciones', () => {
     expect(deleteOffer).not.toHaveBeenCalled()
   })
 
-  it('requiere confirmación visible antes de eliminar una publicación', async () => {
+  it('requiere confirmación visible antes de archivar una publicación', async () => {
     getOffers.mockResolvedValueOnce([oferta]).mockResolvedValueOnce([])
     deleteOffer.mockResolvedValue(undefined)
     render(<MisPublicaciones uid="store-1" />)
@@ -58,12 +58,12 @@ describe('MisPublicaciones', () => {
     await screen.findByText('Pan del día')
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }))
 
-    expect(screen.getByRole('dialog').textContent).toContain('Esta acción no se puede deshacer.')
+    expect(screen.getByRole('dialog').textContent).toContain('se conservará para el historial')
     expect(deleteOffer).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sí, eliminar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sí, archivar' }))
     await waitFor(() => expect(deleteOffer).toHaveBeenCalledWith('offer-1', 'store-1'))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect(screen.getByText('Publicación eliminada.')).toBeTruthy()
+    expect(screen.getByText('Publicación archivada. Se conserva para proteger el historial de reservas.')).toBeTruthy()
   })
 })

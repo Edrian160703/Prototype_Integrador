@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import type { PickupSchedule, StoreProfile } from '../types/user'
+import type { BusinessCoordinates, PickupSchedule, StoreProfile } from '../types/user'
+import MapaNegocio from './MapaNegocio'
 
 type StoreFormValues = Required<Pick<StoreProfile, 'businessName' | 'ruc' | 'address' | 'reference'>> & {
   pickupSchedule: PickupSchedule[]
 }
+type StoreSubmissionValues = StoreFormValues & BusinessCoordinates
 
 const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
@@ -17,11 +19,13 @@ const INITIAL_STORE_FORM: StoreFormValues = {
 
 interface StoreOnboardingFormProps {
   loading: boolean
-  onSubmit: (profile: StoreFormValues) => Promise<void>
+  onSubmit: (profile: StoreSubmissionValues) => Promise<void>
 }
 
 export default function StoreOnboardingForm({ loading, onSubmit }: StoreOnboardingFormProps) {
   const [form, setForm] = useState<StoreFormValues>(INITIAL_STORE_FORM)
+  const [location, setLocation] = useState<BusinessCoordinates | null>(null)
+  const [locationError, setLocationError] = useState('')
 
   const updateField = (field: keyof StoreFormValues, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -52,7 +56,12 @@ export default function StoreOnboardingForm({ loading, onSubmit }: StoreOnboardi
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    onSubmit(form)
+    if (!location) {
+      setLocationError('Selecciona una ubicación válida dentro de San Juan de Lurigancho.')
+      return
+    }
+    setLocationError('')
+    onSubmit({ ...form, ...location })
   }
 
   return (
@@ -86,6 +95,15 @@ export default function StoreOnboardingForm({ loading, onSubmit }: StoreOnboardi
           onChange={(event) => updateField('address', event.target.value)}
           placeholder="Calle, número y distrito"
         />
+      </div>
+      <div className="field">
+        <MapaNegocio selectedLocation={location} onSelect={setLocation} />
+        {location && (
+          <p className="field-hint">
+            Ubicación seleccionada: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+          </p>
+        )}
+        {locationError && <span className="field-error" role="alert">{locationError}</span>}
       </div>
       <div className="field">
         <label htmlFor="store-reference">Punto en el mapa o referencia</label>

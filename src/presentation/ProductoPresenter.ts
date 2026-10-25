@@ -11,6 +11,7 @@ export function toProductoAdminItems(records: ProductoAdminRecord[]): ProductoAd
     price: product.precio_original,
     stock: product.stock,
     status: product.estado,
+    createdAt: product.createdAt,
     updatedAt: product.updatedAt,
   }))
 }

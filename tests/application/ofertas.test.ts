@@ -5,6 +5,7 @@ import {
   deleteOferta,
   getOfertaById,
   getOfertas,
+  getOfertasVigentes,
   getOfertasByOwner,
   updateOferta,
 } from '../../src/application/ofertas'
@@ -52,18 +53,20 @@ function oferta(overrides: Partial<OfertaDocument> = {}): OfertaDocument {
 
 describe('casos de uso de ofertas', () => {
   it('crea una oferta delegando la persistencia al repositorio', async () => {
-    const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
+    const idGenerator = { next: vi.fn().mockReturnValue('product-id') }
+    const offerIds = { next: vi.fn().mockReturnValue('ofertas_pan_del_dia_abc12345') }
     const repository: OfertaCreator = {
       create: vi.fn().mockResolvedValue('offer-1'),
     }
 
-    await expect(createOferta(repository, { uid: 'user-1', payload }, idGenerator)).resolves.toBe('offer-1')
+    await expect(createOferta(repository, { uid: 'user-1', payload }, idGenerator, offerIds)).resolves.toBe('offer-1')
     expect(idGenerator.next).toHaveBeenCalledOnce()
-    expect(repository.create).toHaveBeenCalledWith('user-1', payload, 'offer-id')
+    expect(offerIds.next).toHaveBeenCalledWith(payload.nombre_producto)
+    expect(repository.create).toHaveBeenCalledWith('user-1', payload, 'product-id', 'ofertas_pan_del_dia_abc12345')
   })
 
   it('crea el producto antes de crear la oferta asociada', async () => {
-    const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
+    const offerIds = { next: vi.fn().mockReturnValue('offer-id') }
     const productoCreator: ProductoCreator = {
       create: vi.fn().mockResolvedValue('product-1'),
     }
@@ -72,7 +75,7 @@ describe('casos de uso de ofertas', () => {
     }
 
     await expect(
-      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, idGenerator),
+      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, offerIds),
     ).resolves.toBe('offer-1')
 
     expect(productoCreator.create).toHaveBeenCalledWith({
@@ -90,11 +93,12 @@ describe('casos de uso de ofertas', () => {
       'product-1',
       'offer-id',
     )
-    expect(idGenerator.next).toHaveBeenCalledOnce()
+    expect(offerIds.next).toHaveBeenCalledOnce()
+    expect(offerIds.next).toHaveBeenCalledWith(payload.nombre_producto)
   })
 
   it('no intenta guardar la oferta si falla la creación del producto', async () => {
-    const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
+    const offerIds = { next: vi.fn().mockReturnValue('offer-id') }
     const productoCreator: ProductoCreator = {
       create: vi.fn().mockRejectedValue(new Error('falló el producto')),
     }
@@ -103,7 +107,7 @@ describe('casos de uso de ofertas', () => {
     }
 
     await expect(
-      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, idGenerator),
+      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, offerIds),
     ).rejects.toThrow('falló el producto')
     expect(ofertaCreator.create).not.toHaveBeenCalled()
   })
@@ -116,6 +120,7 @@ describe('casos de uso de ofertas', () => {
         { id: 'offer-1', data: first },
         { id: 'offer-2', data: second },
       ]),
+      listByLimitDate: vi.fn().mockResolvedValue([]),
     }
     const comercios: ComercioReader = {
       getCommerceById: vi.fn().mockResolvedValue({ businessName: 'Panadería Central' }),
@@ -125,8 +130,27 @@ describe('casos de uso de ofertas', () => {
       { id: 'offer-1', data: first, comercio: { businessName: 'Panadería Central' } },
       { id: 'offer-2', data: second, comercio: { businessName: 'Panadería Central' } },
     ])
+    expect(repository.listAll).toHaveBeenCalledOnce()
+    expect(repository.listByLimitDate).not.toHaveBeenCalled()
     expect(comercios.getCommerceById).toHaveBeenCalledTimes(1)
     expect(comercios.getCommerceById).toHaveBeenCalledWith('store-1')
+  })
+
+  it('enriquece las ofertas vigentes sin sustituir la consulta completa', async () => {
+    const data = oferta()
+    const repository: OfertaListReader = {
+      listAll: vi.fn().mockResolvedValue([]),
+      listByLimitDate: vi.fn().mockResolvedValue([{ id: 'offer-1', data }]),
+    }
+    const comercios: ComercioReader = {
+      getCommerceById: vi.fn().mockResolvedValue({ businessName: 'Panadería Central' }),
+    }
+
+    await expect(getOfertasVigentes(repository, comercios)).resolves.toEqual([
+      { id: 'offer-1', data, comercio: { businessName: 'Panadería Central' } },
+    ])
+    expect(repository.listAll).not.toHaveBeenCalled()
+    expect(repository.listByLimitDate).toHaveBeenCalledOnce()
   })
 
   it('devuelve null si no existe la oferta y no consulta el comercio', async () => {

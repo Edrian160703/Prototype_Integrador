@@ -13,5 +13,6 @@ export interface ProductoAdminItem {
   price: number
   stock: number
   status: ProductoEstado
+  createdAt: Date
   updatedAt: Date
 }

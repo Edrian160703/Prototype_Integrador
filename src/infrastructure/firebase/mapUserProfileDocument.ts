@@ -43,6 +43,27 @@ function optionalStringArray(value: unknown, field: string, uid: string): string
   return value
 }
 
+function optionalCoordinates(
+  latitude: unknown,
+  longitude: unknown,
+  uid: string,
+): { latitude?: number; longitude?: number } {
+  if (latitude === undefined && longitude === undefined) return {}
+  if (
+    typeof latitude !== 'number'
+    || !Number.isFinite(latitude)
+    || latitude < -90
+    || latitude > 90
+    || typeof longitude !== 'number'
+    || !Number.isFinite(longitude)
+    || longitude < -180
+    || longitude > 180
+  ) {
+    throw new TypeError(`Las coordenadas del perfil ${uid} deben ser un par de números válidos.`)
+  }
+  return { latitude, longitude }
+}
+
 function mapPickupSchedule(value: unknown, uid: string): PickupSchedule[] | undefined {
   if (value === undefined) return undefined
   if (!Array.isArray(value)) {
@@ -125,6 +146,7 @@ export function mapUserProfileDocument(
     address: optionalString(data.address, 'address', uid),
     district: optionalString(data.district, 'district', uid),
     reference: optionalString(data.reference, 'reference', uid),
+    ...optionalCoordinates(data.latitude, data.longitude, uid),
     pickupSchedule: mapPickupSchedule(data.pickupSchedule, uid),
     businessCategory: optionalString(data.businessCategory, 'businessCategory', uid),
     verificationStatus,

@@ -1,21 +1,19 @@
 import { useMemo, useState } from "react";
 import ConfirmDialog from "./ConfirmDialog";
+import CreationDateFilter from "./CreationDateFilter";
 import { formatRelative, getInitials } from "../../utils/adminFormatters";
 import {
   countAdminStatuses,
   filterAdminItems,
   paginateAdminItems,
 } from "../../utils/adminPanelData";
+import type { AccountStatus, ManagedAccount } from "../../ports/accountRepository";
+import {
+  matchesCreationDateRange,
+  type CreationDateRange,
+} from "../../utils/adminDateFilter";
 
-export type AccountStatus = "activa" | "suspendida" | "pendiente";
-
-export interface ManagedAccount {
-  id: string;
-  displayName: string;
-  email: string;
-  status: AccountStatus;
-  lastActiveAt: Date;
-}
+export type { AccountStatus, ManagedAccount } from "../../ports/accountRepository";
 
 const STATUSES: AccountStatus[] = ["activa", "suspendida", "pendiente"];
 const STATUS_LABELS: Record<AccountStatus, string> = {
@@ -36,8 +34,9 @@ interface AccountsPanelProps {
   entityLabelPlural: string;
   initialAccounts: ManagedAccount[];
 
-  onStatusChange?: (id: string, status: AccountStatus) => Promise<void>;
-  onDelete?: (id: string) => Promise<void>;
+  onStatusChange: (id: string, status: AccountStatus) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onAccountsChange?: (accounts: ManagedAccount[]) => void;
 }
 
 export default function AccountsPanel({
@@ -46,15 +45,19 @@ export default function AccountsPanel({
   initialAccounts,
   onStatusChange,
   onDelete,
+  onAccountsChange,
 }: AccountsPanelProps) {
   const [accounts, setAccounts] = useState<ManagedAccount[]>(initialAccounts);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todas" | AccountStatus>(
     "todas",
   );
+  const [creationDateRange, setCreationDateRange] =
+    useState<CreationDateRange>("todos");
   const [page, setPage] = useState(1);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [loading, setLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const filtered = useMemo(
     () =>
@@ -62,9 +65,11 @@ export default function AccountsPanel({
         accounts,
         query,
         (account) => [account.displayName, account.email],
-        (account) => statusFilter === "todas" || account.status === statusFilter,
+        (account) =>
+          (statusFilter === "todas" || account.status === statusFilter) &&
+          matchesCreationDateRange(account.createdAt, creationDateRange),
       ),
-    [accounts, query, statusFilter],
+    [accounts, query, statusFilter, creationDateRange],
   );
   const { pageItems, currentPage, totalPages } = paginateAdminItems(
     filtered,
@@ -82,26 +87,33 @@ export default function AccountsPanel({
     return (value: T) => {
       setter(value);
       setPage(1);
+      setActionError(null);
     };
   }
 
   async function applyAction() {
     if (!pending) return;
     setLoading(true);
+    setActionError(null);
     try {
+      let updatedAccounts: ManagedAccount[];
       if (pending.action === "eliminar") {
-        await onDelete?.(pending.account.id);
-        setAccounts((prev) => prev.filter((a) => a.id !== pending.account.id));
+        await onDelete(pending.account.id);
+        updatedAccounts = accounts.filter((a) => a.id !== pending.account.id);
       } else {
         const newStatus: AccountStatus =
           pending.action === "suspender" ? "suspendida" : "activa";
-        await onStatusChange?.(pending.account.id, newStatus);
-        setAccounts((prev) =>
-          prev.map((a) =>
+        await onStatusChange(pending.account.id, newStatus);
+        updatedAccounts = accounts.map((a) =>
             a.id === pending.account.id ? { ...a, status: newStatus } : a,
-          ),
         );
       }
+      setAccounts(updatedAccounts);
+      onAccountsChange?.(updatedAccounts);
+      setPending(null);
+    } catch (error) {
+      console.error("No se pudo completar la acción administrativa sobre la cuenta.", error);
+      setActionError("No se pudo completar la acción. Verifica tus permisos e inténtalo de nuevo.");
       setPending(null);
     } finally {
       setLoading(false);
@@ -160,7 +172,12 @@ export default function AccountsPanel({
             />
           </div>
           <div className="toolbar-filters">
+            <CreationDateFilter
+              value={creationDateRange}
+              onChange={(value) => updateFilter(setCreationDateRange)(value)}
+            />
             <select
+              aria-label={`Filtrar ${entityLabelPlural} por estado`}
               value={statusFilter}
               onChange={(e) =>
                 updateFilter(setStatusFilter)(
@@ -178,12 +195,19 @@ export default function AccountsPanel({
           </div>
         </div>
 
+        {actionError && (
+          <div className="admin-error-banner" role="alert">
+            {actionError}
+          </div>
+        )}
+
         <div className="table-wrap">
           <table className="accounts-table">
             <thead>
               <tr>
                 <th>{entityLabel[0].toUpperCase() + entityLabel.slice(1)}</th>
                 <th>Estado</th>
+                <th>Creada</th>
                 <th>Última actividad</th>
                 <th className="col-actions">Acciones</th>
               </tr>
@@ -207,9 +231,7 @@ export default function AccountsPanel({
                       {STATUS_LABELS[a.status]}
                     </span>
                   </td>
-                  <td className="account-last-active">
-                    {formatRelative(a.lastActiveAt)}
-                  </td>
+                  <td>{a.createdAt ? formatRelative(a.createdAt) : "Sin fecha"}</td>
                   <td>
                     <div className="row-actions">
                       {a.status !== "activa" && (
@@ -253,7 +275,7 @@ export default function AccountsPanel({
 
               {pageItems.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="table-empty">
+                  <td colSpan={5} className="table-empty">
                     No hay {entityLabelPlural} que coincidan con los filtros.
                   </td>
                 </tr>

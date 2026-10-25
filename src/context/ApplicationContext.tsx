@@ -3,6 +3,7 @@ import type {
   AccountApplication,
   AccountManagementApplication,
   AccountQueryApplication,
+  AdminClaimQueryApplication,
   ApplicationServices,
   AuthenticationApplication,
   AuthRegistrationApplication,
@@ -25,6 +26,7 @@ import type {
   ProfileEditingApplication,
   ProfileOnboardingApplication,
   ReservationApplication,
+  ReservationAdminApplication,
   ReservationCheckoutApplication,
   ReservationHistoryApplication,
   ReservationManagementApplication,
@@ -152,6 +154,10 @@ export function useReservationHistory(): ReservationHistoryApplication {
   return useReservations()
 }
 
+export function useReservationAdmin(): ReservationAdminApplication {
+  return useReservations()
+}
+
 export function useCurrentUserQuery(): CurrentUserQueryApplication {
   return useAuthentication()
 }
@@ -185,6 +191,10 @@ export function useEmailSignIn(): EmailSignInApplication {
 }
 
 export function useGoogleSignIn(): GoogleSignInApplication {
+  return useAuthentication()
+}
+
+export function useAdminClaimQuery(): AdminClaimQueryApplication {
   return useAuthentication()
 }
 

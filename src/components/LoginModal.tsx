@@ -1,6 +1,10 @@
 import { useState, type FormEvent, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useEmailSignIn, useGoogleSignIn } from '../context/ApplicationContext'
+import {
+  useAdminClaimQuery,
+  useEmailSignIn,
+  useGoogleSignIn,
+} from '../context/ApplicationContext'
 
 interface LoginModalProps {
   onClose: () => void
@@ -11,6 +15,7 @@ type Tab = 'login' | 'register'
 export default function LoginModal({ onClose }: LoginModalProps) {
   const { loginWithGoogle } = useGoogleSignIn()
   const { signInWithEmail } = useEmailSignIn()
+  const { hasAdminClaim } = useAdminClaimQuery()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('login')
   const [showPass, setShowPass] = useState(false)
@@ -24,25 +29,48 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     if (e.target === e.currentTarget) onClose()
   }
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  async function finishSignIn() {
+    try {
+      const isAdmin = await hasAdminClaim()
+      if (isAdmin) navigate('/admin')
+      onClose()
+    } catch (error) {
+      console.error('No se pudieron verificar los permisos tras iniciar sesión.', error)
+      setAuthError(
+        'Iniciaste sesión, pero no pudimos verificar tus permisos. Comprueba la conexión e inténtalo de nuevo.',
+      )
+    }
+  }
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setAuthError('')
     setLoading(true)
-    signInWithEmail(email, password)
-      .then(() => onClose())
-      .catch((error: unknown) => {
-        setAuthError(error instanceof Error ? 'Correo o contraseña incorrectos.' : 'No pudimos iniciar sesión.')
-      })
-      .finally(() => setLoading(false))
+    try {
+      await signInWithEmail(email, password)
+    } catch (error) {
+      setAuthError(error instanceof Error ? 'Correo o contraseña incorrectos.' : 'No pudimos iniciar sesión.')
+      setLoading(false)
+      return
+    }
+
+    await finishSignIn()
+    setLoading(false)
   }
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     setAuthError('')
     setGoogleLoading(true)
-    loginWithGoogle()
-      .then(() => onClose())
-      .catch(() => setAuthError('No pudimos conectar con Google.'))
-      .finally(() => setGoogleLoading(false))
+    try {
+      await loginWithGoogle()
+    } catch {
+      setAuthError('No pudimos conectar con Google.')
+      setGoogleLoading(false)
+      return
+    }
+
+    await finishSignIn()
+    setGoogleLoading(false)
   }
 
   return (

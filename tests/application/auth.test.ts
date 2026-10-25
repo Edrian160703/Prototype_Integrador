@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  hasAdminClaim,
   loginWithGoogle,
   registerWithEmail,
   signInWithGoogle,
 } from '../../src/application/auth'
 import type {
   AuthIdentity,
+  IAuthAdminClaimReader,
   IAuthRegistrar,
   IAuthSignIn,
 } from '../../src/ports/authGateway'
@@ -23,6 +25,15 @@ function createProfileCreator(): IProfileCreator {
 }
 
 describe('casos de uso de autenticación', () => {
+  it('refresca los claims del token antes de consultar acceso administrativo', async () => {
+    const auth: IAuthAdminClaimReader = {
+      hasAdminClaim: vi.fn().mockResolvedValue(true),
+    }
+
+    await expect(hasAdminClaim(auth)).resolves.toBe(true)
+    expect(auth.hasAdminClaim).toHaveBeenCalledWith(true)
+  })
+
   it('registra la cuenta y crea su perfil inicial', async () => {
     const auth: IAuthRegistrar = {
       registerWithEmail: vi.fn().mockResolvedValue(identity),

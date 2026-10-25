@@ -53,6 +53,21 @@ describe('casos de uso de perfiles', () => {
     expect(writer.updateOnboarding).toHaveBeenCalledWith('user-1', 'consumer', profile)
   })
 
+  it('persiste coordenadas completas del comercio y propaga errores del escritor', async () => {
+    const writer: IOnboardingProfileWriter = {
+      updateOnboarding: vi.fn().mockRejectedValue(new Error('Firestore no disponible')),
+    }
+    const profile = {
+      businessName: 'Panadería Ana',
+      latitude: -12.03,
+      longitude: -77.01,
+    }
+
+    await expect(updateUserProfile(writer, 'store-1', 'store', profile))
+      .rejects.toThrow('Firestore no disponible')
+    expect(writer.updateOnboarding).toHaveBeenCalledWith('store-1', 'store', profile)
+  })
+
   it('actualiza el nombre de autenticación solo para el usuario activo', async () => {
     const session: IAuthSession = {
       currentUser: identity,

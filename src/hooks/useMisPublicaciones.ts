@@ -126,7 +126,7 @@ export default function useMisPublicaciones(uid: string): UseMisPublicacionesRes
     try {
       await deleteOferta(idOferta, uid)
       if (seleccionada?.id === idOferta) closeEditor()
-      setMessage('Publicación eliminada.')
+      setMessage('Publicación archivada. Se conserva para proteger el historial de reservas.')
       await loadPublicaciones()
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'No se pudo eliminar la publicación.')

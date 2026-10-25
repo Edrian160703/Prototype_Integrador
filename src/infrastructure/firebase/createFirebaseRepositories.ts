@@ -1,15 +1,19 @@
-import { getFirebaseFirestore } from './firebaseClient'
+import { assertFirebaseAdmin, getFirebaseFirestore } from './firebaseClient'
 import { createLazyRepository } from '../createLazyRepository'
 import { createCryptoIdGenerator } from '../cryptoIdGenerator'
+import { createReadableIdGenerator } from '../readableIdGenerator'
 import type { IdGenerator } from '../../ports/idGenerator'
 
 export function createFirebaseRepositories(idGenerator: IdGenerator = createCryptoIdGenerator()) {
+  const productIds = createReadableIdGenerator(idGenerator)
+  const reservationIds = createReadableIdGenerator(idGenerator, 'reserva')
+
   const products = createLazyRepository(async () => {
     const [{ FirebaseProductoRepository }, db] = await Promise.all([
       import('./FirebaseProductoRepository'),
       getFirebaseFirestore(),
     ])
-    return new FirebaseProductoRepository(db, idGenerator)
+    return new FirebaseProductoRepository(db, productIds)
   })
 
   const offers = createLazyRepository(async () => {
@@ -17,7 +21,7 @@ export function createFirebaseRepositories(idGenerator: IdGenerator = createCryp
       import('./FirebaseOfertaRepository'),
       getFirebaseFirestore(),
     ])
-    return new FirebaseOfertaRepository(db)
+    return new FirebaseOfertaRepository(db, idGenerator)
   })
 
   const commerces = createLazyRepository(async () => {
@@ -33,7 +37,12 @@ export function createFirebaseRepositories(idGenerator: IdGenerator = createCryp
       import('./FirebaseReservaRepository'),
       getFirebaseFirestore(),
     ])
-    return new FirebaseReservaRepository(db, idGenerator)
+    return new FirebaseReservaRepository(
+      db,
+      idGenerator,
+      { assertAdmin: assertFirebaseAdmin },
+      reservationIds,
+    )
   })
 
   const accounts = createLazyRepository(async () => {
@@ -41,7 +50,7 @@ export function createFirebaseRepositories(idGenerator: IdGenerator = createCryp
       import('./FirebaseAccountRepository'),
       getFirebaseFirestore(),
     ])
-    return new FirebaseAccountRepository(db)
+    return new FirebaseAccountRepository(db, { assertAdmin: assertFirebaseAdmin })
   })
 
   const userProfiles = createLazyRepository(async () => {

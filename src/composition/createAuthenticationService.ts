@@ -1,5 +1,6 @@
 import {
   getCurrentUser,
+  hasAdminClaim,
   loginWithGoogle,
   registerWithEmail,
   signInWithEmail,
@@ -17,6 +18,7 @@ import {
 } from '../application/signup'
 import type {
   IAuthAccountDeleter,
+  IAuthAdminClaimReader,
   IAuthRegistrar,
   IAuthSession,
   IAuthSignIn,
@@ -26,7 +28,13 @@ import type { ISignupDraftReader, ISignupDraftWriter } from '../ports/signupDraf
 import type { IProfileCreator } from '../ports/userProfileRepository'
 import type { InitialUserData, UserRole } from '../types/user'
 
-type AuthGateway = IAuthSession & IAuthRegistrar & IAuthSignIn & IAuthSignOut & IAuthAccountDeleter
+type AuthGateway =
+  & IAuthSession
+  & IAuthRegistrar
+  & IAuthSignIn
+  & IAuthAdminClaimReader
+  & IAuthSignOut
+  & IAuthAccountDeleter
 
 interface AuthenticationServiceDependencies {
   auth: AuthGateway
@@ -58,6 +66,7 @@ export function createAuthenticationService({
     signInWithEmail: (email: string, password: string) =>
       signInWithEmail(auth, email, password),
     loginWithGoogle: async () => loginWithGoogle(auth, await profiles()),
+    hasAdminClaim: () => hasAdminClaim(auth),
     signOutUser: () => signOutUser(auth),
     getCurrentUser: () => getCurrentUser(auth),
     subscribeToAuthChanges: (listener) => subscribeToAuthChanges(auth, listener),

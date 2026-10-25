@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useProfileEditing } from '../context/ApplicationContext'
 import useProfileEditLifecycle, { type ProfileEditStatus } from './useProfileEditLifecycle'
-import type { PickupSchedule, StoreUser } from '../types/user'
+import type { BusinessCoordinates, PickupSchedule, StoreProfile, StoreUser } from '../types/user'
 
 export const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
@@ -10,18 +10,28 @@ export interface StoreFormValues {
   ruc: string
   address: string
   reference: string
+  latitude?: number
+  longitude?: number
   pickupSchedule: PickupSchedule[]
 }
 
-export type StoreFieldErrors = Partial<Record<'businessName' | 'ruc' | 'address' | 'reference' | 'pickupSchedule', string>>
+export type StoreFieldErrors = Partial<Record<'businessName' | 'ruc' | 'address' | 'reference' | 'pickupSchedule' | 'location', string>>
 export type StoreSaveStatus = ProfileEditStatus
 
 function toFormValues(profile: StoreUser): StoreFormValues {
+  const hasCoordinates =
+    typeof profile.latitude === 'number'
+    && Number.isFinite(profile.latitude)
+    && typeof profile.longitude === 'number'
+    && Number.isFinite(profile.longitude)
   return {
     businessName: profile.businessName ?? '',
     ruc: profile.ruc ?? '',
     address: profile.address ?? '',
     reference: profile.reference ?? '',
+    ...(hasCoordinates
+      ? { latitude: profile.latitude, longitude: profile.longitude }
+      : {}),
     pickupSchedule: profile.pickupSchedule ?? [],
   }
 }
@@ -57,6 +67,20 @@ export function useProfileStoreForm(profile: StoreUser, onSaved: () => Promise<v
   const updateField = (field: 'businessName' | 'ruc' | 'address' | 'reference', value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
+    touch()
+  }
+
+  const updateLocation = (location: BusinessCoordinates | null) => {
+    setForm((current) => {
+      if (!location) {
+        const next = { ...current }
+        delete next.latitude
+        delete next.longitude
+        return next
+      }
+      return { ...current, ...location }
+    })
+    setErrors((current) => ({ ...current, location: undefined }))
     touch()
   }
 
@@ -98,6 +122,9 @@ export function useProfileStoreForm(profile: StoreUser, onSaved: () => Promise<v
     if (!isValidTaxId(values.ruc)) nextErrors.ruc = 'Ingresa un DNI (8 dígitos) o RUC (11 dígitos) válido.'
     if (!values.address) nextErrors.address = 'Ingresa la dirección exacta del local.'
     if (!values.reference) nextErrors.reference = 'Ingresa un punto en el mapa o referencia.'
+    if ((values.latitude === undefined) !== (values.longitude === undefined)) {
+      nextErrors.location = 'Selecciona una ubicación completa en el mapa.'
+    }
 
     if (values.pickupSchedule.length === 0) {
       nextErrors.pickupSchedule = 'Agrega al menos un horario de recojo.'
@@ -126,7 +153,17 @@ export function useProfileStoreForm(profile: StoreUser, onSaved: () => Promise<v
     beginSave()
 
     try {
-      await saveProfileChanges(profile.uid, profile.role, values, values.businessName)
+      const profileValues: StoreProfile = {
+        businessName: values.businessName,
+        ruc: values.ruc,
+        address: values.address,
+        reference: values.reference,
+        pickupSchedule: values.pickupSchedule,
+        ...(typeof values.latitude === 'number' && typeof values.longitude === 'number'
+          ? { latitude: values.latitude, longitude: values.longitude }
+          : {}),
+      }
+      await saveProfileChanges(profile.uid, profile.role, profileValues, values.businessName)
       saveSucceeded(values)
       await onSaved()
     } catch (error) {
@@ -150,6 +187,7 @@ export function useProfileStoreForm(profile: StoreUser, onSaved: () => Promise<v
     saving,
     statusMessage,
     updateField,
+    updateLocation,
     updateSchedule,
     addSchedule,
     removeSchedule,

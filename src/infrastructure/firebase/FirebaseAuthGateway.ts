@@ -13,6 +13,7 @@ import type { Auth } from 'firebase/auth'
 import type {
   AuthIdentity,
   IAuthAccountDeleter,
+  IAuthAdminClaimReader,
   IAuthProfileUpdater,
   IAuthRegistrar,
   IAuthSession,
@@ -35,6 +36,7 @@ export class FirebaseAuthGateway implements
   IAuthSignIn,
   IAuthProfileUpdater,
   IAuthAccountDeleter,
+  IAuthAdminClaimReader,
   IAuthSignOut {
   constructor(private readonly auth: Auth) {}
 
@@ -61,6 +63,13 @@ export class FirebaseAuthGateway implements
   async signInWithGoogle(): Promise<AuthIdentity> {
     const { user } = await signInWithPopup(this.auth, new GoogleAuthProvider())
     return toIdentity(user)
+  }
+
+  async hasAdminClaim(forceRefresh = false): Promise<boolean> {
+    const user = this.auth.currentUser
+    if (!user) return false
+    const token = await user.getIdTokenResult(forceRefresh)
+    return token.claims.admin === true
   }
 
   async updateDisplayName(uid: string, displayName: string): Promise<void> {

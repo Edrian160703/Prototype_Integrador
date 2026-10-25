@@ -1,5 +1,6 @@
 import type {
   AuthIdentity,
+  IAuthAdminClaimReader,
   IAuthRegistrar,
   IAuthSession,
   IAuthSignIn,
@@ -63,6 +64,10 @@ export function subscribeToAuthChanges(
 
 export function signInWithEmail(auth: IAuthSignIn, email: string, password: string): Promise<AuthIdentity> {
   return auth.signInWithEmail(email, password)
+}
+
+export function hasAdminClaim(auth: IAuthAdminClaimReader): Promise<boolean> {
+  return auth.hasAdminClaim(true)
 }
 
 export async function loginWithGoogle(auth: IAuthSignIn, profiles: IProfileCreator): Promise<AuthIdentity> {

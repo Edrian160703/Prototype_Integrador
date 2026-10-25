@@ -1,4 +1,10 @@
-import type { ReservaCreator, ReservaDeleter, ReservaReader } from '../ports/reservaRepository'
+import type {
+  ReservaAdminReader,
+  ReservaAdminWriter,
+  ReservaCreator,
+  ReservaDeleter,
+  ReservaReader,
+} from '../ports/reservaRepository'
 import type { OfertaByIdReader } from '../ports/ofertaRepository'
 import type { CartItem } from '../types/cart'
 import type { ReservaConOferta, ReservaDocument } from '../types/reserva'
@@ -8,8 +14,9 @@ export function crearReserva(
   idUsuario: string,
   emailUsuario: string,
   item: CartItem,
+  nombreUsuario?: string | null,
 ): Promise<string> {
-  return repository.create(idUsuario, emailUsuario, item)
+  return repository.create(idUsuario, emailUsuario, item, nombreUsuario)
 }
 
 export async function crearReservasDesdeCarrito(
@@ -17,16 +24,36 @@ export async function crearReservasDesdeCarrito(
   idUsuario: string,
   emailUsuario: string,
   items: CartItem[],
+  nombreUsuario?: string | null,
 ): Promise<string[]> {
   const idsReservas: string[] = []
   for (const item of items) {
-    idsReservas.push(await repository.create(idUsuario, emailUsuario, item))
+    idsReservas.push(await repository.create(idUsuario, emailUsuario, item, nombreUsuario))
   }
   return idsReservas
 }
 
 export function cancelarReserva(repository: ReservaDeleter, idReserva: string): Promise<void> {
   return repository.delete(idReserva)
+}
+
+export function getAllReservasForAdmin(repository: ReservaAdminReader): Promise<ReservaDocument[]> {
+  return repository.listAll()
+}
+
+export function updateReservaEstado(
+  repository: ReservaAdminWriter,
+  idReserva: string,
+  estado: ReservaDocument['estado_reserva'],
+): Promise<void> {
+  return repository.updateEstado(idReserva, estado)
+}
+
+export function deleteReservaForAdmin(
+  repository: ReservaAdminWriter,
+  idReserva: string,
+): Promise<void> {
+  return repository.deleteForAdmin(idReserva)
 }
 
 export async function getReservasByUsuario(

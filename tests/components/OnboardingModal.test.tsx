@@ -27,6 +27,19 @@ vi.mock('../../src/context/AuthContext', () => ({
   useRefreshUserProfile: () => ({ refreshProfile: mocks.refreshProfile }),
 }))
 
+vi.mock('../../src/components/MapaNegocio', () => ({
+  default: ({ onSelect }: {
+    onSelect: (location: { latitude: number; longitude: number }) => void
+  }) => (
+    <button
+      type="button"
+      onClick={() => onSelect({ latitude: -12.03, longitude: -77.01 })}
+    >
+      Seleccionar ubicación de prueba
+    </button>
+  ),
+}))
+
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
@@ -98,5 +111,38 @@ describe('OnboardingModal', () => {
     await waitFor(() => expect(mocks.completeSignup).toHaveBeenCalledOnce())
     expect(mocks.completeSignup).toHaveBeenCalledWith(expect.objectContaining({ dni: '12345678' }))
     expect(updateUserProfile).not.toHaveBeenCalled()
+  })
+
+  it('no completa el onboarding de comercio si falta la ubicación', async () => {
+    mocks.getPendingSignupRole.mockReturnValue('store')
+    renderOnboarding('/onboarding/store')
+
+    fireEvent.change(screen.getByLabelText('Nombre comercial del local'), { target: { value: 'Panadería Ana' } })
+    fireEvent.change(screen.getByLabelText('RUC o DNI del titular'), { target: { value: '12345678' } })
+    fireEvent.change(screen.getByLabelText('Dirección exacta del local'), { target: { value: 'Av. Central 123' } })
+    fireEvent.change(screen.getByLabelText('Punto en el mapa o referencia'), { target: { value: 'Frente al parque' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar y continuar' }))
+
+    expect((await screen.findByRole('alert')).textContent)
+      .toContain('Selecciona una ubicación válida')
+    expect(mocks.completeSignup).not.toHaveBeenCalled()
+  })
+
+  it('envía las coordenadas seleccionadas al finalizar el onboarding de comercio', async () => {
+    mocks.getPendingSignupRole.mockReturnValue('store')
+    renderOnboarding('/onboarding/store')
+
+    fireEvent.change(screen.getByLabelText('Nombre comercial del local'), { target: { value: 'Panadería Ana' } })
+    fireEvent.change(screen.getByLabelText('RUC o DNI del titular'), { target: { value: '12345678' } })
+    fireEvent.change(screen.getByLabelText('Dirección exacta del local'), { target: { value: 'Av. Central 123' } })
+    fireEvent.change(screen.getByLabelText('Punto en el mapa o referencia'), { target: { value: 'Frente al parque' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Seleccionar ubicación de prueba' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar y continuar' }))
+
+    await waitFor(() => expect(mocks.completeSignup).toHaveBeenCalledOnce())
+    expect(mocks.completeSignup).toHaveBeenCalledWith(expect.objectContaining({
+      latitude: -12.03,
+      longitude: -77.01,
+    }))
   })
 })
