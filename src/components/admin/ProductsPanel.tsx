@@ -239,7 +239,7 @@ export default function ProductsPanel({
                   <td>
                     <p className="account-name">{p.name}</p>
                     <p className="account-email">
-                      {p.category} · creado {formatRelative(p.createdAt)} · actualizado {formatRelative(p.updatedAt)}
+                      {p.category} · creado {formatRelative(p.createdAt)}
                     </p>
                   </td>
                   <td>{p.storeName}</td>
@@ -276,16 +276,6 @@ export default function ProductsPanel({
                           ⏸️
                         </button>
                       )}
-                      <button
-                        type="button"
-                        className="icon-btn icon-btn-danger"
-                        title="Eliminar producto"
-                        onClick={() =>
-                          setPending({ product: p, action: "eliminar" })
-                        }
-                      >
-                        🗑️
-                      </button>
                     </div>
                   </td>
                 </tr>
