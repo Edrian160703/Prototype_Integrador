@@ -105,12 +105,9 @@ export default function ProfileStoreForm({ profile, onSaved }: ProfileStoreFormP
         </div>
         <div className="field">
           <MapaNegocio
-            selectedLocation={
-              typeof form.latitude === 'number' && typeof form.longitude === 'number'
-                ? { latitude: form.latitude, longitude: form.longitude }
-                : null
+            onSeleccionar={(latitude, longitude) =>
+              updateLocation({ latitude, longitude })
             }
-            onSelect={updateLocation}
           />
           {typeof form.latitude === 'number' && typeof form.longitude === 'number' && (
             <p className="field-hint">
