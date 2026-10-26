@@ -20,7 +20,7 @@ export default function HeaderNavigation({
   navOpen,
   onClose,
 }: HeaderNavigationProps) {
-  const { user, loading } = useAuthSession()
+  const { user, loading, isAdmin } = useAuthSession()
   const { profile } = useUserProfile()
 
   return (
@@ -47,6 +47,11 @@ export default function HeaderNavigation({
         {!loading && profile?.role === 'store' && (
           <NavLink to="/publicar" className="mobile-nav-publish" onClick={onClose}>
             + Publicar una oferta
+          </NavLink>
+        )}
+        {!loading && user && isAdmin && (
+          <NavLink to="/admin" className="mobile-nav-admin" onClick={onClose}>
+            + Dashboard
           </NavLink>
         )}
         {!loading && !user && (

@@ -3,7 +3,6 @@ import { useAuthSession, useUserProfile } from '../context/AuthContext'
 import UserMenu from './UserMenu'
 import darkModeIcon from '../assets/images/dark-mode-icon.png'
 import useThemePreference from '../hooks/useThemePreference'
-import { getFirebaseAuth } from '../infrastructure/firebase/firebaseClient'
 
 interface HeaderActionsProps {
   onOpenLogin: () => void
@@ -17,28 +16,18 @@ export default function HeaderActions({
   onToggleNavigation,
 }: HeaderActionsProps) {
 
-  const { user, loading } = useAuthSession()
+  const { user, loading, isAdmin } = useAuthSession()
   const { profile } = useUserProfile()
   const { darkMode, toggleTheme } = useThemePreference()
 
-  const currentUser = getFirebaseAuth().currentUser;
-  let tokenExists = false;
-
-  async function checkAdminClaim() {
-    if (currentUser && await currentUser.getIdTokenResult(true)){
-      tokenExists = true;
-    }
-  }
-
-  void checkAdminClaim();
   return (
     <div className="header-right">
       {!loading && profile?.role === 'store' && (
         <Link to="/publicar" className="btn btn-publish">+ Publicar</Link>
       )}
       
-      {!loading && tokenExists && (
-        <Link to="/admin" className="btn btn-publish">+ Dashboard</Link>
+      {!loading && isAdmin && (
+        <Link to="/admin" className="btn btn-publish">Dashboard</Link>
       )}
       <span className="location-pill"> Lima, Perú</span>
       <button className="icon-btn" aria-label="Favoritos">♡</button>
