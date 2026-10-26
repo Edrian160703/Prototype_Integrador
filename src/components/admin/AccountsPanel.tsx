@@ -125,7 +125,7 @@ export default function AccountsPanel({
       <div className="admin-stats">
         <div className="stat-card">
           <span className="stat-icon" aria-hidden="true">
-            👥
+            {entityLabel == "consumidor" ? "👥" : "🏪"}
           </span>
           <div>
             <p className="stat-value">{accounts.length}</p>
@@ -208,7 +208,6 @@ export default function AccountsPanel({
                 <th>{entityLabel[0].toUpperCase() + entityLabel.slice(1)}</th>
                 <th>Estado</th>
                 <th>Creada</th>
-                <th>Última actividad</th>
                 <th className="col-actions">Acciones</th>
               </tr>
             </thead>

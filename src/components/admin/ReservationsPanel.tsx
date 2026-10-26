@@ -204,7 +204,7 @@ export default function ReservationsPanel({
                 <tr key={reservation.id_reserva}>
                   <td><span className="account-name">{reservation.id_reserva}</span></td>
                   <td>
-                    <p className="account-name">{reservation.email_usuario || reservation.id_usuario}</p>
+                    <p className="account-name">{reservation.email_usuario}</p>
                     {reservation.email_usuario && (
                       <p className="account-email">{reservation.id_usuario}</p>
                     )}

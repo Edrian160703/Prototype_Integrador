@@ -473,6 +473,26 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /compras/{purchaseId} {
+      allow read: if isAdmin() || (
+        signedIn() && resource.data.id_usuario == request.auth.uid
+      );
+      allow create: if signedIn()
+        && purchaseId.matches('COMPRA_.+')
+        && request.resource.data.id_compra == purchaseId
+        && request.resource.data.id_usuario == request.auth.uid
+        && request.resource.data.fecha_compra == request.time
+        && request.resource.data.metodo_pago in ['tienda', 'online']
+        && request.resource.data.estado_pago in ['PENDIENTE_PAGO_TIENDA', 'PAGADO']
+        && request.resource.data.total is number
+        && request.resource.data.total >= 0
+        && request.resource.data.ids_reservas is list
+        && request.resource.data.ids_reservas.size() > 0
+        && request.resource.data.items is list
+        && request.resource.data.items.size() == request.resource.data.ids_reservas.size();
+      allow update, delete: if false;
+    }
+
     match /inventario_movimientos/{operationId} {
       allow read: if isAdmin() || (
         signedIn()

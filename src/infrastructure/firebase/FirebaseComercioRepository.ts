@@ -7,6 +7,8 @@ function mapComercio(data: Record<string, unknown>): ComercioSummary {
   return {
     businessName: typeof data.businessName === 'string' ? data.businessName : undefined,
     district: typeof data.district === 'string' ? data.district : undefined,
+    address: typeof data.address === 'string' ? data.address : undefined,
+    reference: typeof data.reference === 'string' ? data.reference : undefined,
   }
 }
 
