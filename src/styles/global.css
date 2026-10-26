@@ -2622,6 +2622,12 @@ html[data-theme="dark"] .form-section-title {
   .icon-btn {
     display: none;
   }
+
+  .header-right .btn-pending-reservations {
+    display: inline-flex;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
 }
 
 .toast {
@@ -2790,6 +2796,11 @@ html[data-theme="dark"] .form-section-title {
 
   .header-right {
     gap: 8px;
+  }
+
+  .header-right .btn-pending-reservations {
+    padding: 7px 8px;
+    font-size: 10px;
   }
 
   .cards-grid {

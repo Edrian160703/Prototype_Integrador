@@ -36,7 +36,7 @@ export default function MisReservas({ idUsuario }: MisReservasProps) {
   } = useMisReservas(idUsuario)
 
   return (
-    <section className="profile-section" aria-labelledby="consumer-reservas-title">
+    <section id="reservas" className="profile-section" aria-labelledby="consumer-reservas-title">
       <header className="profile-section-head">
         <span className="profile-section-icon" aria-hidden="true">🧾</span>
         <div>
