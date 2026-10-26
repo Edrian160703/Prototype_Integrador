@@ -17,10 +17,10 @@ import type {
   ReservaCreator,
   ReservaDeleter,
   ReservaReader,
-  ReservaStateWriter,
 } from '../../ports/reservaRepository'
 import type { IdGenerator, NamedIdGenerator } from '../../ports/idGenerator'
 import type { CartItem } from '../../types/cart'
+import type { ReservaCheckoutDetails } from '../../types/checkout'
 import type { ReservaDocument, EstadoReserva } from '../../types/reserva'
 import { createCryptoIdGenerator } from '../cryptoIdGenerator'
 import { createReadableIdGenerator } from '../readableIdGenerator'
@@ -92,6 +92,7 @@ export class FirebaseReservaRepository implements
     emailUsuario: string,
     item: CartItem,
     nombreUsuario?: string | null,
+    checkout?: ReservaCheckoutDetails,
   ): Promise<string> {
     if (!idUsuario.trim() || !emailUsuario.trim()) {
       throw new Error('Debes iniciar sesión para reservar.')
@@ -160,6 +161,7 @@ export class FirebaseReservaRepository implements
         fecha_reserva: serverTimestamp(),
         cantidad: item.quantity,
         estado_reserva: 'pendiente',
+        ...checkout,
         inventory_creation_operation_id: operationId,
         inventory_last_operation_id: operationId,
       })

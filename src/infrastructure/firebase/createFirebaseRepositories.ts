@@ -7,6 +7,7 @@ import type { IdGenerator } from '../../ports/idGenerator'
 export function createFirebaseRepositories(idGenerator: IdGenerator = createCryptoIdGenerator()) {
   const productIds = createReadableIdGenerator(idGenerator)
   const reservationIds = createReadableIdGenerator(idGenerator, 'reserva')
+  const purchaseIds = createReadableIdGenerator(idGenerator, 'COMPRA')
 
   const products = createLazyRepository(async () => {
     const [{ FirebaseProductoRepository }, db] = await Promise.all([
@@ -45,6 +46,14 @@ export function createFirebaseRepositories(idGenerator: IdGenerator = createCryp
     )
   })
 
+  const purchases = createLazyRepository(async () => {
+    const [{ FirebaseCompraRecorder }, db] = await Promise.all([
+      import('./FirebaseCompraRecorder'),
+      getFirebaseFirestore(),
+    ])
+    return new FirebaseCompraRecorder(db, purchaseIds)
+  })
+
   const accounts = createLazyRepository(async () => {
     const [{ FirebaseAccountRepository }, db] = await Promise.all([
       import('./FirebaseAccountRepository'),
@@ -61,5 +70,5 @@ export function createFirebaseRepositories(idGenerator: IdGenerator = createCryp
     return new FirebaseUserProfileRepository(db)
   })
 
-  return { products, offers, commerces, reservations, accounts, userProfiles }
+  return { products, offers, commerces, reservations, purchases, accounts, userProfiles }
 }

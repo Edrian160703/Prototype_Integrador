@@ -9,6 +9,7 @@ import { FirebaseAuthGateway } from './infrastructure/firebase/FirebaseAuthGatew
 import { createFirebaseRepositories } from './infrastructure/firebase/createFirebaseRepositories'
 import { InMemorySignupDraftStore } from './infrastructure/InMemorySignupDraftStore'
 import { createCryptoIdGenerator } from './infrastructure/cryptoIdGenerator'
+import { SimulatedPaymentGateway } from './infrastructure/SimulatedPaymentGateway'
 import { createReadableIdGenerator } from './infrastructure/readableIdGenerator'
 import { getFirebaseAuth } from './infrastructure/firebase/firebaseClient'
 
@@ -35,6 +36,8 @@ export function createFoodBackApplication(): ApplicationServices {
     reservations: createReservationServices({
       reservations: repositories.reservations,
       offers: repositories.offers,
+      purchases: repositories.purchases,
+      payments: new SimulatedPaymentGateway(idGenerator),
     }),
     authentication: createAuthenticationService({
       auth: authGateway,

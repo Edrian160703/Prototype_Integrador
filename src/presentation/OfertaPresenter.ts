@@ -8,6 +8,8 @@ export interface OfferCardData {
   title: string
   place: string
   distance: string
+  address?: string
+  reference?: string
   price: string
   categoriaChip: string
 }
@@ -36,6 +38,8 @@ function mapOfertaDoc({ id, data, comercio }: OfertaConComercio): OfferCardData 
     title: data.nombre_producto,
     place: comercio?.businessName || 'Comercio FoodBack',
     distance: comercio?.district || 'Lima, Perú',
+    address: comercio?.address,
+    reference: comercio?.reference,
     price: data.precio_oferta.toFixed(2),
     categoriaChip: categoria?.chip ?? 'Todos',
   }
