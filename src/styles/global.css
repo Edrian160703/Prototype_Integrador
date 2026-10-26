@@ -2342,7 +2342,7 @@ html[data-theme="dark"] {
   --surface: #18231e;
   --surface-muted: #202e28;
   --input-bg: #121c18;
-  --cream: #1b2922;
+  --cream: #213f2f;
   --lime: #253821;
   --green-soft: #29442c;
   --text-dark: #edf5ed;
@@ -2380,7 +2380,14 @@ html[data-theme="dark"] .profile-section {
   color: var(--text-dark);
 }
 
+html[data-theme="dark"] .account-type-badge,
+html[data-theme="dark"] .reserva-exclusiva-price,
+html[data-theme="dark"] .qty-stepper > button{
+  color: var(--text-gray);
+}
+
 html[data-theme="dark"] .hero,
+html[data-theme="dark"] .footer,
 html[data-theme="dark"] .search-hero,
 html[data-theme="dark"] .impact-hero,
 html[data-theme="dark"] .business-hero,
@@ -2412,6 +2419,11 @@ html[data-theme="dark"] .process {
 html[data-theme="dark"] .how-strip > div {
   border-color: #3d5931;
   color: #c2d5bd;
+}
+
+html[data-theme="dark"] .how-strip > div > strong,
+html[data-theme="dark"] .offer-card-price {
+  color: var(--text-dark)
 }
 
 html[data-theme="dark"] .step:nth-child(1),
