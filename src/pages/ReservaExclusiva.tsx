@@ -144,7 +144,7 @@ export default function ReservaExclusiva() {
                     >
                       −
                     </button>
-                    <span >{cantidad}</span>
+                    <span>{cantidad}</span>
                     <button
                       type="button"
                       onClick={() => setCantidad((c) => Math.min(oferta.cantidadDisponible, c + 1))}

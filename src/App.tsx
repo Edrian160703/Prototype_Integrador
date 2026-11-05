@@ -1,8 +1,9 @@
 import { lazy, Suspense, useState } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import AdminRoute from './components/admin/AdminRoute'
+import AdminHome from './pages/admin/AdminHome'
 
 const LoginModal = lazy(() => import('./components/LoginModal'))
 const SignUpForm = lazy(() => import('./components/SignUpForm'))
@@ -16,14 +17,22 @@ const Onboarding = lazy(() => import('./pages/Onboarding'))
 const Perfil = lazy(() => import('./pages/Perfil'))
 const Publicar = lazy(() => import('./pages/Publicar'))
 const ReservaExclusiva = lazy(() => import('./pages/ReservaExclusiva'))
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 
-export default function App() {
-  const [loginOpen, setLoginOpen] = useState(false)
+interface AppProps{
+  loginOpen: boolean
+  onOpenLogin: () => void
+  onCloseLogin: () => void
+}
 
+// Para paginas de acceso publico
+function PublicShell({
+  loginOpen,
+  onOpenLogin,
+  onCloseLogin,
+}: AppProps) {
   return (
     <>
-      <Header onOpenLogin={() => setLoginOpen(true)} />
+      <Header onOpenLogin={onOpenLogin} />
 
       <main>
         <Suspense fallback={<div role="status">Cargando página…</div>}>
@@ -40,7 +49,6 @@ export default function App() {
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/publicar" element={<Publicar />} />
             <Route path="/reserva/:id" element={<ReservaExclusiva />} />
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           </Routes>
         </Suspense>
       </main>
@@ -49,9 +57,59 @@ export default function App() {
 
       {loginOpen && (
         <Suspense fallback={null}>
-          <LoginModal onClose={() => setLoginOpen(false)} />
+          <LoginModal onClose={onCloseLogin} />
         </Suspense>
       )}
     </>
   )
 }
+
+/**
+ * Para paginas de administrador. 
+ * Cada nueva ruta debe usar {@link AdminRoute} como proteccion. 
+ */
+
+function AdminShell({
+  loginOpen,
+  onCloseLogin,
+}: AppProps){
+  return (
+    <>
+      <header className='header'></header>
+      <main>
+        <Suspense fallback={<div role="status">Cargando página…</div>}>
+          <Routes>
+            <Route path="/admin" element={<AdminRoute><AdminHome /></AdminRoute>} />
+          </Routes>
+        </Suspense>
+      </main>
+
+      {loginOpen && (
+        <Suspense fallback={null}>
+          <LoginModal onClose={onCloseLogin} />
+        </Suspense>
+      )}
+    </>
+  )
+}
+
+
+export default function App() {
+  const [loginOpen, setLoginOpen] = useState(false)
+  const isAdminRoute = useLocation().pathname.startsWith('/admin')
+
+  return isAdminRoute ? (
+    <AdminShell       
+      loginOpen={loginOpen}
+      onOpenLogin={() => setLoginOpen(true)}
+      onCloseLogin={() => setLoginOpen(false)}
+    />
+  ) : (
+    <PublicShell
+      loginOpen={loginOpen}
+      onOpenLogin={() => setLoginOpen(true)}
+      onCloseLogin={() => setLoginOpen(false)}
+    />
+  )
+}
+

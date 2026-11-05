@@ -1,4 +1,14 @@
-import { collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc, type Firestore } from 'firebase/firestore'
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+  type Firestore,
+} from 'firebase/firestore'
 import type {
   AccountReader,
   AccountStatus,
@@ -27,7 +37,10 @@ export class FirebaseAccountRepository implements AccountReader, AccountWriter {
 
   async listByRole(role: UserRole): Promise<ManagedAccount[]> {
     await this.adminAuthorizer.assertAdmin()
-    const snapshot = await getDocs(collection(this.db, getUserCollectionName(role)))
+    const snapshot = await getDocs(query(
+      collection(this.db, getUserCollectionName(role)),
+      orderBy('createdAt', 'desc'),
+    ))
     return snapshot.docs.map((item) => {
       const data = item.data()
       return {

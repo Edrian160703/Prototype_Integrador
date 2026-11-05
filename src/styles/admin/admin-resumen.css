@@ -1,0 +1,69 @@
+:root{
+  --consumer-bg-color: #eef9ef;
+  --comerce-bg-color: #edf5ff;
+  --product-bg-color: #fff9e7;
+  --reservation-bg-color: #f5f0ff;
+}
+p{
+  margin: 0;
+}
+
+.admin-stats{
+  padding: 1rem 2.5rem;
+  display: flex;
+  flex-direction: row;
+  gap: 4rem;
+  width: 0 auto;
+  border-bottom: 1px solid var(--admin-border);
+  max-height: 200px;
+}
+.stat-card{
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 250px;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background-color: var(--admin-surface);
+  border: 2px solid var(--admin-border); 
+  box-shadow: var(--admin-shadow);
+}
+
+.stat-card-consumer{
+  background-color: var(--consumer-bg-color);
+  color: var(--consumer-ink);
+}
+.stat-card-comerce{
+  background-color: var(--comerce-bg-color);
+  color: var(--comerce-ink);
+}
+.stat-card-product{
+  background-color: var(--product-bg-color);
+  color: var(--product-ink);
+}
+.stat-card-reservation{
+  background-color: var(--reservation-bg-color);
+  color: var(--reservation-ink);
+} 
+
+.stat-icon {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+.stat-label {
+  display: block;
+  color: var(--text-gray);
+  margin-top: 6px;
+  font-size: 1rem;
+  line-height: 1.4;
+}

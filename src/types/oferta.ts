@@ -1,5 +1,7 @@
 import type { ComercioSummary } from './comercio'
 
+export type OfertaEstado = 'disponible' | 'suspendida' | 'agotada' | 'eliminada'
+
 export interface CreateOfertaParams {
   uid: string
   payload: OfertaPayload
@@ -39,7 +41,8 @@ export interface OfertaDocument {
   precio_oferta: number
   cantidad_disponible: number
   horario_recojo: string
-  estado: string
+  estado: OfertaEstado
   fecha_limite: Date
+  createdAt?: Date
   imagen_url: string | null
 }
