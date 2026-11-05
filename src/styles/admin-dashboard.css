@@ -15,7 +15,6 @@
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
   color: var(--admin-ink);
-  background: var(--admin-bg);
 }
 
 html[data-theme="dark"] .admin-page {

@@ -135,7 +135,7 @@ export default function ReservaExclusiva() {
                       {sinStock ? 'Sin stock disponible' : `${oferta.cantidadDisponible} disponibles`}
                     </span>
                   </div>
-                  <div className="qty-stepper">
+                  <div className="qty-stepper unselectable">
                     <button
                       type="button"
                       onClick={() => setCantidad((c) => Math.max(1, c - 1))}
@@ -144,7 +144,7 @@ export default function ReservaExclusiva() {
                     >
                       −
                     </button>
-                    <span>{cantidad}</span>
+                    <span >{cantidad}</span>
                     <button
                       type="button"
                       onClick={() => setCantidad((c) => Math.min(oferta.cantidadDisponible, c + 1))}
