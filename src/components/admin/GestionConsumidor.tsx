@@ -48,12 +48,12 @@ export default function GestionConsumidor() {
       <table className="tabla-main">
         <thead>
           <tr>
-            <th className="static-header">ID</th>
-            <th className="static-header">Correo</th>
-            <th className="static-header">DNI</th>
-            <th className="static-header">Número de teléfono</th>
+            <th>ID</th>
+            <th>Correo</th>
+            <th>DNI</th>
+            <th>Teléfono</th>
             <th>Nombre de consumidor</th>
-            <th>Acciones</th>
+            <th className="centered-cell">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -69,13 +69,24 @@ export default function GestionConsumidor() {
                 <td className="static-cell">{user.dni}</td>
                 <td className="static-cell">{user.phone}</td>
                 <td className="static-cell">{user.displayName}</td>
-                <td className="static-cell">
+                <td className="static-cell actions-cell">
+
+                  {/* BOTONES DE ACCION PARA EL ADMIN */ }
+
                   <button
                     type="button"
                     className={`gestion-table-button ${selectedUser === user.id ? "gestion-table-button-active" : ""}`}
                     onClick={() => setSelectedUser(user.id)}
                   >
                     {selectedUser === user.id ? "Mostrando" : "Ver reservas"}
+                  </button>
+                  {/* ESTE ES EL BOTON SUSPENDER, NO FUNCIONA PQ AUN NO HAY STATUS EN LA TABLA CONSUMIDORES NI EN LA TABLA COMERCIOS*/ }
+                  <button
+                    type="button"
+                    className={`gestion-table-button gestion-table-button-dangerous`}
+                    onClick={() => {}}
+                  >
+                    Suspender
                   </button>
                 </td>
               </tr>

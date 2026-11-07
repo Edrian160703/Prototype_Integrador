@@ -130,9 +130,13 @@
   background: var(--admin-gestion-selected);
 }
 
-.static-header,
-.static-cell {
-  white-space: nowrap;
+.centered-cell {
+  text-align: center !important;
+}
+
+.actions-cell{
+  display: flex;
+  justify-content: space-evenly;
 }
 
 .gestion-table-button {
@@ -140,14 +144,18 @@
   background: var(--admin-gestion-accent-soft);
   color: #3730a3;
   border-radius: 10px;
-  padding: 0.55rem 0.8rem;
+  padding: 0.55rem 0.3rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .gestion-table-button:hover {
   background: #e0e7ff;
+}
+.gestion-table-button-dangerous:hover {
+  border: 1zpx solid #fa8888;
+  color: rgb(107, 0, 0);
+  background: #ff5959;
 }
 
 .gestion-table-button-active {
