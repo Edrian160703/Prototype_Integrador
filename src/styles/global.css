@@ -68,6 +68,12 @@ img {
   -ms-user-select: none;     /* IE 10 and Edge */
   user-select: none;         /* Standard syntax (Chrome, Firefox, Opera) */
 }
+/* ---------- Errores ---------- */
+.error{
+  align-self: center;
+  align-items: center;
+  display: inline-flex;
+}
 
 /* ---------- botones ---------- */
 .btn {
@@ -1017,6 +1023,45 @@ img {
   max-width: 640px;
   margin: 0 auto;
   line-height: 1.6;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 36px 0;
+}
+.stat-card {
+  border-radius: 14px;
+  padding: 26px 16px;
+  text-align: center;
+}
+.stat-card:nth-child(1) {
+  background: #eef9ef;
+}
+.stat-card:nth-child(2) {
+  background: #edf5ff;
+}
+.stat-card:nth-child(3) {
+  background: #fff9e7;
+}
+.stat-card:nth-child(4) {
+  background: #f5f0ff;
+}
+.stat-icon {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+.stat-label {
+  display: block;
+  color: var(--text-gray);
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 .metrics-box {
   background: var(--lime);

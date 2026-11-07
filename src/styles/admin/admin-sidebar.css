@@ -1,27 +1,19 @@
-.admin-sidebar-toggle {
-  z-index: 10001;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  background: var(--admin-surface);
-  color: var(--admin-ink);
-  font-size: 1.2rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.admin-sidebar-toggle:hover {
-  background: var(--admin-bg);
-  border-color: #c7d2fe;
-}
-
 .admin-sidebar {
+  --admin-sidebar-bg: var(--admin-surface);
+  --admin-sidebar-border: var(--admin-border);
+  --admin-sidebar-item-hover: var(--admin-bg);
+  --admin-sidebar-item-active-start: #1d4ed8;
+  --admin-sidebar-item-active-end: #2563eb2e;
+  --admin-sidebar-item-active-hover-start: #1e40af;
+  --admin-sidebar-item-active-hover-end: #2564eb5d;
+  --admin-sidebar-item-active-shadow: #2563eb2e;
+  --admin-sidebar-text: var(--admin-ink);
+  --admin-sidebar-muted: var(--admin-muted);
+
   max-width: 240px;
   height: 86vh;
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  background: var(--admin-sidebar-bg);
+  border: 1px solid var(--admin-sidebar-border);
   border-radius: 8px;
   padding: 0.75rem;
   display: flex;
@@ -33,9 +25,12 @@
 }
 
 .admin-sidebar-open {
+  --admin-sidebar-bg: var(--admin-surface);
+  --admin-sidebar-border: var(--admin-border);
+
   max-width: 240px;
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  background: var(--admin-sidebar-bg);
+  border: 1px solid var(--admin-sidebar-border);
   border-radius: 8px;
   padding: 0.75rem;
   display: flex;
@@ -53,7 +48,7 @@
   width: 100%;
   border: none;
   background: transparent;
-  color: var(--admin-muted);
+  color: var(--admin-sidebar-muted);
   padding: 2.8rem 2.5rem 2.8rem 2.5rem;
   font-size: 1.25rem;
   font-weight: 600;
@@ -63,18 +58,18 @@
 }
 
 .admin-sidebar-item:hover {
-  background: var(--admin-bg);
-  color: var(--admin-ink);
+  background: var(--admin-sidebar-item-hover);
+  color: var(--admin-sidebar-text);
 }
 
 .admin-sidebar-item-active {
-  background: linear-gradient(to right, #1d4ed8, #2563eb2e);
+  background: linear-gradient(to right, var(--admin-accent), var(--admin-accent-light));
   color: #ffffff;
-  box-shadow: 0 10px 20px #2563eb2e;
+  box-shadow: 0 10px 20px var(--admin-sidebar-item-active-shadow);
 }
 
 .admin-sidebar-item-active:hover {
-  background: linear-gradient(to right, #1e40af, #2564eb5d);
+  background: linear-gradient(to right, var(--admin-accent-strong), var(--admin-accent-light));
   color: #ffffff;
 }
 

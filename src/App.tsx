@@ -2,8 +2,6 @@ import { lazy, Suspense, useState } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
-import AdminRoute from './components/admin/AdminRoute'
-import AdminHome from './pages/admin/AdminHome'
 
 const LoginModal = lazy(() => import('./components/LoginModal'))
 const SignUpForm = lazy(() => import('./components/SignUpForm'))
@@ -17,6 +15,8 @@ const Onboarding = lazy(() => import('./pages/Onboarding'))
 const Perfil = lazy(() => import('./pages/Perfil'))
 const Publicar = lazy(() => import('./pages/Publicar'))
 const ReservaExclusiva = lazy(() => import('./pages/ReservaExclusiva'))
+
+const AdminHome = lazy(() => import('./pages/admin/AdminHome'))
 
 interface AppProps{
   loginOpen: boolean
@@ -79,7 +79,7 @@ function AdminShell({
       <main>
         <Suspense fallback={<div role="status">Cargando página…</div>}>
           <Routes>
-            <Route path="/admin" element={<AdminRoute><AdminHome /></AdminRoute>} />
+            <Route path="/admin" element={<AdminHome />} />
           </Routes>
         </Suspense>
       </main>

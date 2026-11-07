@@ -7,6 +7,10 @@ export interface ManagedAccount {
   role: UserRole
   displayName: string
   email: string
+  dni?: string
+  phone?: string
+  ruc?: string
+  address?: string
   status: AccountStatus
   createdAt: Date
   lastActiveAt: Date

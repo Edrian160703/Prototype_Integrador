@@ -18,13 +18,6 @@ type AdminSidebarProps = {
   onSelect: (key: string) => void
 }
 
-export function getSidebarItems(){
-  return SIDEBAR_ITEMS
-}
-
-
-
-
 export default function AdminSidebar({
   activeItem,
   onSelect,

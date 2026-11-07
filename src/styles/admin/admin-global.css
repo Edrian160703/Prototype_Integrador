@@ -1,4 +1,4 @@
-#root {
+:root {
   --admin-ink: #1a1d24;
   --admin-muted: #6b7280;
   --admin-border: #e5e7eb;
@@ -10,6 +10,10 @@
   --admin-warning-bg: #fef6e7;
   --admin-danger: #b91c1c;
   --admin-danger-bg: #fdecec;
+
+  --admin-accent: #0c6b3c;
+  --admin-accent-strong: #0c7a3f;
+  --admin-accent-light: #07c760;
 
   margin: 0 auto;
   color: var(--admin-ink);
@@ -73,6 +77,25 @@ main{
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.admin-section {
+  width: 100%;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.admin-section-hidden {
+  display: none;
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.admin-section-active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 

@@ -1,62 +1,61 @@
-import { useEffect, useState } from "react";
-import AdminSidebar, {
-  SIDEBAR_ITEMS,
-} from "../../components/admin/AdminSidebar";
-import "./../../styles/admin-global.css"
-import AdminGestion from "../../components/admin/AdminGestion";
+import { lazy, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import AdminSidebar, { SIDEBAR_ITEMS } from "../../components/admin/AdminSidebar";
+import "./../../styles/admin/admin-global.css";
 import AdminResumen from "../../components/admin/AdminResumen";
+import AdminRoute from "../../components/admin/AdminRoute";
+
+const AdminGestion = lazy(() => import('../../components/admin/AdminGestion'));
 
 export default function AdminHome() {
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const [sidebarActive, setSidebarActive] = useState("resumen")
+  const defaultKey = useMemo(() => {
+    const hashKey = location.hash.replace("#", "").trim();
+    return SIDEBAR_ITEMS.some((item) => item.key === hashKey) ? hashKey : "resumen";
+  }, [location.hash]);
 
-  function handleSidebarSelect(selectedKey: string){
-    const selectedItem = SIDEBAR_ITEMS.find((item) => item.key === selectedKey);
-
-    if (!selectedItem) return(console.log(`tried selecting ${selectedItem}`))
-
-    setSidebarActive(selectedKey)  
-    const nextHash = `#${selectedItem.key}`;
-    if (window.location.hash !== nextHash) {
-      window.history.pushState(null, "", nextHash);
-    }
-  }
+  const [sidebarActive, setSidebarActive] = useState(defaultKey);
 
   useEffect(() => {
-    const syncTabFromHash = () => {
-      const hashKey = window.location.hash.replace("#", "");
-      const selectedItem = SIDEBAR_ITEMS.find((item) => item.key === hashKey);
+    setSidebarActive(defaultKey);
+  }, [defaultKey]);
 
-      if (!selectedItem) {
-        if (window.location.hash === "") {
-          const fallback = SIDEBAR_ITEMS[0];
-          if (fallback) {
-            setSidebarActive(fallback.key);
-          }
-        }
-        return;
-      }
+  function handleSidebarSelect(selectedKey: string) {
+    const selectedItem = SIDEBAR_ITEMS.find((item) => item.key === selectedKey);
+    if (!selectedItem) return;
 
-      setSidebarActive(selectedItem.key);
-    };
+    setSidebarActive(selectedKey);
+    navigate({ pathname: location.pathname, hash: selectedItem.key }, { replace: false });
+  }
 
-    syncTabFromHash();
-    window.addEventListener("hashchange", syncTabFromHash);
-
-    return () => window.removeEventListener("hashchange", syncTabFromHash);
-  }, [sidebarActive]);
+  const sections = {
+    resumen: <AdminResumen key="resumen" />,
+    nuevos: <AdminResumen key="nuevos" />,
+    gestionar: <AdminGestion key="gestionar" />,
+    estadisticas: <AdminResumen key="estadisticas" />,
+  } as const;
 
   return (
     <>
-      <AdminSidebar
-        activeItem={sidebarActive}
-        onSelect={handleSidebarSelect}
-      ></AdminSidebar>
+      <AdminRoute>
+        <AdminSidebar
+          activeItem={sidebarActive}
+          onSelect={handleSidebarSelect}
+        />
 
-      <div className="admin-content">
-        <AdminResumen></AdminResumen>
-        <AdminGestion></AdminGestion>
-      </div>
+        <div className="admin-content">
+          {Object.entries(sections).map(([key, section]) => (
+            <div
+              key={key}
+              className={`admin-section ${sidebarActive === key ? "admin-section-active" : "admin-section-hidden"}`}
+            >
+              {section}
+            </div>
+          ))}
+        </div>
+      </AdminRoute>
     </>
   );
 }

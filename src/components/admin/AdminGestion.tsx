@@ -1,34 +1,31 @@
 import { useState } from "react";
-import useAdminDashboard, { type AdminTab } from "../../hooks/useAdminDashboard";
+import useAdminDashboard from "../../hooks/useAdminDashboard";
+import GestionComercio from "./GestionComercio";
+import GestionConsumidor from "./GestionConsumidor";
+import "../../styles/admin/admin-gestion.css";
 
 export const MANAGEMENT_USER_TYPES = [
-  { key: "consumidor", label: "Consumidor", icon: "📊"},
-  { key: "comercio", label: "Comercio", icon: "✨"},
+  { key: "consumidor", label: "Consumidor", icon: "🧑"},
+  { key: "comercio", label: "Comercio", icon: "🛒"},
 ];
+
+export interface ManagementData {
+  key: string, 
+  info: any,
+}
 
 
 export default function AdminGestion(){
-    const {
-      activeTab,
-      setActiveTab,
-      users,
-      stores,
-      products,
-      reservations,
-      offers,
-      loadError,
-      handleUserStatusChange,
-      handleUserDelete,
-      handleStoreStatusChange,
-      handleStoreDelete,
-      handleProductStatusChange,
-      handleProductDelete,
-      handleReservationStatusChange,
-      handleReservationDelete,
-    } = useAdminDashboard();
+  const {
+    loadError,
+  } = useAdminDashboard();
   const [typeSelected, setTypeSelected] = useState("consumidor")
 
-    if (loadError) {}
+  if (loadError) {return(
+    <>
+      <div className="error">Ocurrio un error inesperado: {loadError}</div>
+    </>
+  )}
     
  return(
   <div className="admin-management">
@@ -39,27 +36,22 @@ export default function AdminGestion(){
             key={item.key}
             type="button"
             className={`admin-user-type-button ${(
-              typeSelected === item.key) ? "admin-user-type-button" : ""}`}
+              typeSelected === item.key) ? "admin-user-type-button-active" : ""}`}
             onClick={() => setTypeSelected(item.key)}
-          > {item.label}</button>
+          > {item.icon}{item.label}</button>
         )
       })}
     </div>
     <div className="management-container">
-      <table>
-        <th>Correo del {MANAGEMENT_USER_TYPES.find((item) => item.key === typeSelected)?.label}</th>
-        <th>Reserva</th>
-        <th>Oferta</th>
-        <th>Fecha</th>
-        <th>Cantidad</th>
-
-      </table>
-
+     <div className={`management-section ${typeSelected === "consumidor" ? "management-section-active" : "management-section-hidden"}`}>
+       <GestionConsumidor />
+     </div>
+     <div className={`management-section ${typeSelected === "comercio" ? "management-section-active" : "management-section-hidden"}`}>
+       <GestionComercio />
+     </div>
+   </div>
 
 
-    </div>
-
-
-  </div>
+ </div>
  )
 }

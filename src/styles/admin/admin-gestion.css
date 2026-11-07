@@ -1,0 +1,188 @@
+.admin-management {
+  --admin-gestion-bg: var(--admin-bg);
+  --admin-gestion-surface: var(--admin-surface);
+  --admin-gestion-border: var(--admin-border);
+  --admin-gestion-soft: #eef4ff;
+  --admin-gestion-soft-2: #f8fafc;
+  --admin-gestion-text: var(--admin-ink);
+  --admin-gestion-muted: var(--admin-muted);
+  --admin-gestion-accent: #0c6b3c;
+  --admin-gestion-accent-strong: #0c7a3f;
+  --admin-gestion-accent-soft: #eef2ff;
+  --admin-gestion-selected: #eef6ff;
+  --admin-gestion-shadow: rgba(15, 23, 42, 0.04);
+  --admin-gestion-shadow-strong: rgba(37, 99, 235, 0.18);
+
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.admin-type-container {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-user-type-button {
+  border: 1px solid var(--admin-gestion-border);
+  background: var(--admin-gestion-surface);
+  color: #354152;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px var(--admin-gestion-shadow);
+}
+
+.admin-user-type-button:hover {
+  border-color: #b8c7d9;
+  transform: translateY(-1px);
+}
+
+.admin-user-type-button-active {
+  background: linear-gradient(135deg, #07c760 0%, var(--admin-gestion-accent) 100%);
+  border: 0px solid transparent;
+  color: #fff;
+  box-shadow: 0 8px 18px var(--admin-gestion-shadow-strong);
+}
+
+.management-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  gap: 1rem;
+  background: var(--admin-gestion-soft-2);
+  border: 1px solid var(--admin-gestion-border);
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.management-section {
+  width: 100%;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(8px);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, max-height 0.25s ease, visibility 0.25s ease;
+}
+
+.management-section-hidden {
+  display: none;
+}
+
+.management-section-active {
+  max-height: 2000px;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  pointer-events: auto;
+  height: auto;
+}
+
+.tabla-main,
+.tabla-secundaria {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background: var(--admin-gestion-surface);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px var(--admin-gestion-shadow);
+}
+
+.tabla-main th,
+.tabla-main td,
+.tabla-secundaria th,
+.tabla-secundaria td {
+  text-align: left;
+  padding: 0.3rem 0.85rem;
+  border-bottom: 1px solid #edf1f5;
+  vertical-align: middle;
+}
+
+.tabla-main th,
+.tabla-secundaria th {
+  background: var(--admin-gestion-soft);
+  color: #1f2937;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tabla-main tbody tr:last-child td,
+.tabla-secundaria tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-main tbody tr:hover,
+.tabla-secundaria tbody tr:hover {
+  background: #f8fbff;
+}
+
+.gestion-row-selected {
+  background: var(--admin-gestion-selected);
+}
+
+.static-header,
+.static-cell {
+  white-space: nowrap;
+}
+
+.gestion-table-button {
+  border: 1px solid #c7d2fe;
+  background: var(--admin-gestion-accent-soft);
+  color: #3730a3;
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gestion-table-button:hover {
+  background: #e0e7ff;
+}
+
+.gestion-table-button-active {
+  background: linear-gradient(135deg, var(--admin-gestion-accent-strong) 0%, var(--admin-gestion-accent) 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 10px 20px var(--admin-gestion-shadow-strong);
+}
+
+.gestion-reservas-header {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--admin-gestion-soft-2);
+  border: 1px solid var(--admin-gestion-border);
+  border-radius: 12px;
+  color: var(--admin-gestion-text);
+  font-size: 0.98rem;
+}
+
+@media (max-width: 768px) {
+  .admin-type-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-user-type-button {
+    width: 100%;
+  }
+
+  .tabla-main,
+  .tabla-secundaria {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
