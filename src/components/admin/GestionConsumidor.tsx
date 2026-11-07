@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import useAdminDashboard from "../../hooks/useAdminDashboard";
-import type { ManagedAccount } from "./AccountsPanel";
+import type { ManagedAccount } from "../../ports/accountRepository";
 import type { ReservaDocument } from "../../types/reserva";
 import type { ProductoAdminItem } from "../../types/productoAdmin";
+import ConfirmDialog from "./ConfirmDialog";
 
 const TABLE_HEADERS: string[] = [
   "Reserva",
@@ -13,8 +14,10 @@ const TABLE_HEADERS: string[] = [
 ];
 
 export default function GestionConsumidor() {
-  const { users, products, reservations } = useAdminDashboard();
+  const { users, products, reservations, handleUserStatusChange } = useAdminDashboard();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ id: string; action: "suspend" | "reactivate" } | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState(false);
 
   const [snapshot, setSnapshot] = useState<{
     users: ManagedAccount[] | null;
@@ -40,8 +43,24 @@ export default function GestionConsumidor() {
     return snapshot.users.find((user) => user.id === selectedUser) ?? null;
   }, [selectedUser, snapshot.users]);
 
-  console.log(snapshot.users)
-  console.log(snapshot.reservations)
+  async function confirmUserStatusChange() {
+    if (!pendingAction) return;
+
+    setStatusUpdating(true);
+    try {
+      const nextStatus = pendingAction.action === "suspend" ? "suspendida" : "activa";
+      await handleUserStatusChange(pendingAction.id, nextStatus);
+      setSnapshot((current) => ({
+        ...current,
+        users: current.users?.map((user) =>
+          user.id === pendingAction.id ? { ...user, status: nextStatus } : user,
+        ) ?? null,
+      }));
+    } finally {
+      setPendingAction(null);
+      setStatusUpdating(false);
+    }
+  }
 
   return (
     <>
@@ -80,13 +99,15 @@ export default function GestionConsumidor() {
                   >
                     {selectedUser === user.id ? "Mostrando" : "Ver reservas"}
                   </button>
-                  {/* ESTE ES EL BOTON SUSPENDER, NO FUNCIONA PQ AUN NO HAY STATUS EN LA TABLA CONSUMIDORES NI EN LA TABLA COMERCIOS*/ }
                   <button
                     type="button"
-                    className={`gestion-table-button gestion-table-button-dangerous`}
-                    onClick={() => {}}
+                    className={`gestion-table-button ${user.status === "suspendida" ? "gestion-table-button-success" : "gestion-table-button-dangerous"}`}
+                    onClick={() => setPendingAction({
+                      id: user.id,
+                      action: user.status === "suspendida" ? "reactivate" : "suspend",
+                    })}
                   >
-                    Suspender
+                    {user.status === "suspendida" ? "Reactivar" : "Suspender"}
                   </button>
                 </td>
               </tr>
@@ -133,6 +154,20 @@ export default function GestionConsumidor() {
           )}
         </tbody>
       </table>
+
+      {pendingAction && (
+        <ConfirmDialog
+          title={pendingAction.action === "suspend" ? "Suspender consumidor" : "Reactivar consumidor"}
+          message={pendingAction.action === "suspend"
+            ? "¿Deseas suspender a este consumidor? El estado del usuario pasará a suspendida."
+            : "¿Deseas reactivar a este consumidor? El estado volverá a activa."}
+          confirmLabel={pendingAction.action === "suspend" ? "Suspender" : "Reactivar"}
+          variant={pendingAction.action === "suspend" ? "danger" : "primary"}
+          loading={statusUpdating}
+          onCancel={() => setPendingAction(null)}
+          onConfirm={confirmUserStatusChange}
+        />
+      )}
     </>
   );
 }

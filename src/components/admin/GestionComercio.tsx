@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import useAdminDashboard from "../../hooks/useAdminDashboard";
-import type { ManagedAccount } from "./AccountsPanel";
+import type { ManagedAccount } from "../../ports/accountRepository";
 import type { OfertaConComercio } from "../../types/oferta";
+import ConfirmDialog from "./ConfirmDialog";
 
 const TABLE_HEADERS: string[] = [
   "Oferta",
@@ -13,8 +14,10 @@ const TABLE_HEADERS: string[] = [
 ];
 
 export default function GestionComercio() {
-  const { stores, offers } = useAdminDashboard();
+  const { stores, offers, handleStoreStatusChange } = useAdminDashboard();
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ id: string; action: "suspend" | "reactivate" } | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState(false);
 
   const [snapshot, setSnapshot] = useState<{
     stores: ManagedAccount[] | null;
@@ -37,6 +40,25 @@ export default function GestionComercio() {
     if (!selectedStore || !snapshot.stores) return null;
     return snapshot.stores.find((store) => store.id === selectedStore) ?? null;
   }, [selectedStore, snapshot.stores]);
+
+  async function confirmStoreStatusChange() {
+    if (!pendingAction) return;
+
+    setStatusUpdating(true);
+    try {
+      const nextStatus = pendingAction.action === "suspend" ? "suspendida" : "activa";
+      await handleStoreStatusChange(pendingAction.id, nextStatus);
+      setSnapshot((current) => ({
+        ...current,
+        stores: current.stores?.map((store) =>
+          store.id === pendingAction.id ? { ...store, status: nextStatus } : store,
+        ) ?? null,
+      }));
+    } finally {
+      setPendingAction(null);
+      setStatusUpdating(false);
+    }
+  }
 
   return (
     <>
@@ -73,13 +95,15 @@ export default function GestionComercio() {
                   >
                     {selectedStore === store.id ? "Mostrando" : "Ver ofertas"}
                   </button>
-                  {/* ESTE ES EL BOTON SUSPENDER, NO FUNCIONA PQ AUN NO HAY STATUS EN LA TABLA CONSUMIDORES NI EN LA TABLA COMERCIOS*/ }
                   <button
                     type="button"
-                    className={`gestion-table-button gestion-table-button-dangerous`}
-                    onClick={() => {}}
+                    className={`gestion-table-button ${store.status === "suspendida" ? "gestion-table-button-success" : "gestion-table-button-dangerous"}`}
+                    onClick={() => setPendingAction({
+                      id: store.id,
+                      action: store.status === "suspendida" ? "reactivate" : "suspend",
+                    })}
                   >
-                    Suspender
+                    {store.status === "suspendida" ? "Reactivar" : "Suspender"}
                   </button>
 
                 </td>
@@ -131,6 +155,20 @@ export default function GestionComercio() {
           )}
         </tbody>
       </table>
+
+      {pendingAction && (
+        <ConfirmDialog
+          title={pendingAction.action === "suspend" ? "Suspender comercio" : "Reactivar comercio"}
+          message={pendingAction.action === "suspend"
+            ? "¿Deseas suspender a este comercio?"
+            : "¿Deseas reactivar a este comercio?"}
+          confirmLabel={pendingAction.action === "suspend" ? "Suspender" : "Reactivar"}
+          variant={pendingAction.action === "suspend" ? "danger" : "primary"}
+          loading={statusUpdating}
+          onCancel={() => setPendingAction(null)}
+          onConfirm={confirmStoreStatusChange}
+        />
+      )}
     </>
   );
 }

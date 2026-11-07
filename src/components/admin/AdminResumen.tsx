@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import useAdminDashboard from "../../hooks/useAdminDashboard";
-import { ManagedAccount } from "./AccountsPanel";
+import type { ManagedAccount } from "../../ports/accountRepository";
 import { ProductoAdminItem } from "../../types/productoAdmin";
 import { ReservaDocument } from "../../application/reservas";
 import { OfertaConComercio } from "../../application/contracts";
