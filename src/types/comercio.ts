@@ -1,4 +1,4 @@
-export type ComercioEstado = 'activo' | 'suspendido' | 'agotado' | 'eliminado'
+export type ComercioEstado = 'activo' | 'suspendido' | 'eliminado'
 
 export interface ComercioSummary {
   businessName?: string

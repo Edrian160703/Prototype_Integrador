@@ -1,4 +1,4 @@
-export type EstadoReserva = 'pendiente' | 'confirmada' | 'cancelada'
+export type EstadoReserva = 'pendiente' | 'confirmada' | 'cancelada' | 'vencida'
 
 export interface ReservaDocument {
   id_reserva: string

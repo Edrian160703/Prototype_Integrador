@@ -10,8 +10,12 @@
   --admin-gestion-accent-strong: #0c7a3f;
   --admin-gestion-accent-soft: #eef2ff;
   --admin-gestion-selected: #eef6ff;
-  --admin-gestion-shadow: rgba(15, 23, 42, 0.04);
-  --admin-gestion-shadow-strong: rgba(37, 99, 235, 0.18);
+  --admin-gestion-shadow: #0f172a0a;
+  --admin-gestion-shadow-strong: #2563eb2e;
+
+  --admin-status-active: #17c400;
+  --admin-status-suspended: #ffd519;
+  --admin-status-deleted: #580000;
 
   display: flex;
   flex-direction: column;
@@ -45,7 +49,11 @@
 }
 
 .admin-user-type-button-active {
-  background: linear-gradient(135deg, #07c760 0%, var(--admin-gestion-accent) 100%);
+  background: linear-gradient(
+    135deg,
+    #07c760 0%,
+    var(--admin-gestion-accent) 100%
+  );
   border: 0px solid transparent;
   color: #fff;
   box-shadow: 0 8px 18px var(--admin-gestion-shadow-strong);
@@ -70,7 +78,11 @@
   transform: translateY(8px);
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease, max-height 0.25s ease, visibility 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    max-height 0.25s ease,
+    visibility 0.25s ease;
 }
 
 .management-section-hidden {
@@ -78,6 +90,8 @@
 }
 
 .management-section-active {
+  display: grid;
+  gap: 2rem;
   max-height: 2000px;
   opacity: 1;
   transform: translateY(0);
@@ -134,9 +148,30 @@
   text-align: center !important;
 }
 
-.actions-cell{
+.actions-cell {
   display: flex;
   justify-content: space-evenly;
+}
+
+/* Estado de todo */
+
+.cell-status {
+  padding: 10px;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--admin-border);
+  border-radius: 100px;
+  background-color: var(--admin-gestion-muted);
+}
+
+.cell-status-activa {
+  background-color: var(--admin-status-active);
+}
+.cell-status-suspendida {
+  background-color: var(--admin-status-suspended);
+}
+.cell-status-activa {
+  background-color: var(--admin-status-active);
 }
 
 .gestion-table-button {
@@ -144,6 +179,7 @@
   background: var(--admin-gestion-accent-soft);
   color: #3730a3;
   border-radius: 10px;
+  width: 88px;
   padding: 0.55rem 0.3rem;
   font-weight: 700;
   cursor: pointer;
@@ -159,7 +195,11 @@
 }
 
 .gestion-table-button-active {
-  background: linear-gradient(135deg, var(--admin-gestion-accent-strong) 0%, var(--admin-gestion-accent) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--admin-gestion-accent-strong) 0%,
+    var(--admin-gestion-accent) 100%
+  );
   border-color: transparent;
   color: #fff;
   box-shadow: 0 10px 20px var(--admin-gestion-shadow-strong);

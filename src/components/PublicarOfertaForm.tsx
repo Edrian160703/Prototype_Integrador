@@ -21,6 +21,10 @@ export default function PublicarOfertaForm() {
     imagePreview,
     imageError,
     fileInputRef,
+    verificationImageMode,
+    verificationImagePreview,
+    verificationImageError,
+    verificationFileInputRef,
     descripcionRestante,
     descuentoValido,
     porcentajeDescuento,
@@ -36,6 +40,11 @@ export default function PublicarOfertaForm() {
     handlePreviewError,
     switchImageMode,
     removeImage,
+    handleVerificationFileChange,
+    handleVerificationUrlChange,
+    handleVerificationPreviewError,
+    switchVerificationImageMode,
+    removeVerificationImage,
     resetForm,
     handleSubmit,
   } = usePublicarOfertaForm()
@@ -176,6 +185,73 @@ export default function PublicarOfertaForm() {
             <small className="field-hint">Se activa automáticamente al publicar.</small>
           </div>
         </div>
+      </section>
+
+      {/* ---------- Imagen de verificación ---------- */}
+      <section className="profile-section" aria-labelledby="oferta-verificacion-title">
+        <header className="profile-section-head">
+          <span className="profile-section-icon" aria-hidden="true">🔎</span>
+          <div>
+            <h2 id="oferta-verificacion-title">Validación de vencimiento</h2>
+            <p>Anexa una segunda imagen para verificar la disponibilidad de tu producto.</p>
+          </div>
+        </header>
+
+        <div className="tabs oferta-image-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            className={`tab${verificationImageMode === 'upload' ? ' active' : ''}`}
+            aria-selected={verificationImageMode === 'upload'}
+            onClick={() => switchVerificationImageMode('upload')}
+          >
+            Subir imagen
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={`tab${verificationImageMode === 'url' ? ' active' : ''}`}
+            aria-selected={verificationImageMode === 'url'}
+            onClick={() => switchVerificationImageMode('url')}
+          >
+            Usar una URL
+          </button>
+        </div>
+
+        {verificationImageMode === 'upload' ? (
+          <div className="field oferta-image-field">
+            <label htmlFor="oferta-verificacion-file">Segunda imagen (JPG, PNG o WEBP, máx. 5 MB)</label>
+            <input
+              id="oferta-verificacion-file"
+              type="file"
+              accept="image/*"
+              ref={verificationFileInputRef}
+              onChange={handleVerificationFileChange}
+            />
+          </div>
+        ) : (
+          <div className="field oferta-image-field">
+            <label htmlFor="oferta-verificacion-url">URL de la segunda imagen</label>
+            <input
+              id="oferta-verificacion-url"
+              type="url"
+              maxLength={IMAGEN_URL_MAX}
+              value={form.imagen_verificacion_url ?? ''}
+              onChange={(event) => handleVerificationUrlChange(event.target.value)}
+              placeholder="https://misitio.com/imagenes/producto.jpg"
+              aria-invalid={Boolean(errors.imagen_verificacion_url)}
+            />
+            {errors.imagen_verificacion_url && <span className="field-error">{errors.imagen_verificacion_url}</span>}
+          </div>
+        )}
+        {verificationImageError && <span className="field-error">{verificationImageError}</span>}
+
+        {verificationImagePreview && (
+          <div className="oferta-image-preview">
+            <img src={verificationImagePreview} alt="Vista previa de la segunda imagen" onError={handleVerificationPreviewError} />
+            <button type="button" className="oferta-image-remove" onClick={removeVerificationImage} aria-label="Quitar segunda imagen">×</button>
+          </div>
+        )}
       </section>
 
       {/* ---------- Recojo ---------- */}

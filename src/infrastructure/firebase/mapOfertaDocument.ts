@@ -16,5 +16,9 @@ export function mapOfertaDocument(data: Record<string, unknown>): OfertaDocument
     fecha_limite: toDate(data.fecha_limite),
     createdAt: data.createdAt === undefined || data.createdAt === null ? undefined : toDate(data.createdAt),
     imagen_url: typeof data.imagen_url === 'string' ? data.imagen_url : null,
+    imagen_verificacion_url:
+      typeof data.imagen_verificacion_url === 'string'
+        ? data.imagen_verificacion_url
+        : null,
   }
 }

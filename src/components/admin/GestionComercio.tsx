@@ -4,7 +4,7 @@ import type { ManagedAccount } from "../../ports/accountRepository";
 import type { OfertaConComercio } from "../../types/oferta";
 import ConfirmDialog from "./ConfirmDialog";
 
-const TABLE_HEADERS: string[] = [
+const SECONDARY_TABLE_HEADERS: string[] = [
   "Oferta",
   "Producto",
   "Precio de oferta",
@@ -16,7 +16,10 @@ const TABLE_HEADERS: string[] = [
 export default function GestionComercio() {
   const { stores, offers, handleStoreStatusChange } = useAdminDashboard();
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
-  const [pendingAction, setPendingAction] = useState<{ id: string; action: "suspend" | "reactivate" } | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    id: string;
+    action: "suspend" | "reactivate";
+  } | null>(null);
   const [statusUpdating, setStatusUpdating] = useState(false);
 
   const [snapshot, setSnapshot] = useState<{
@@ -33,7 +36,9 @@ export default function GestionComercio() {
 
   const selectedOffers = useMemo(() => {
     if (!selectedStore || !snapshot.offers) return [];
-    return snapshot.offers.filter((offer) => offer.data.id_comercio === selectedStore);
+    return snapshot.offers.filter(
+      (offer) => offer.data.id_comercio === selectedStore,
+    );
   }, [selectedStore, snapshot.offers]);
 
   const selectedStoreData = useMemo(() => {
@@ -46,13 +51,17 @@ export default function GestionComercio() {
 
     setStatusUpdating(true);
     try {
-      const nextStatus = pendingAction.action === "suspend" ? "suspendida" : "activa";
+      const nextStatus =
+        pendingAction.action === "suspend" ? "suspendida" : "activa";
       await handleStoreStatusChange(pendingAction.id, nextStatus);
       setSnapshot((current) => ({
         ...current,
-        stores: current.stores?.map((store) =>
-          store.id === pendingAction.id ? { ...store, status: nextStatus } : store,
-        ) ?? null,
+        stores:
+          current.stores?.map((store) =>
+            store.id === pendingAction.id
+              ? { ...store, status: nextStatus }
+              : store,
+          ) ?? null,
       }));
     } finally {
       setPendingAction(null);
@@ -65,10 +74,11 @@ export default function GestionComercio() {
       <table className="tabla-main">
         <thead>
           <tr>
-            <th>ID de Comercio</th>
+            <th>ID</th>
             <th>RUC</th>
             <th>Dirección</th>
             <th>Nombre de comercio</th>
+            <th>Estado</th>
             <th className="centered-cell">Acciones</th>
           </tr>
         </thead>
@@ -79,14 +89,27 @@ export default function GestionComercio() {
             </tr>
           ) : (
             snapshot.stores.map((store) => (
-              <tr key={store.id} className={selectedStore === store.id ? "gestion-row-selected" : ""}>
+              <tr
+                key={store.id}
+                className={
+                  selectedStore === store.id ? "gestion-row-selected" : ""
+                }
+              >
                 <td className="static-cell">{store.id}</td>
                 <td className="static-cell">{store.ruc}</td>
                 <td className="static-cell">{store.address}</td>
                 <td className="static-cell">{store.displayName}</td>
+                <td className="static-cell">
+                  <div
+                    title={
+                      store.status.charAt(0).toUpperCase() +
+                      store.status.slice(1)
+                    }
+                    className={`cell-status cell-status-${store.status}`}
+                  ></div>
+                </td>
                 <td className="static-cell actions-cell">
-
-                  {/* BOTONES DE ACCION PARA EL ADMIN */ }
+                  {/* BOTONES DE ACCION PARA EL ADMIN */}
 
                   <button
                     type="button"
@@ -98,14 +121,18 @@ export default function GestionComercio() {
                   <button
                     type="button"
                     className={`gestion-table-button ${store.status === "suspendida" ? "gestion-table-button-success" : "gestion-table-button-dangerous"}`}
-                    onClick={() => setPendingAction({
-                      id: store.id,
-                      action: store.status === "suspendida" ? "reactivate" : "suspend",
-                    })}
+                    onClick={() =>
+                      setPendingAction({
+                        id: store.id,
+                        action:
+                          store.status === "suspendida"
+                            ? "reactivate"
+                            : "suspend",
+                      })
+                    }
                   >
                     {store.status === "suspendida" ? "Reactivar" : "Suspender"}
                   </button>
-
                 </td>
               </tr>
             ))
@@ -113,56 +140,72 @@ export default function GestionComercio() {
         </tbody>
       </table>
 
-      <div className="gestion-reservas-header">
+      <div className="gestion-reservas">
         {selectedStoreData ? (
-          <strong>Ofertas de {selectedStoreData.displayName || selectedStoreData.email}</strong>
+          <strong className="gestion-reservas-header">
+            Ofertas de {selectedStoreData.displayName}
+          </strong>
         ) : (
           <strong>Selecciona un comercio</strong>
         )}
-      </div>
 
-      <table className="tabla-secundaria">
-        <thead>
-          <tr>
-            {TABLE_HEADERS.map((item) => (
-              <th key={item}>{item}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {selectedStore === null ? (
+        <table className="tabla-secundaria">
+          <thead>
             <tr>
-              <td colSpan={TABLE_HEADERS.length}>No hay un comercio seleccionado.</td>
+              {SECONDARY_TABLE_HEADERS.map((item) => (
+                <th key={item}>{item}</th>
+              ))}
             </tr>
-          ) : selectedOffers.length === 0 ? (
-            <tr>
-              <td colSpan={TABLE_HEADERS.length}>Este comercio no tiene ofertas registradas.</td>
-            </tr>
-          ) : (
-            selectedOffers.map((offer) => (
-              <tr key={offer.id}>
-                <td>{offer.id}</td>
-                <td>{offer.data.nombre_producto}</td>
-                <td>{offer.data.precio_oferta.toLocaleString("es-ES", {
-                  style: "currency",
-                  currency: "EUR",
-                })}</td>
-                <td>{offer.data.cantidad_disponible}</td>
-                <td>{offer.data.fecha_limite.toLocaleString()}</td>
-                <td>{offer.data.estado}</td>
+          </thead>
+          <tbody>
+            {selectedStore === null ? (
+              <tr>
+                <td colSpan={SECONDARY_TABLE_HEADERS.length}>
+                  No hay un comercio seleccionado.
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : selectedOffers.length === 0 ? (
+              <tr>
+                <td colSpan={SECONDARY_TABLE_HEADERS.length}>
+                  Este comercio no tiene ofertas registradas.
+                </td>
+              </tr>
+            ) : (
+              selectedOffers.map((offer) => (
+                <tr key={offer.id}>
+                  <td>{offer.id}</td>
+                  <td>{offer.data.nombre_producto}</td>
+                  <td>
+                    {offer.data.precio_oferta.toLocaleString("es-ES", {
+                      style: "currency",
+                      currency: "EUR",
+                    })}
+                  </td>
+                  <td>{offer.data.cantidad_disponible}</td>
+                  <td>{offer.data.fecha_limite.toLocaleString()}</td>
+                  <td>{offer.data.estado}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {pendingAction && (
         <ConfirmDialog
-          title={pendingAction.action === "suspend" ? "Suspender comercio" : "Reactivar comercio"}
-          message={pendingAction.action === "suspend"
-            ? "¿Deseas suspender a este comercio?"
-            : "¿Deseas reactivar a este comercio?"}
-          confirmLabel={pendingAction.action === "suspend" ? "Suspender" : "Reactivar"}
+          title={
+            pendingAction.action === "suspend"
+              ? "Suspender comercio"
+              : "Reactivar comercio"
+          }
+          message={
+            pendingAction.action === "suspend"
+              ? "¿Deseas suspender a este comercio?"
+              : "¿Deseas reactivar a este comercio?"
+          }
+          confirmLabel={
+            pendingAction.action === "suspend" ? "Suspender" : "Reactivar"
+          }
           variant={pendingAction.action === "suspend" ? "danger" : "primary"}
           loading={statusUpdating}
           onCancel={() => setPendingAction(null)}

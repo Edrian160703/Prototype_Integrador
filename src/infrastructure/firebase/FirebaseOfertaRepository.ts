@@ -40,6 +40,9 @@ function offerFields(payload: OfertaPayload | Omit<OfertaPayload, 'estado'>, exp
     horario_recojo: payload.horario_recojo.trim(),
     fecha_limite: expiry,
     imagen_url: payload.imagen_url.trim() ? payload.imagen_url.trim() : null,
+    imagen_verificacion_url: payload.imagen_verificacion_url?.trim()
+      ? payload.imagen_verificacion_url.trim()
+      : null,
   }
 }
 

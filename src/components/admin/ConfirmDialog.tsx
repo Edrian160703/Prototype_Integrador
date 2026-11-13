@@ -1,5 +1,4 @@
 import ReactDOM from 'react-dom'
-import '../../styles/confirm-dialog.css'
 
 interface ConfirmDialogProps {
   title: string

@@ -19,6 +19,7 @@ const INITIAL_VALUES: OfertaFormValues = {
   horario_recojo: '',
   fecha_limite: '',
   imagen_url: '',
+  imagen_verificacion_url: '',
 }
 
 export default function usePublicarOfertaForm() {
@@ -52,6 +53,18 @@ export default function usePublicarOfertaForm() {
     removeImage,
     resetImage,
   } = useOfertaImage((value) => updateField('imagen_url', value))
+  const {
+    imageMode: verificationImageMode,
+    imagePreview: verificationImagePreview,
+    imageError: verificationImageError,
+    fileInputRef: verificationFileInputRef,
+    handleFileChange: handleVerificationFileChange,
+    handleUrlChange: handleVerificationUrlChange,
+    handlePreviewError: handleVerificationPreviewError,
+    switchImageMode: switchVerificationImageMode,
+    removeImage: removeVerificationImage,
+    resetImage: resetVerificationImage,
+  } = useOfertaImage((value) => updateField('imagen_verificacion_url', value))
 
   const getValidationContext = (): OfertaFormValidationContext => {
     const now = new Date()
@@ -67,6 +80,7 @@ export default function usePublicarOfertaForm() {
       fechaAnio,
       fechaHora,
       imageMode,
+      verificationImageMode,
       ahoraLocal,
     }
   }
@@ -100,6 +114,7 @@ export default function usePublicarOfertaForm() {
     setForm(INITIAL_VALUES)
     resetSchedule()
     resetImage()
+    resetVerificationImage()
     submission.clearErrors()
     submission.clearStatus()
   }
@@ -117,6 +132,10 @@ export default function usePublicarOfertaForm() {
     imagePreview,
     imageError,
     fileInputRef,
+    verificationImageMode,
+    verificationImagePreview,
+    verificationImageError,
+    verificationFileInputRef,
     descripcionRestante,
     descuentoValido,
     porcentajeDescuento,
@@ -132,6 +151,11 @@ export default function usePublicarOfertaForm() {
     handlePreviewError,
     switchImageMode,
     removeImage,
+    handleVerificationFileChange,
+    handleVerificationUrlChange,
+    handleVerificationPreviewError,
+    switchVerificationImageMode,
+    removeVerificationImage,
     resetForm,
     handleSubmit: submission.handleSubmit,
   }

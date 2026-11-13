@@ -2,15 +2,11 @@
   --admin-sidebar-bg: var(--admin-surface);
   --admin-sidebar-border: var(--admin-border);
   --admin-sidebar-item-hover: var(--admin-bg);
-  --admin-sidebar-item-active-start: #1d4ed8;
-  --admin-sidebar-item-active-end: #2563eb2e;
-  --admin-sidebar-item-active-hover-start: #1e40af;
-  --admin-sidebar-item-active-hover-end: #2564eb5d;
-  --admin-sidebar-item-active-shadow: #2563eb2e;
+  --admin-sidebar-item-gradient: linear-gradient(to right,  var(--admin-accent), var(--admin-accent-light) 80%, transparent);
   --admin-sidebar-text: var(--admin-ink);
   --admin-sidebar-muted: var(--admin-muted);
 
-  max-width: 240px;
+  max-width: 260px;
   height: 86vh;
   background: var(--admin-sidebar-bg);
   border: 1px solid var(--admin-sidebar-border);
@@ -21,29 +17,11 @@
   gap: 0.1rem;
   position: sticky;
   top: 1.25rem;
-  transform: translateX(-20px);
-}
-
-.admin-sidebar-open {
-  --admin-sidebar-bg: var(--admin-surface);
-  --admin-sidebar-border: var(--admin-border);
-
-  max-width: 240px;
-  background: var(--admin-sidebar-bg);
-  border: 1px solid var(--admin-sidebar-border);
-  border-radius: 8px;
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  position: sticky;
-  top: 1.25rem;
-  transform: translateX(-60px);
+  transform: translateX(-13px);
 }
 
 .admin-sidebar-item {
   display: flex;
-  align-items: center;
   gap: 0.95rem;
   width: 100%;
   border: none;
@@ -63,13 +41,13 @@
 }
 
 .admin-sidebar-item-active {
-  background: linear-gradient(to right, var(--admin-accent), var(--admin-accent-light));
+  background: var(--admin-sidebar-item-gradient);
   color: #ffffff;
-  box-shadow: 0 10px 20px var(--admin-sidebar-item-active-shadow);
 }
 
 .admin-sidebar-item-active:hover {
-  background: linear-gradient(to right, var(--admin-accent-strong), var(--admin-accent-light));
+  background: var(--admin-sidebar-item-gradient);
+  filter: saturate(1.5);
   color: #ffffff;
 }
 

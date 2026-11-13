@@ -25,6 +25,15 @@
 * {
   box-sizing: border-box;
 }
+
+.logo {
+  height: 60%;
+  padding: px 0px;
+}
+.logo img {
+  height: 100%;
+}
+
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
@@ -65,11 +74,11 @@ img {
 
 .unselectable {
   -webkit-user-select: none; /* Safari */
-  -ms-user-select: none;     /* IE 10 and Edge */
-  user-select: none;         /* Standard syntax (Chrome, Firefox, Opera) */
+  -ms-user-select: none; /* IE 10 and Edge */
+  user-select: none; /* Standard syntax (Chrome, Firefox, Opera) */
 }
 /* ---------- Errores ---------- */
-.error{
+.error {
   align-self: center;
   align-items: center;
   display: inline-flex;
@@ -271,7 +280,9 @@ img {
   cursor: pointer;
   box-shadow: 0 8px 22px rgba(12, 106, 60, 0.35);
   z-index: 90;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 .cart-fab:hover {
   background: var(--green-dark);
@@ -437,7 +448,10 @@ img {
   white-space: nowrap;
   border: none;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .btn-publish:hover {
@@ -760,8 +774,7 @@ img {
   object-fit: cover;
   background: var(--cream);
   transform: scale(1);
-  transition: 
-    transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .offer-card-img:hover {
   transform: scale(1.12);
@@ -2406,7 +2419,7 @@ html[data-theme="dark"] .profile-section {
 
 html[data-theme="dark"] .account-type-badge,
 html[data-theme="dark"] .reserva-exclusiva-price,
-html[data-theme="dark"] .qty-stepper > button{
+html[data-theme="dark"] .qty-stepper > button {
   color: var(--text-gray);
 }
 
@@ -2447,7 +2460,7 @@ html[data-theme="dark"] .how-strip > div {
 
 html[data-theme="dark"] .how-strip > div > strong,
 html[data-theme="dark"] .offer-card-price {
-  color: var(--text-dark)
+  color: var(--text-dark);
 }
 
 html[data-theme="dark"] .step:nth-child(1),

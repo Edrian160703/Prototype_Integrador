@@ -1,5 +1,3 @@
-import "./../../styles/admin/admin-sidebar.css"
-
 export const SIDEBAR_ITEMS : AdminSidebarItem[] = [
   { key: "resumen", label: "Resumen", icon: "📊"},
   { key: "nuevos", label: "Nuevos", icon: "✨"},
