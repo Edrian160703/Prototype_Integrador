@@ -10,13 +10,15 @@ import {
 import type { LatLngTuple } from 'leaflet'
 import type { FeatureCollection } from 'geojson'
 import L from 'leaflet'
+import type { BusinessCoordinates } from '../types/user'
 import { validarUbicacionSJL } from '../utils/validarUbicacion'
 import 'leaflet/dist/leaflet.css'
 
 const centro: LatLngTuple = [-11.98, -77.01]
 
 type Props = {
-  onSeleccionar: (lat: number, lng: number) => void
+  selectedLocation: BusinessCoordinates | null
+  onSelect: (location: BusinessCoordinates) => void
 }
 
 type ResultadoBusqueda = {
@@ -85,7 +87,8 @@ function MarcarUbicacion({
 }
 
 export default function MapaNegocio({
-  onSeleccionar,
+  selectedLocation,
+  onSelect,
 }: Props) {
   const [contorno, setContorno] =
     useState<FeatureCollection | null>(null)
@@ -96,8 +99,9 @@ export default function MapaNegocio({
   const [direccion, setDireccion] = useState('')
   const [buscando, setBuscando] = useState(false)
 
-  const [ubicacion, setUbicacion] =
-    useState<LatLngTuple | null>(null)
+  const ubicacion: LatLngTuple | null = selectedLocation
+    ? [selectedLocation.latitude, selectedLocation.longitude]
+    : null
 
   const [destinoMapa, setDestinoMapa] =
     useState<LatLngTuple | null>(null)
@@ -140,7 +144,7 @@ export default function MapaNegocio({
       .catch(() => {
         if (activo) {
           setError(
-            'No se pudieron cargar los límites de San Juan de Lurigancho.'
+            'No se pudieron cargar los límites oficiales de SJL.'
           )
         }
       })
@@ -165,11 +169,10 @@ export default function MapaNegocio({
       return false
     }
 
-    setUbicacion([lat, lng])
     setMensaje('')
 
     // Envía las coordenadas al formulario del comercio
-    onSeleccionar(lat, lng)
+    onSelect({ latitude: lat, longitude: lng })
 
     return true
   }

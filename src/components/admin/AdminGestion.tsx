@@ -3,10 +3,12 @@ import useAdminDashboard from "../../hooks/useAdminDashboard";
 import GestionComercio from "./GestionComercio";
 import GestionConsumidor from "./GestionConsumidor";
 import GestionOfertas from "./GestionOfertas";
+import GestionReservas from "./GestionReservas";
 
 export const MANAGEMENT_USER_TYPES = [
   { key: "consumidor", label: "Consumidor", icon: "🧑" },
   { key: "comercio", label: "Comercio", icon: "🛒" },
+  { key: "reservas", label: "Reservas", icon: "🕓" },
   { key: "ofertas", label: "Ofertas", icon: "🏷️" },
 ];
 
@@ -57,6 +59,11 @@ export default function AdminGestion() {
           className={`management-section ${typeSelected === "comercio" ? "management-section-active" : "management-section-hidden"}`}
         >
           <GestionComercio />
+        </div>
+        <div
+          className={`management-section ${typeSelected === "reservas" ? "management-section-active" : "management-section-hidden"}`}
+        >
+          <GestionReservas />
         </div>
         <div
           className={`management-section ${typeSelected === "ofertas" ? "management-section-active" : "management-section-hidden"}`}

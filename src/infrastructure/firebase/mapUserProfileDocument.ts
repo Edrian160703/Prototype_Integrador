@@ -95,7 +95,7 @@ export function mapUserProfileDocument(
   collectionName: UserCollectionName,
   data: Record<string, unknown>,
 ): UserDocument {
-  const role = mapRole(collectionName === 'consumidores' ? 'consumer' : 'store', uid, collectionName)
+  const role = mapRole(data.role, uid, collectionName)
   const email = requiredString(data.email, 'email', uid)
   const displayName = nullableString(data.displayName, 'displayName', uid)
   const photoURL = nullableString(data.photoURL, 'photoURL', uid)

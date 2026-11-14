@@ -95,6 +95,7 @@ export default function GestionConsumidor() {
             snapshot.users.map((user) => (
               <tr
                 key={user.id}
+                onClick={() => setSelectedUser(user.id)}
                 className={
                   selectedUser === user.id ? "gestion-row-selected" : ""
                 }
@@ -115,13 +116,6 @@ export default function GestionConsumidor() {
                 <td className="static-cell actions-cell">
                   {/* BOTONES DE ACCION PARA EL ADMIN */}
 
-                  <button
-                    type="button"
-                    className={`gestion-table-button ${selectedUser === user.id ? "gestion-table-button-active" : ""}`}
-                    onClick={() => setSelectedUser(user.id)}
-                  >
-                    {selectedUser === user.id ? "Mostrando" : "Ver reservas"}
-                  </button>
                   <button
                     type="button"
                     className={`gestion-table-button ${user.status === "suspendida" ? "gestion-table-button-success" : "gestion-table-button-dangerous"}`}
@@ -150,15 +144,19 @@ export default function GestionConsumidor() {
             Reservas de {selectedUserData.displayName || selectedUserData.email}
           </strong>
         ) : (
-          <strong>Selecciona un consumidor</strong>
+          <strong className="gestion-reservas-header">
+            Selecciona un consumidor
+          </strong>
         )}
 
         <table className="tabla-secundaria">
           <thead>
             <tr>
-              {SECONDARY_TABLE_HEADERS.map((item) => (
-                <th key={item}>{item}</th>
-              ))}
+              <th>Reserva</th>
+              <th>Producto</th>
+              <th>Fecha de Reserva</th>
+              <th>Cantidad</th>
+              <th>Estado</th>
             </tr>
           </thead>
           <tbody>

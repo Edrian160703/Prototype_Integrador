@@ -9,12 +9,13 @@
   --admin-gestion-accent: #0c6b3c;
   --admin-gestion-accent-strong: #0c7a3f;
   --admin-gestion-accent-soft: #eef2ff;
-  --admin-gestion-selected: #eef6ff;
+  --admin-gestion-selected: #c5d4e6;
   --admin-gestion-shadow: #0f172a0a;
   --admin-gestion-shadow-strong: #2563eb2e;
 
   --admin-status-active: #17c400;
   --admin-status-suspended: #ffd519;
+  --admin-status-spent: #ff8819;
   --admin-status-deleted: #580000;
 
   display: flex;
@@ -143,6 +144,9 @@
 .gestion-row-selected {
   background: var(--admin-gestion-selected);
 }
+.gestion-row-selected:hover {
+  background: var(--admin-gestion-selected) !important;
+}
 
 .centered-cell {
   text-align: center !important;
@@ -164,14 +168,22 @@
   background-color: var(--admin-gestion-muted);
 }
 
-.cell-status-activa {
+.cell-status-activa,
+.cell-status-disponible {
   background-color: var(--admin-status-active);
 }
+
 .cell-status-suspendida {
   background-color: var(--admin-status-suspended);
 }
-.cell-status-activa {
-  background-color: var(--admin-status-active);
+.cell-status-agotada,
+.cell-status-agotado {
+  background-color: var(--admin-status-spent);
+}
+
+.cell-status-eliminado,
+.cell-status-eliminada {
+  background-color: var(--admin-status-deleted);
 }
 
 .gestion-table-button {

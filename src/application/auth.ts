@@ -81,7 +81,7 @@ export function signInWithEmail(
 }
 
 export function hasAdminClaim(auth: IAuthAdminClaimReader): Promise<boolean> {
-  return auth.hasAdminClaim(false);
+  return auth.hasAdminClaim(true);
 }
 
 export async function loginWithGoogle(

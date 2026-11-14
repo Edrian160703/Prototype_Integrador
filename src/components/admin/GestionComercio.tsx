@@ -91,6 +91,7 @@ export default function GestionComercio() {
             snapshot.stores.map((store) => (
               <tr
                 key={store.id}
+                onClick={() => setSelectedStore(store.id)}
                 className={
                   selectedStore === store.id ? "gestion-row-selected" : ""
                 }
@@ -100,6 +101,7 @@ export default function GestionComercio() {
                 <td className="static-cell">{store.address}</td>
                 <td className="static-cell">{store.displayName}</td>
                 <td className="static-cell">
+                  {/* ESTADO */}
                   <div
                     title={
                       store.status.charAt(0).toUpperCase() +
@@ -110,14 +112,6 @@ export default function GestionComercio() {
                 </td>
                 <td className="static-cell actions-cell">
                   {/* BOTONES DE ACCION PARA EL ADMIN */}
-
-                  <button
-                    type="button"
-                    className={`gestion-table-button ${selectedStore === store.id ? "gestion-table-button-active" : ""}`}
-                    onClick={() => setSelectedStore(store.id)}
-                  >
-                    {selectedStore === store.id ? "Mostrando" : "Ver ofertas"}
-                  </button>
                   <button
                     type="button"
                     className={`gestion-table-button ${store.status === "suspendida" ? "gestion-table-button-success" : "gestion-table-button-dangerous"}`}

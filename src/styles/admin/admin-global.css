@@ -3,7 +3,7 @@
   --admin-muted: #6b7280;
   --admin-border: #e5e7eb;
   --admin-surface: #ffffff;
-  --admin-bg: #f7f8fa;
+  --admin-bg: #f3f1e8;
 
   --admin-accent-dark: #094c39;
   --admin-accent: #0b8140;
@@ -29,6 +29,10 @@ header {
   position: sticky;
   top: 0;
   z-index: 1000;
+}
+
+main {
+  background-color: var(--admin-bg);
 }
 
 .logo {
