@@ -14,7 +14,10 @@ export default function useOfertaImage(onImageChange: (value: string) => void) {
   const [imageMode, setImageMode] = useState<OfertaImageMode>('upload')
   const [imagePreview, setImagePreview] = useState('')
   const [imageError, setImageError] = useState('')
+  const [selectedProductFile, setSelectedProductFile] = useState<File | null>(null)
+  const [selectedLabelFile, setSelectedLabelFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const labelInputRef = useRef<HTMLInputElement>(null)
 
   const clearSelectedFile = () => {
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -36,6 +39,7 @@ export default function useOfertaImage(onImageChange: (value: string) => void) {
 
     try {
       const dataUrl = await readFileAsDataUrl(file)
+      setSelectedProductFile(file)
       setImagePreview(dataUrl)
       onImageChange(dataUrl)
     } catch {
@@ -53,6 +57,8 @@ export default function useOfertaImage(onImageChange: (value: string) => void) {
     setImageMode(mode)
     setImageError('')
     setImagePreview('')
+    setSelectedProductFile(null)
+    setSelectedLabelFile(null)
     onImageChange('')
     clearSelectedFile()
   }
@@ -60,6 +66,7 @@ export default function useOfertaImage(onImageChange: (value: string) => void) {
   const removeImage = () => {
     setImagePreview('')
     setImageError('')
+    setSelectedProductFile(null)
     onImageChange('')
     clearSelectedFile()
   }
@@ -67,7 +74,14 @@ export default function useOfertaImage(onImageChange: (value: string) => void) {
   const resetImage = () => {
     setImagePreview('')
     setImageError('')
+    setSelectedProductFile(null)
+    setSelectedLabelFile(null)
     clearSelectedFile()
+    if (labelInputRef.current) labelInputRef.current.value = ''
+  }
+
+  const handleLabelFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSelectedLabelFile(event.target.files?.[0] ?? null)
   }
 
   return {
@@ -75,11 +89,15 @@ export default function useOfertaImage(onImageChange: (value: string) => void) {
     imagePreview,
     imageError,
     fileInputRef,
+    labelInputRef,
+    selectedProductFile,
+    selectedLabelFile,
     handleFileChange,
     handleUrlChange,
     handlePreviewError: () => setImageError('No se pudo cargar la vista previa. Verifica el archivo o la URL.'),
     switchImageMode,
     removeImage,
     resetImage,
+    handleLabelFileChange,
   }
 }

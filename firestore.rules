@@ -487,6 +487,22 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /analisis_ia/{analysisId} {
+      allow read: if isAdmin() || (
+        signedIn() && resource.data.usuarioId == request.auth.uid
+      );
+      allow create: if signedIn()
+        && request.resource.data.usuarioId == request.auth.uid
+        && request.resource.data.tipoAnalisis in ['alimento', 'vencimiento']
+        && request.resource.data.rutaFotografia is string
+        && request.resource.data.rutaFotografia.size() > 0
+        && request.resource.data.rutaFotografia.matches('analisis_ia/' + request.auth.uid + '/.*')
+        && request.resource.data.resultado is map
+        && request.resource.data.estadoAnalisis in ['pendiente', 'rechazado', 'requiere_revision']
+        && request.resource.data.fechaCreacion == request.time;
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

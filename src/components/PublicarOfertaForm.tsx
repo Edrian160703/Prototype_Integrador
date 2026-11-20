@@ -21,6 +21,7 @@ export default function PublicarOfertaForm() {
     imagePreview,
     imageError,
     fileInputRef,
+    labelInputRef,
     descripcionRestante,
     descuentoValido,
     porcentajeDescuento,
@@ -32,6 +33,7 @@ export default function PublicarOfertaForm() {
     handleHorarioFinChange,
     handleFechaChange,
     handleFileChange,
+    handleLabelFileChange,
     handleUrlChange,
     handlePreviewError,
     switchImageMode,
@@ -305,6 +307,14 @@ export default function PublicarOfertaForm() {
               accept="image/*"
               ref={fileInputRef}
               onChange={handleFileChange}
+            />
+            <label htmlFor="oferta-etiqueta-file">Fotografía de la etiqueta de vencimiento (JPG, PNG o WEBP, máx. 5 MB)</label>
+            <input
+              id="oferta-etiqueta-file"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              ref={labelInputRef}
+              onChange={handleLabelFileChange}
             />
           </div>
         ) : (

@@ -11,7 +11,7 @@ function requiredFirebaseEnv(name: string): string {
   return value
 }
 
-function getFirebaseApp() {
+export function getFirebaseApp() {
   const firebaseConfig = {
     apiKey: requiredFirebaseEnv('VITE_FIREBASE_API_KEY'),
     authDomain: requiredFirebaseEnv('VITE_FIREBASE_AUTH_DOMAIN'),
