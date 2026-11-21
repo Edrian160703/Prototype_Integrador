@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import {
+  useAdminClaimQuery,
   useAuthStateSubscription,
   useCurrentUserQuery,
+  useGoogleSignIn,
   useUserProfileQuery,
 } from './ApplicationContext'
 import type { AuthIdentity } from '../ports/authGateway'
@@ -10,6 +12,7 @@ import type { UserDocument } from '../types/user'
 interface AuthSessionValue {
   user: AuthIdentity | null
   loading: boolean
+  isAdmin: boolean
 }
 
 interface UserProfileReader {
@@ -28,10 +31,38 @@ const UserProfileRefreshContext = createContext<UserProfileRefresher | null>(nul
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { getCurrentUser } = useCurrentUserQuery()
   const { subscribeToAuthChanges } = useAuthStateSubscription()
+  const { completeGoogleRedirect } = useGoogleSignIn()
+  const { hasAdminClaim } = useAdminClaimQuery()
   const { getUserDocument } = useUserProfileQuery()
   const [user, setUser] = useState<AuthIdentity | null>(null)
   const [profile, setProfile] = useState<UserDocument | null>(null)
   const [loading, setLoading] = useState(true)
+  const [adminAccess, setAdminAccess] = useState<{ uid: string; authorized: boolean } | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    if (!user) {
+      setAdminAccess(null)
+      return () => {
+        active = false
+      }
+    }
+
+    const uid = user.uid
+    void hasAdminClaim()
+      .then((authorized) => {
+        if (active) setAdminAccess({ uid, authorized })
+      })
+      .catch((error: unknown) => {
+        console.error('No se pudieron verificar los permisos administrativos.', error)
+        if (active) setAdminAccess({ uid, authorized: false })
+      })
+
+    return () => {
+      active = false
+    }
+  }, [hasAdminClaim, user?.uid])
 
   const refreshProfile = useCallback(async () => {
     const currentUser = getCurrentUser()
@@ -56,8 +87,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe
   }, [getUserDocument, subscribeToAuthChanges])
 
+  useEffect(() => {
+    void completeGoogleRedirect()
+      .then(async (redirectUser) => {
+        if (redirectUser) setProfile(await getUserDocument(redirectUser.uid))
+      })
+      .catch((error: unknown) => {
+        console.error('No se pudo completar el inicio de sesión con Google.', error)
+      })
+  }, [completeGoogleRedirect, getUserDocument])
+
   return (
-    <AuthSessionContext.Provider value={{ user, loading }}>
+    <AuthSessionContext.Provider value={{
+      user,
+      loading,
+      isAdmin: Boolean(user && adminAccess?.uid === user.uid && adminAccess.authorized),
+    }}>
       <UserProfileContext.Provider value={{ profile }}>
         <UserProfileRefreshContext.Provider value={{ refreshProfile }}>
           {children}

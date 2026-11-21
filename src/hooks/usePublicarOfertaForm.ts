@@ -71,6 +71,7 @@ export default function usePublicarOfertaForm() {
       fechaAnio,
       fechaHora,
       imageMode,
+      verificationImageMode: 'upload',
       ahoraLocal,
     }
   }

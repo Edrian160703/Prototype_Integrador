@@ -1,7 +1,7 @@
 import type { ProductoDocument, ProductoEstado } from '../../types/producto'
 import { toDate } from './firestoreDates'
 
-const PRODUCT_STATES: readonly ProductoEstado[] = ['activo', 'pausado', 'agotado']
+const PRODUCT_STATES: readonly ProductoEstado[] = ['activo', 'suspendido', 'agotado']
 
 function isProductoEstado(value: string): value is ProductoEstado {
   return PRODUCT_STATES.some((state) => state === value)

@@ -1,4 +1,5 @@
 import {
+  completeGoogleRedirect,
   getCurrentUser,
   hasAdminClaim,
   loginWithGoogle,
@@ -66,6 +67,8 @@ export function createAuthenticationService({
     signInWithEmail: (email: string, password: string) =>
       signInWithEmail(auth, email, password),
     loginWithGoogle: async () => loginWithGoogle(auth, await profiles()),
+    completeGoogleRedirect: async () =>
+      completeGoogleRedirect(auth, await profiles()),
     hasAdminClaim: () => hasAdminClaim(auth),
     signOutUser: () => signOutUser(auth),
     getCurrentUser: () => getCurrentUser(auth),

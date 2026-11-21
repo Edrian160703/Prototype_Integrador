@@ -35,7 +35,7 @@ export default function ParaNegocios() {
           <h1>Únete como negocio aliado de FoodBack</h1>
           <p>Reduce el desperdicio, genera ingresos extra y aumenta tu visibilidad ante miles de clientes en Lima. Sin costos fijos, sin complicaciones.</p>
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '18px', flexWrap: 'wrap', gap: '8px' }}>
-            <Link className="btn btn-primary" to="/registro-negocio">Registrar mi negocio</Link>
+            <Link className="btn btn-primary" to="/registro?rol=comercio">Registrar mi negocio</Link>
             <span className="free-note">◎ Gratis para empezar</span>
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function ParaNegocios() {
         <p style={{ color: 'var(--text-gray)', marginBottom: '20px' }}>
           Completa el registro de tu negocio y nuestro equipo se pondrá en contacto contigo.
         </p>
-        <Link className="btn btn-primary" to="/registro-negocio">Registrar mi negocio</Link>
+        <Link className="btn btn-primary" to="/registro?rol=comercio">Registrar mi negocio</Link>
       </section>
     </>
   )

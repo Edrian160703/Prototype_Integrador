@@ -49,8 +49,8 @@ export class FirebaseUserProfileRepository implements
     const userData: Record<string, unknown> = {
       uid: user.uid,
       email: user.email,
-      role: data.role,
       displayName,
+      status: 'activo',
       photoURL: data.photoURL ?? user.photoURL,
       onboardingCompleted: data.onboardingCompleted ?? false,
       createdAt: serverTimestamp(),

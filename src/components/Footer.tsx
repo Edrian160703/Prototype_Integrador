@@ -26,7 +26,7 @@ export default function Footer() {
             <h4>Negocios</h4>
             <ul>
               <li><Link to="/para-negocios">Únete como negocio</Link></li>
-              <li><Link to="/registro-negocio">Registra tu negocio</Link></li>
+              <li><Link to="/registro?rol=comercio">Registra tu negocio</Link></li>
             </ul>
           </div>
           <div className="footer-col">

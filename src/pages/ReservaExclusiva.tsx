@@ -55,6 +55,8 @@ export default function ReservaExclusiva() {
         id: oferta.id,
         title: oferta.title,
         place: oferta.place,
+        address: oferta.address,
+        reference: oferta.reference,
         image: oferta.image,
         price: oferta.precioOfertaNum,
         maxStock: oferta.cantidadDisponible,
@@ -133,7 +135,7 @@ export default function ReservaExclusiva() {
                       {sinStock ? 'Sin stock disponible' : `${oferta.cantidadDisponible} disponibles`}
                     </span>
                   </div>
-                  <div className="qty-stepper">
+                  <div className="qty-stepper unselectable">
                     <button
                       type="button"
                       onClick={() => setCantidad((c) => Math.max(1, c - 1))}

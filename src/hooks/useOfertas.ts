@@ -3,8 +3,9 @@ import { useOfferListQuery } from '../context/ApplicationContext'
 import { toOfferCardData } from '../presentation/OfertaPresenter'
 import type { OfferCardData } from '../presentation/OfertaPresenter'
 
-export default function useOfertas() {
-  const { getOfertas } = useOfferListQuery()
+export default function useOfertas(soloVigentes = false) {
+  const { getOfertas, getOfertasVigentes } = useOfferListQuery()
+  const cargarOfertas = soloVigentes ? getOfertasVigentes : getOfertas
   const [offers, setOffers] = useState<OfferCardData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -12,7 +13,7 @@ export default function useOfertas() {
   useEffect(() => {
     let cancelled = false
 
-    getOfertas()
+    cargarOfertas()
       .then((offers) => {
         if (!cancelled) setOffers(offers.map(toOfferCardData))
       })
@@ -26,7 +27,7 @@ export default function useOfertas() {
     return () => {
       cancelled = true
     }
-  }, [getOfertas])
+  }, [cargarOfertas])
 
   return { offers, loading, error }
 }

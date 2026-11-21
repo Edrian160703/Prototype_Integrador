@@ -25,6 +25,28 @@
 * {
   box-sizing: border-box;
 }
+
+.logo {
+  height: 60%;
+  padding: px 0px;
+}
+.logo img {
+  height: 100%;
+}
+
+.brand-logo-dark {
+  display: none;
+}
+
+html[data-theme="dark"] .brand-logo-light {
+  display: none;
+}
+
+html[data-theme="dark"] .brand-logo-dark {
+  display: block;
+  filter: brightness(0) invert(1);
+}
+
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
@@ -61,6 +83,18 @@ img {
 .container {
   width: min(1160px, calc(100% - 40px));
   margin: 0 auto;
+}
+
+.unselectable {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and Edge */
+  user-select: none; /* Standard syntax (Chrome, Firefox, Opera) */
+}
+/* ---------- Errores ---------- */
+.error {
+  align-self: center;
+  align-items: center;
+  display: inline-flex;
 }
 
 /* ---------- botones ---------- */
@@ -148,6 +182,20 @@ img {
   font-weight: 800;
   line-height: 0.95;
   flex-shrink: 0;
+}
+
+.header .logo {
+  width: 180px;
+  height: 57px;
+  overflow: hidden;
+}
+
+.header .logo .brand-logo-light,
+.header .logo .brand-logo-dark {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 .logo-mark {
@@ -259,7 +307,9 @@ img {
   cursor: pointer;
   box-shadow: 0 8px 22px rgba(12, 106, 60, 0.35);
   z-index: 90;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 .cart-fab:hover {
   background: var(--green-dark);
@@ -425,7 +475,10 @@ img {
   white-space: nowrap;
   border: none;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .btn-publish:hover {
@@ -488,7 +541,7 @@ img {
     border-color 0.25s ease;
 }
 .theme-toggle:hover {
-  transform: translateY(-2px) rotate(8deg);
+  transform: translateY(-5px) rotate(8deg);
   border-color: var(--green-primary);
 }
 .theme-toggle:focus-visible {
@@ -499,13 +552,14 @@ img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  filter: invert(1);
   transition:
     transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
     filter 0.3s ease;
 }
 .theme-toggle.is-dark img {
   transform: rotate(180deg) scale(0.9);
-  filter: brightness(1.15) saturate(0.9) invert(1);
+  filter: brightness(1.15) saturate(0.9) invert(0);
 }
 /* ---------- hero ---------- */
 .hero {
@@ -743,8 +797,14 @@ img {
 .offer-card-img {
   width: 100%;
   height: 170px;
+
   object-fit: cover;
   background: var(--cream);
+  transform: scale(1);
+  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.offer-card-img:hover {
+  transform: scale(1.12);
 }
 .offer-card-imgwrap {
   position: relative;
@@ -866,7 +926,7 @@ img {
 
 /* ---------- como funciona ---------- */
 .dark-banner {
-  background: var(--green-dark);
+  background: var(--dark-banner-background, var(--green-dark));
   color: #fff;
   text-align: center;
   padding: 60px 20px;
@@ -1132,11 +1192,14 @@ img {
   display: grid;
   grid-template-columns: 1fr 1.05fr;
   min-height: 320px;
-  border-radius: 0;
+  border-radius: 24px;
   overflow: hidden;
 }
 .business-copy {
-  padding: 50px 5px 50px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(28px, 4vw, 52px);
 }
 .business-copy h1 {
   font-size: 36px;
@@ -1149,9 +1212,9 @@ img {
   max-width: 460px;
 }
 .business-img {
-  background: var(--line);
+  background: var(--cream);
   min-height: 280px;
-  border-radius: 20px;
+  border-radius: 0 24px 24px 0;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -1161,6 +1224,8 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: scale(1.25);
+  transform-origin: left center;
 }
 .free-note {
   color: var(--text-gray);
@@ -1674,26 +1739,31 @@ img {
   padding: 4px 6px;
 }
 .qty-stepper button {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 0;
   background: var(--green-soft);
   color: var(--green-dark);
-  font-size: 15px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   display: grid;
   place-items: center;
+  transition: transform 0.2s ease;
+}
+.qty-stepper button:active {
+  transform: scale(1.5);
 }
 .qty-stepper button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 .qty-stepper span {
-  min-width: 18px;
+  min-width: 24px;
   text-align: center;
   font-weight: 700;
+  font-size: 1.2rem;
 }
 .reserva-exclusiva-footer {
   display: flex;
@@ -2109,11 +2179,13 @@ img {
     grid-template-columns: 1fr;
   }
   .business-img {
-    min-height: 240px;
-    margin-bottom: 20px;
+    height: clamp(240px, 56vw, 360px);
+    min-height: 0;
+    margin-bottom: 0;
+    border-radius: 0 0 24px 24px;
   }
   .business-copy {
-    padding: 30px 0;
+    padding: clamp(24px, 6vw, 40px);
   }
   .step {
     grid-template-columns: 65px 1fr 140px;
@@ -2125,6 +2197,11 @@ img {
   }
   .logo-tagline {
     display: none;
+  }
+
+  .header .logo {
+    width: 150px;
+    height: 48px;
   }
   .header-right {
     gap: 8px;
@@ -2341,7 +2418,7 @@ html[data-theme="dark"] {
   --surface: #18231e;
   --surface-muted: #202e28;
   --input-bg: #121c18;
-  --cream: #1b2922;
+  --cream: #213f2f;
   --lime: #253821;
   --green-soft: #29442c;
   --text-dark: #edf5ed;
@@ -2379,12 +2456,23 @@ html[data-theme="dark"] .profile-section {
   color: var(--text-dark);
 }
 
+html[data-theme="dark"] .account-type-badge,
+html[data-theme="dark"] .reserva-exclusiva-price,
+html[data-theme="dark"] .qty-stepper > button {
+  color: var(--text-gray);
+}
+
 html[data-theme="dark"] .hero,
+html[data-theme="dark"] .footer,
 html[data-theme="dark"] .search-hero,
 html[data-theme="dark"] .impact-hero,
 html[data-theme="dark"] .business-hero,
 html[data-theme="dark"] .testimonials {
   background: var(--cream);
+}
+
+html[data-theme="dark"] .dark-banner {
+  --dark-banner-background: #153d31;
 }
 
 html[data-theme="dark"] .hero-art-circle {
@@ -2411,6 +2499,11 @@ html[data-theme="dark"] .process {
 html[data-theme="dark"] .how-strip > div {
   border-color: #3d5931;
   color: #c2d5bd;
+}
+
+html[data-theme="dark"] .how-strip > div > strong,
+html[data-theme="dark"] .offer-card-price {
+  color: var(--text-dark);
 }
 
 html[data-theme="dark"] .step:nth-child(1),
@@ -2494,7 +2587,8 @@ html[data-theme="dark"] .nav-toggle {
 }
 
 html[data-theme="dark"] .mobile-nav-login,
-html[data-theme="dark"] .mobile-nav-publish {
+html[data-theme="dark"] .mobile-nav-publish,
+html[data-theme="dark"] .mobile-nav-admin {
   color: #a8d989;
 }
 
@@ -2530,15 +2624,6 @@ html[data-theme="dark"] .form-section-title {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
-}
 /* ---------- header responsive ---------- */
 
 @media (max-width: 1000px) {
@@ -2617,6 +2702,12 @@ html[data-theme="dark"] .form-section-title {
   .icon-btn {
     display: none;
   }
+
+  .header-right .btn-pending-reservations {
+    display: inline-flex;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
 }
 
 .toast {
@@ -2648,7 +2739,8 @@ html[data-theme="dark"] .form-section-title {
 }
 
 .mobile-nav-login,
-.mobile-nav-publish {
+.mobile-nav-publish,
+.mobile-nav-admin {
   display: none;
 }
 
@@ -2662,7 +2754,7 @@ html[data-theme="dark"] .form-section-title {
   }
 
   .business-hero {
-    gap: 24px;
+    gap: 0;
   }
 
   .process-grid {
@@ -2674,7 +2766,8 @@ html[data-theme="dark"] .form-section-title {
   }
 
   .nav.open .mobile-nav-login,
-  .nav.open .mobile-nav-publish {
+  .nav.open .mobile-nav-publish,
+  .nav.open .mobile-nav-admin {
     display: flex;
     align-items: center;
     min-height: 44px;
@@ -2783,6 +2876,16 @@ html[data-theme="dark"] .form-section-title {
 
   .header-right {
     gap: 8px;
+  }
+
+  .header .logo {
+    width: 125px;
+    height: 40px;
+  }
+
+  .header-right .btn-pending-reservations {
+    padding: 7px 8px;
+    font-size: 10px;
   }
 
   .cards-grid {

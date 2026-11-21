@@ -3,6 +3,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  orderBy,
   query,
   serverTimestamp,
   setDoc,
@@ -26,7 +27,8 @@ import type {
   ProductoPayload,
 } from '../../types/producto'
 import { createCryptoIdGenerator } from '../cryptoIdGenerator'
-import type { IdGenerator } from '../../ports/idGenerator'
+import { createReadableIdGenerator } from '../readableIdGenerator'
+import type { NamedIdGenerator } from '../../ports/idGenerator'
 
 export class FirebaseProductoRepository implements
   ProductoCreator,
@@ -37,14 +39,14 @@ export class FirebaseProductoRepository implements
   ProductoAdminReader {
   constructor(
     private readonly db: Firestore,
-    private readonly idGenerator: IdGenerator = createCryptoIdGenerator(),
+    private readonly idGenerator: NamedIdGenerator = createReadableIdGenerator(createCryptoIdGenerator()),
   ) {}
 
   async create(payload: ProductoPayload, uid: string): Promise<string> {
     if (!Number.isSafeInteger(payload.stock) || payload.stock < 0) {
       throw new Error('El stock del producto no es válido.')
     }
-    const idProducto = this.idGenerator.next()
+    const idProducto = this.idGenerator.next(payload.nombre_producto)
 
     const docData: Record<string, unknown> = {
       id_producto: idProducto,
@@ -67,7 +69,11 @@ export class FirebaseProductoRepository implements
   }
 
   async getByComercio(idComercio: string): Promise<ProductoDocument[]> {
-    const productosQuery = query(collection(this.db, 'productos'), where('id_comercio', '==', idComercio))
+    const productosQuery = query(
+      collection(this.db, 'productos'),
+      where('id_comercio', '==', idComercio),
+      orderBy('createdAt', 'desc'),
+    )
     const snapshot = await getDocs(productosQuery)
     return snapshot.docs
       .filter((docSnap) => docSnap.data().archivedAt === undefined)
@@ -81,6 +87,7 @@ export class FirebaseProductoRepository implements
   }
 
   async updateEstado(idProducto: string, estado: ProductoEstado): Promise<void> {
+    await assertFirebaseAdmin()
     await updateDoc(doc(this.db, 'productos', idProducto), {
       estado,
       updatedAt: serverTimestamp(),
@@ -96,7 +103,8 @@ export class FirebaseProductoRepository implements
   }
 
   async getAll(): Promise<ProductoDocument[]> {
-    const snapshot = await getDocs(collection(this.db, 'productos'))
+    await assertFirebaseAdmin()
+    const snapshot = await getDocs(query(collection(this.db, 'productos'), orderBy('createdAt', 'desc')))
     return snapshot.docs
       .filter((docSnap) => docSnap.data().archivedAt === undefined)
       .map((docSnap) => mapProductoDocument(docSnap.id, docSnap.data()))

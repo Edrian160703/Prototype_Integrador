@@ -1,4 +1,5 @@
-import { Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuthSession, useRefreshUserProfile, useUserProfile } from '../context/AuthContext'
 import ProfileConsumerForm from '../components/ProfileConsumerForm'
 import ProfileStoreForm from '../components/ProfileStoreForm'
@@ -10,6 +11,13 @@ export default function Perfil() {
   const { user, loading } = useAuthSession()
   const { profile } = useUserProfile()
   const { refreshProfile } = useRefreshUserProfile()
+  const { hash } = useLocation()
+
+  useEffect(() => {
+    if (hash === '#reservas') {
+      document.getElementById('reservas')?.scrollIntoView()
+    }
+  }, [hash, profile])
 
   if (loading) return null
   if (!user) return <Navigate to="/" replace />

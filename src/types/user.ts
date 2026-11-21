@@ -1,5 +1,7 @@
 export type UserRole = 'consumer' | 'store'
 
+export type UsuarioEstado = 'activo' | 'suspendido' | 'eliminado'
+
 export interface PickupSchedule {
   day: string
   startTime: string

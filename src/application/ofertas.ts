@@ -7,7 +7,7 @@ import type {
 } from '../ports/ofertaRepository'
 import type { ComercioReader } from '../ports/comercioRepository'
 import type { ProductoCreator } from '../ports/productoRepository'
-import type { IdGenerator } from '../ports/idGenerator'
+import type { IdGenerator, NamedIdGenerator } from '../ports/idGenerator'
 import type {
   CreateOfertaParams,
   OfertaConComercio,
@@ -20,16 +20,17 @@ export function createOferta(
   repository: OfertaCreator,
   { uid, payload }: CreateOfertaParams,
   idGenerator: IdGenerator,
+  offerIds: NamedIdGenerator,
 ): Promise<string> {
   const idProducto = idGenerator.next()
-  return repository.create(uid, payload, idProducto)
+  return repository.create(uid, payload, idProducto, offerIds.next(payload.nombre_producto))
 }
 
 export async function createOfertaConProducto(
   { uid, payload }: CreateOfertaParams,
   productoCreator: ProductoCreator,
   ofertaCreator: OfertaCreator,
-  idGenerator: IdGenerator,
+  offerIds: NamedIdGenerator,
 ): Promise<string> {
   const idProducto = await productoCreator.create(
     {
@@ -43,20 +44,41 @@ export async function createOfertaConProducto(
     },
     uid,
   )
-  return ofertaCreator.create(uid, payload, idProducto, idGenerator.next())
+  return ofertaCreator.create(uid, payload, idProducto, offerIds.next(payload.nombre_producto))
 }
 
-export async function getOfertas(
-  repository: OfertaListReader,
+async function enrichOfertas(
+  ofertas: Array<{ id: string; data: OfertaDocument }>,
   comercios: ComercioReader,
 ): Promise<OfertaConComercio[]> {
-  const ofertas = await repository.listAll()
   const cache = new Map<string, Promise<Awaited<ReturnType<ComercioReader['getCommerceById']>>>>()
 
   return Promise.all(ofertas.map(async ({ id, data }) => {
     if (!cache.has(data.id_comercio)) cache.set(data.id_comercio, comercios.getCommerceById(data.id_comercio))
     return { id, data, comercio: await cache.get(data.id_comercio)! }
   }))
+}
+
+function getCreatedAtValue(date: Date | null | undefined): number {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return 0
+  return date.getTime()
+}
+
+export async function getOfertas(
+  repository: OfertaListReader,
+  comercios: ComercioReader,
+): Promise<OfertaConComercio[]> {
+  const ofertas = await enrichOfertas(await repository.listAll(), comercios)
+  return ofertas.sort(
+    (left, right) => getCreatedAtValue(right.data.createdAt) - getCreatedAtValue(left.data.createdAt),
+  )
+}
+
+export async function getOfertasVigentes(
+  repository: OfertaListReader,
+  comercios: ComercioReader,
+): Promise<OfertaConComercio[]> {
+  return enrichOfertas(await repository.listByLimitDate(), comercios)
 }
 
 export async function getOfertaById(

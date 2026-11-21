@@ -1,9 +1,10 @@
 import type { Firestore } from 'firebase/firestore'
 import type { UserCollectionName } from './userCollections'
-import { UidDocumentFinder, UidFieldDocumentFinder, type UserDocumentFinder } from './userDocumentFinders'
+import { UidFieldDocumentFinder, type UserDocumentFinder } from './userDocumentFinders'
 import {
+  READABLE_ID_UID_LENGTH,
   ReadableNameDocumentIdStrategy,
-  UidDocumentIdStrategy,
+  STORE_FALLBACK_NAME,
   type UserDocumentIdStrategy,
 } from './userDocumentIds'
 
@@ -25,8 +26,8 @@ export function createUserDocumentPolicies(db: Firestore): UserDocumentPolicies 
       finder: new UidFieldDocumentFinder(db),
     },
     comercios: {
-      ids: new UidDocumentIdStrategy(),
-      finder: new UidDocumentFinder(db),
+      ids: new ReadableNameDocumentIdStrategy(READABLE_ID_UID_LENGTH, STORE_FALLBACK_NAME),
+      finder: new UidFieldDocumentFinder(db),
     },
   }
 }

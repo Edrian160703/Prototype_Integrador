@@ -1,18 +1,25 @@
-import { doc, getDoc, type Firestore } from 'firebase/firestore'
+import type { Firestore } from 'firebase/firestore'
 import type { ComercioReader, ComercioSummary } from '../../ports/comercioRepository'
+import { createUserDocumentPolicies } from './userDocumentPolicies'
+import type { UserDocumentFinder } from './userDocumentFinders'
 
 function mapComercio(data: Record<string, unknown>): ComercioSummary {
   return {
     businessName: typeof data.businessName === 'string' ? data.businessName : undefined,
     district: typeof data.district === 'string' ? data.district : undefined,
+    address: typeof data.address === 'string' ? data.address : undefined,
+    reference: typeof data.reference === 'string' ? data.reference : undefined,
   }
 }
 
 export class FirebaseComercioRepository implements ComercioReader {
-  constructor(private readonly db: Firestore) {}
+  constructor(
+    db: Firestore,
+    private readonly finder: UserDocumentFinder = createUserDocumentPolicies(db).comercios.finder,
+  ) {}
 
   async getCommerceById(id: string): Promise<ComercioSummary | null> {
-    const snapshot = await getDoc(doc(this.db, 'comercios', id))
-    return snapshot.exists() ? mapComercio(snapshot.data()) : null
+    const snapshot = await this.finder.find('comercios', id)
+    return snapshot ? mapComercio(snapshot.data() ?? {}) : null
   }
 }

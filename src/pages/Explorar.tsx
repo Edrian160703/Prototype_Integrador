@@ -12,7 +12,7 @@ export default function Explorar() {
   const [active, setActive] = useState<string>('Todos')
   const state = location.state as { toastMessage?: string } | null
   const toastMessage = state?.toastMessage ?? ''
-  const { offers, loading, error: loadError } = useOfertas()
+  const { offers, loading, error: loadError } = useOfertas(true)
 
   useEffect(() => {
     if (!toastMessage) return

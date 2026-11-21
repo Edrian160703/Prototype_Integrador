@@ -23,6 +23,8 @@ function createAuth() {
     deleteCurrentAccount: vi.fn().mockResolvedValue(undefined),
     signInWithEmail: vi.fn(),
     signInWithGoogle: vi.fn().mockResolvedValue(identity),
+    startSignInWithGoogle: vi.fn().mockResolvedValue(undefined),
+    consumeGoogleRedirect: vi.fn().mockResolvedValue(null),
     signOut: vi.fn().mockResolvedValue(undefined),
   }
 }

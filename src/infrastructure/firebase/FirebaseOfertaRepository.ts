@@ -7,6 +7,7 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  Timestamp,
   where,
   type Firestore,
 } from 'firebase/firestore'
@@ -39,6 +40,9 @@ function offerFields(payload: OfertaPayload | Omit<OfertaPayload, 'estado'>, exp
     horario_recojo: payload.horario_recojo.trim(),
     fecha_limite: expiry,
     imagen_url: payload.imagen_url.trim() ? payload.imagen_url.trim() : null,
+    imagen_verificacion_url: payload.imagen_verificacion_url?.trim()
+      ? payload.imagen_verificacion_url.trim()
+      : null,
   }
 }
 
@@ -93,6 +97,7 @@ export class FirebaseOfertaRepository implements
         id_producto: productId,
         id_comercio: product.id_comercio,
         cantidad_disponible: payload.cantidad_disponible,
+        createdAt: serverTimestamp(),
         inventory_version: INVENTORY_VERSION,
         last_inventory_operation_id: operationId,
       })
@@ -107,7 +112,7 @@ export class FirebaseOfertaRepository implements
   }
 
   async listAll(): Promise<Array<{ id: string; data: OfertaDocument }>> {
-    const snapshot = await getDocs(query(collection(this.db, 'ofertas'), orderBy('fecha_limite', 'asc')))
+    const snapshot = await getDocs(query(collection(this.db, 'ofertas'), orderBy('createdAt', 'desc')))
     return snapshot.docs
       .filter((item) => item.data().estado !== 'archivada')
       .map((item) => ({ id: item.id, data: mapOfertaDocument(item.data()) }))
@@ -119,11 +124,25 @@ export class FirebaseOfertaRepository implements
   }
 
   async listByOwner(uid: string): Promise<Array<{ id: string; data: OfertaDocument }>> {
-    const snapshot = await getDocs(query(collection(this.db, 'ofertas'), where('id_comercio', '==', uid)))
+    const snapshot = await getDocs(query(
+      collection(this.db, 'ofertas'),
+      where('id_comercio', '==', uid),
+      orderBy('createdAt', 'desc'),
+    ))
     return snapshot.docs
       .filter((item) => item.data().estado !== 'archivada')
       .map((item) => ({ id: item.id, data: mapOfertaDocument(item.data()) }))
-      .sort((left, right) => right.data.fecha_limite.getTime() - left.data.fecha_limite.getTime())
+      .sort((left, right) => (right.data.createdAt ?? right.data.fecha_limite).getTime() - (left.data.createdAt ?? left.data.fecha_limite).getTime())
+  }
+
+  async listByLimitDate(): Promise<Array<{ id: string; data: OfertaDocument }>> {
+    const snapshot = await getDocs(
+      query(collection(this.db, 'ofertas'), where('fecha_limite', '>', Timestamp.now()), orderBy('createdAt', 'desc')),
+    )
+    return snapshot.docs
+      .filter((item) => item.data().estado !== 'archivada')
+      .map((item) => ({ id: item.id, data: mapOfertaDocument(item.data()) }))
+      .sort((left, right) => (right.data.createdAt ?? right.data.fecha_limite).getTime() - (left.data.createdAt ?? left.data.fecha_limite).getTime())
   }
 
   async updateOwned(id: string, uid: string, payload: Omit<OfertaPayload, 'estado'>): Promise<void> {

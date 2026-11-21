@@ -7,6 +7,7 @@ export interface ProductoAdminRecord {
 
 export interface ProductoAdminItem {
   id: string
+  storeId: string
   name: string
   category: string
   storeName: string

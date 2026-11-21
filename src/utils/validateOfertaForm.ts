@@ -68,6 +68,13 @@ export function validateOfertaForm(
     nextErrors.imagen_url = `La URL no debe superar los ${IMAGEN_URL_MAX} caracteres.`
   }
 
+  if (
+    context.verificationImageMode === 'url' &&
+    (values.imagen_verificacion_url ?? '').length > IMAGEN_URL_MAX
+  ) {
+    nextErrors.imagen_verificacion_url = `La URL no debe superar los ${IMAGEN_URL_MAX} caracteres.`
+  }
+
   if (!context.fechaDia || !context.fechaMes || !context.fechaAnio || !context.fechaHora) {
     nextErrors.fecha_limite = 'Completa la fecha y hora límite.'
   } else if (!esFechaValida(context.fechaDia, context.fechaMes, context.fechaAnio)) {

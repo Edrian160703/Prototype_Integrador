@@ -1,8 +1,14 @@
 import type { AccountReader, AccountStatus, AccountWriter, ManagedAccount } from '../ports/accountRepository'
 import type { UserRole } from '../types/user'
 
+function getTimestampValue(date: Date | null | undefined): number {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return 0
+  return date.getTime()
+}
+
 export function listAccounts(repository: AccountReader, role: UserRole): Promise<ManagedAccount[]> {
-  return repository.listByRole(role)
+  return repository.listByRole(role).then((accounts) =>
+    [...accounts].sort((left, right) => getTimestampValue(right.createdAt) - getTimestampValue(left.createdAt)))
 }
 
 export function setAccountStatus(

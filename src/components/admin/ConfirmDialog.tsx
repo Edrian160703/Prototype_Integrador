@@ -1,3 +1,5 @@
+import ReactDOM from 'react-dom'
+
 interface ConfirmDialogProps {
   title: string
   message: string
@@ -17,21 +19,23 @@ export default function ConfirmDialog({
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) {
-  return (
-    <div className="modal-overlay" role="dialog" aria-modal="true">
-      <div className="modal">
-        <div className="modal-header">
-          <h3>{title}</h3>
-          <button type="button" className="modal-close" onClick={onCancel} aria-label="Cerrar">✕</button>
+  const root = document.getElementById('root') ?? document.body
+
+  return ReactDOM.createPortal(
+    <div className="confirm-dialog-backdrop" role="dialog" aria-modal="true">
+      <div className="confirm-dialog-card">
+        <div className="confirm-dialog-header">
+          <h3 className="confirm-dialog-title">{title}</h3>
+          <button type="button" className="confirm-dialog-close" onClick={onCancel} aria-label="Cerrar">✕</button>
         </div>
-        <p className="modal-body">{message}</p>
-        <div className="modal-actions">
-          <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={loading}>
+        <p className="confirm-dialog-body">{message}</p>
+        <div className="confirm-dialog-actions">
+          <button type="button" className="confirm-dialog-action confirm-dialog-action-secondary" onClick={onCancel} disabled={loading}>
             Cancelar
           </button>
           <button
             type="button"
-            className={`btn ${variant === 'danger' ? 'btn-danger' : 'btn-primary'}`}
+            className={`confirm-dialog-action ${variant === 'danger' ? 'confirm-dialog-action-danger' : 'confirm-dialog-action-primary'}`}
             onClick={onConfirm}
             disabled={loading}
           >
@@ -39,6 +43,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    root,
   )
 }

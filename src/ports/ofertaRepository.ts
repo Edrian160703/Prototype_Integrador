@@ -10,6 +10,7 @@ export interface OfertaByIdReader {
 
 export interface OfertaListReader {
   listAll(): Promise<Array<{ id: string; data: OfertaDocument }>>
+  listByLimitDate(): Promise<Array<{ id: string; data: OfertaDocument }>>
 }
 
 export interface OfertaOwnerReader {

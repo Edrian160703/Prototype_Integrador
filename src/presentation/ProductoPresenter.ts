@@ -5,6 +5,7 @@ import type { ProductoAdminItem } from '../types/productoAdmin'
 export function toProductoAdminItems(records: ProductoAdminRecord[]): ProductoAdminItem[] {
   return records.map(({ product, storeName }) => ({
     id: product.id_producto,
+    storeId: product.id_comercio,
     name: product.nombre_producto,
     category: CATEGORIAS_VISUALES.find((category) => category.id === product.id_categoria)?.label ?? 'Otros',
     storeName: storeName || 'Comercio FoodBack',

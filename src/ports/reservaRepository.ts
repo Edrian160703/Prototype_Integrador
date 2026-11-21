@@ -1,12 +1,27 @@
 import type { CartItem } from '../types/cart'
+import type { ReservaCheckoutDetails } from '../types/checkout'
 import type { EstadoReserva, ReservaDocument } from '../types/reserva'
 
 export interface ReservaCreator {
-  create(idUsuario: string, emailUsuario: string, item: CartItem): Promise<string>
+  create(
+    idUsuario: string,
+    emailUsuario: string,
+    item: CartItem,
+    nombreUsuario?: string | null,
+    checkout?: ReservaCheckoutDetails,
+  ): Promise<string>
 }
 
 export interface ReservaReader {
   listByUsuario(idUsuario: string): Promise<ReservaDocument[]>
+}
+
+export interface ReservaAdminReader {
+  listAll(): Promise<ReservaDocument[]>
+}
+
+export interface ReservaStateWriter {
+  updateEstado(idReserva: string, estado: ReservaDocument['estado_reserva']): Promise<void>
 }
 
 export interface ReservaDeleter {

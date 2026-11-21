@@ -1,9 +1,13 @@
 import { type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import useSignupForm from '../hooks/useSignupForm'
 
 export default function SignUpForm() {
   const navigate = useNavigate()
+  const { search } = useLocation()
+  const initialRole = new URLSearchParams(search).get('rol') === 'comercio'
+    ? 'business'
+    : undefined
   const {
     role,
     setRole,
@@ -20,6 +24,7 @@ export default function SignUpForm() {
     submitWithEmail,
     submitWithGoogle,
   } = useSignupForm({
+    initialRole,
     onStepCompleted: (onboardingPath) => navigate(onboardingPath),
   })
 

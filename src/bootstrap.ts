@@ -9,7 +9,11 @@ import { FirebaseAuthGateway } from './infrastructure/firebase/FirebaseAuthGatew
 import { createFirebaseRepositories } from './infrastructure/firebase/createFirebaseRepositories'
 import { InMemorySignupDraftStore } from './infrastructure/InMemorySignupDraftStore'
 import { createCryptoIdGenerator } from './infrastructure/cryptoIdGenerator'
+import { SimulatedPaymentGateway } from './infrastructure/SimulatedPaymentGateway'
+import { createReadableIdGenerator } from './infrastructure/readableIdGenerator'
 import { getFirebaseAuth } from './infrastructure/firebase/firebaseClient'
+
+const OFFER_ID_PREFIX = 'ofertas'
 
 export function createFoodBackApplication(): ApplicationServices {
   const idGenerator = createCryptoIdGenerator()
@@ -26,11 +30,14 @@ export function createFoodBackApplication(): ApplicationServices {
       products: repositories.products,
       commerces: repositories.commerces,
       idGenerator,
+      offerIds: createReadableIdGenerator(idGenerator, OFFER_ID_PREFIX),
     }),
     accounts: createAccountServices(repositories.accounts),
     reservations: createReservationServices({
       reservations: repositories.reservations,
       offers: repositories.offers,
+      purchases: repositories.purchases,
+      payments: new SimulatedPaymentGateway(idGenerator),
     }),
     authentication: createAuthenticationService({
       auth: authGateway,

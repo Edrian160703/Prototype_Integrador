@@ -1,4 +1,4 @@
-export type ProductoEstado = 'activo' | 'pausado' | 'agotado'
+export type ProductoEstado = 'activo' | 'suspendido' | 'agotado' | 'eliminado'
 
 /** Datos que llegan desde el formulario al crear/editar un producto del catálogo. */
 export interface ProductoPayload {

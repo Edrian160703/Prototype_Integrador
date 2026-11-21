@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  completeGoogleRedirect,
   hasAdminClaim,
   loginWithGoogle,
   registerWithEmail,
@@ -66,6 +67,8 @@ describe('casos de uso de autenticación', () => {
     const auth: IAuthSignIn = {
       signInWithEmail: vi.fn(),
       signInWithGoogle: vi.fn().mockResolvedValue(identity),
+      startSignInWithGoogle: vi.fn().mockResolvedValue(undefined),
+      consumeGoogleRedirect: vi.fn().mockResolvedValue(null),
     }
     const profiles = createProfileCreator()
 
@@ -81,11 +84,26 @@ describe('casos de uso de autenticación', () => {
     const auth: IAuthSignIn = {
       signInWithEmail: vi.fn(),
       signInWithGoogle: vi.fn().mockResolvedValue(identity),
+      startSignInWithGoogle: vi.fn().mockResolvedValue(undefined),
+      consumeGoogleRedirect: vi.fn().mockResolvedValue(null),
     }
     const profiles = createProfileCreator()
 
-    await loginWithGoogle(auth, profiles)
+    await expect(loginWithGoogle(auth, profiles)).resolves.toBeNull()
+    expect(auth.startSignInWithGoogle).toHaveBeenCalledOnce()
+    expect(profiles.createIfMissing).not.toHaveBeenCalled()
+  })
 
+  it('completa una redirección de Google y crea el perfil consumidor', async () => {
+    const auth: IAuthSignIn = {
+      signInWithEmail: vi.fn(),
+      signInWithGoogle: vi.fn(),
+      startSignInWithGoogle: vi.fn(),
+      consumeGoogleRedirect: vi.fn().mockResolvedValue(identity),
+    }
+    const profiles = createProfileCreator()
+
+    await expect(completeGoogleRedirect(auth, profiles)).resolves.toEqual(identity)
     expect(profiles.createIfMissing).toHaveBeenCalledWith(identity, { role: 'consumer' })
   })
 })

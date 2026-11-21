@@ -14,8 +14,9 @@ export function crearReserva(
   idUsuario: string,
   emailUsuario: string,
   item: CartItem,
+  nombreUsuario?: string | null,
 ): Promise<string> {
-  return repository.create(idUsuario, emailUsuario, item)
+  return repository.create(idUsuario, emailUsuario, item, nombreUsuario)
 }
 
 export async function crearReservasDesdeCarrito(
@@ -23,10 +24,11 @@ export async function crearReservasDesdeCarrito(
   idUsuario: string,
   emailUsuario: string,
   items: CartItem[],
+  nombreUsuario?: string | null,
 ): Promise<string[]> {
   const idsReservas: string[] = []
   for (const item of items) {
-    idsReservas.push(await repository.create(idUsuario, emailUsuario, item))
+    idsReservas.push(await repository.create(idUsuario, emailUsuario, item, nombreUsuario))
   }
   return idsReservas
 }

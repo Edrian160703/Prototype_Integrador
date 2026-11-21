@@ -4,6 +4,7 @@ import {
   deleteOferta,
   getOfertaById,
   getOfertas,
+  getOfertasVigentes,
   getOfertasByOwner,
   updateOferta,
 } from '../application/ofertas'
@@ -17,7 +18,7 @@ import type {
   OfertaWriter,
 } from '../ports/ofertaRepository'
 import type { ProductoCreator } from '../ports/productoRepository'
-import type { IdGenerator } from '../ports/idGenerator'
+import type { IdGenerator, NamedIdGenerator } from '../ports/idGenerator'
 import type { CreateOfertaParams, OfertaPayload } from '../types/oferta'
 
 type OfferRepository =
@@ -32,6 +33,7 @@ interface OfferServiceDependencies {
   products: () => Promise<ProductoCreator>
   commerces: () => Promise<ComercioReader>
   idGenerator: IdGenerator
+  offerIds: NamedIdGenerator
 }
 
 export function createOfferServices({
@@ -39,17 +41,22 @@ export function createOfferServices({
   products,
   commerces,
   idGenerator,
+  offerIds,
 }: OfferServiceDependencies): OfferApplication {
   return {
     createOferta: async (params: CreateOfertaParams) =>
-      createOferta(await offers(), params, idGenerator),
+      createOferta(await offers(), params, idGenerator, offerIds),
     createOfertaConProducto: async (params: CreateOfertaParams) => {
       const [productRepository, offerRepository] = await Promise.all([products(), offers()])
-      return createOfertaConProducto(params, productRepository, offerRepository, idGenerator)
+      return createOfertaConProducto(params, productRepository, offerRepository, offerIds)
     },
     getOfertas: async () => {
       const [offerRepository, commerceRepository] = await Promise.all([offers(), commerces()])
       return getOfertas(offerRepository, commerceRepository)
+    },
+    getOfertasVigentes: async () => {
+      const [offerRepository, commerceRepository] = await Promise.all([offers(), commerces()])
+      return getOfertasVigentes(offerRepository, commerceRepository)
     },
     getOfertaById: async (idOferta: string) => {
       const [offerRepository, commerceRepository] = await Promise.all([offers(), commerces()])

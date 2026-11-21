@@ -97,7 +97,10 @@ export default function StoreOnboardingForm({ loading, onSubmit }: StoreOnboardi
         />
       </div>
       <div className="field">
-        <MapaNegocio selectedLocation={location} onSelect={setLocation} />
+        <MapaNegocio
+          selectedLocation={location}
+          onSelect={setLocation}
+        />
         {location && (
           <p className="field-hint">
             Ubicación seleccionada: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}

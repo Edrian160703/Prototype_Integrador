@@ -17,6 +17,8 @@ export interface IAuthRegistrar {
 export interface IAuthSignIn {
   signInWithEmail(email: string, password: string): Promise<AuthIdentity>
   signInWithGoogle(): Promise<AuthIdentity>
+  startSignInWithGoogle(): Promise<void>
+  consumeGoogleRedirect(): Promise<AuthIdentity | null>
 }
 
 export interface IAuthAdminClaimReader {
