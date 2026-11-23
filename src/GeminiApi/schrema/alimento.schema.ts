@@ -1,16 +1,14 @@
-import type { ObjectSchemaRequest } from 'firebase/ai'
-
-export const alimentoSchema: ObjectSchemaRequest = {
-  type: 'object',
+export const alimentoSchema = {
+  type: 'OBJECT',
   required: ['esAlimento', 'nombre', 'categoria', 'descripcion', 'caracteristicasVisuales', 'nivelConfianza', 'motivo', 'estadoRevision'],
   properties: {
-    esAlimento: { type: 'boolean' },
-    nombre: { type: 'string' },
-    categoria: { type: 'string' },
-    descripcion: { type: 'string' },
-    caracteristicasVisuales: { type: 'array', items: { type: 'string' } },
-    nivelConfianza: { type: 'number' },
-    motivo: { type: 'string' },
-    estadoRevision: { type: 'string', enum: ['aprobado', 'rechazado', 'requiere_revision'] },
+    esAlimento: { type: 'BOOLEAN' },
+    nombre: { type: 'STRING' },
+    categoria: { type: 'STRING' },
+    descripcion: { type: 'STRING' },
+    caracteristicasVisuales: { type: 'ARRAY', items: { type: 'STRING' } },
+    nivelConfianza: { type: 'NUMBER' },
+    motivo: { type: 'STRING' },
+    estadoRevision: { type: 'STRING', enum: ['aprobado', 'rechazado', 'requiere_revision'] },
   },
-}
+} as const

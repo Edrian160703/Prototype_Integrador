@@ -12,4 +12,5 @@ export interface ResultadoVencimiento {
   motivoRevision: string
   estadoRevision: EstadoRevisionVencimiento
   vencido: boolean
+  fechaEvaluacion?: string
 }

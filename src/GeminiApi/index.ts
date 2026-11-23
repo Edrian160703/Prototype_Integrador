@@ -1,9 +1,41 @@
-export * from './firebase/config'
+import { FirebaseGeminiTokenProvider } from './firebase/firebaseGeminiTokenProvider'
+import { createAnalizarVencimiento } from './services/analizarVencimiento'
+import { guardarAnalisis } from './services/guardarAnalisis'
+import { GeminiApiClient } from './services/geminiClient'
+import { createProcesarProducto } from './services/procesarProducto'
+import { subirImagenAnalisis } from './services/subirImagen'
+import { createValidarAlimento } from './services/validarAlimento'
+import { fileToInlineData } from './utils/convertirImagen'
+import { validateImage } from './utils/validarImagen'
+
 export * from './types/alimento.types'
 export * from './types/vencimiento.types'
 export * from './types/analisis.types'
-export * from './services/procesarProducto'
-export * from './services/validarAlimento'
-export * from './services/analizarVencimiento'
+export { parseResultadoAlimento } from './services/validarAlimento'
+export { parseResultadoVencimiento } from './services/analizarVencimiento'
 export * from './utils/validarImagen'
 export * from './utils/validarFecha'
+
+const firebaseGeminiAuth = new FirebaseGeminiTokenProvider()
+const geminiClient = new GeminiApiClient(firebaseGeminiAuth)
+const validarAlimento = createValidarAlimento(geminiClient)
+const analizarVencimiento = createAnalizarVencimiento(geminiClient)
+
+export { validarAlimento, analizarVencimiento }
+export const generateText = geminiClient.generateText.bind(geminiClient)
+export const procesarProducto = createProcesarProducto({
+  currentUser: firebaseGeminiAuth,
+  images: {
+    validate: validateImage,
+    toInlineData: fileToInlineData,
+  },
+  analyzers: {
+    validateFood: validarAlimento,
+    analyzeExpiration: analizarVencimiento,
+  },
+  repository: {
+    uploadImage: subirImagenAnalisis,
+    saveAnalysis: guardarAnalisis,
+  },
+})
+export type { ProcesarProductoResultado } from './services/procesarProducto'

@@ -3,6 +3,7 @@ import usePublicarOferta from './usePublicarOferta'
 import type { OfertaFormValidationContext, OfertaFormValues, FieldErrors } from '../utils/ofertaFormTypes'
 import { prepareOfertaSubmission } from '../utils/ofertaFormSubmission'
 import { procesarProducto } from '../GeminiApi'
+import { isEvaluationDateCurrent } from '../GeminiApi/utils/validarFecha'
 
 interface OfertaSubmissionOptions {
   getValues: () => OfertaFormValues
@@ -47,6 +48,13 @@ export default function useOfertaSubmission({
       const analysis = await procesarProducto(productFile, labelFile)
       if (!analysis.puedePublicarse) {
         showError(analysis.mensaje)
+        return
+      }
+      if (
+        !analysis.vencimiento
+        || !isEvaluationDateCurrent(analysis.vencimiento.fechaEvaluacion)
+      ) {
+        showError('La evaluación de vencimiento está obsoleta. Solicita un nuevo análisis.')
         return
       }
     } catch (error) {

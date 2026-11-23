@@ -1,4 +1,4 @@
-export const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+export const MAX_IMAGE_SIZE = 3 * 1024 * 1024
 
 export type ImageValidationResult =
   | { valid: true }
@@ -12,7 +12,7 @@ export function validateImage(file: File): ImageValidationResult {
     return { valid: false, message: 'La imagen está vacía.' }
   }
   if (file.size > MAX_IMAGE_SIZE) {
-    return { valid: false, message: 'La imagen no debe superar los 5 MB.' }
+    return { valid: false, message: 'La imagen no debe superar los 3 MB.' }
   }
   return { valid: true }
 }
