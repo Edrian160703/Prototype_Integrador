@@ -32,3 +32,4 @@ coverage
 .github/agents/
 .vercel
 .env*
+docs/

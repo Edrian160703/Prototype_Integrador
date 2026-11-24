@@ -65,8 +65,6 @@ export function createReservationServices({
     ),
     cancelarReserva: async (idReserva: string) =>
       cancelarReserva(await reservations(), idReserva),
-    deleteReserva: async (idReserva: string) =>
-      cancelarReserva(await reservations(), idReserva),
     getReservasByUsuario: async (idUsuario: string) => {
       const [reservationRepository, offerRepository] = await Promise.all([reservations(), offers()])
       return getReservasByUsuario(reservationRepository, offerRepository, idUsuario)

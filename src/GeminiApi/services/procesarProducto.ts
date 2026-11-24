@@ -1,9 +1,9 @@
 import type { ResultadoAlimento } from '../types/alimento.types'
-import type { EstadoAnalisis, TipoAnalisis } from '../types/analisis.types'
 import type { ResultadoVencimiento } from '../types/vencimiento.types'
 import type { ImageValidationResult } from '../utils/validarImagen'
 import { isEvaluationDateCurrent } from '../utils/validarFecha'
 import { GeminiApiError } from './geminiClient'
+import type { GeminiAnalysisRepository } from '../../ports/geminiAnalysisRepository'
 
 export interface ProcesarProductoResultado {
   puedePublicarse: boolean
@@ -28,22 +28,11 @@ interface ProductAnalyzers {
   analyzeExpiration(image: { mimeType: string; data: string }): Promise<ResultadoVencimiento>
 }
 
-interface ProductAnalysisRepository {
-  uploadImage(userId: string, type: TipoAnalisis, file: File): Promise<{ ruta: string }>
-  saveAnalysis(params: {
-    usuarioId: string
-    tipoAnalisis: TipoAnalisis
-    rutaFotografia: string
-    resultado: unknown
-    estadoAnalisis: EstadoAnalisis
-  }): Promise<unknown>
-}
-
 interface ProductAnalysisDependencies {
   currentUser: CurrentUserProvider
   images: ProductImageProcessor
   analyzers: ProductAnalyzers
-  repository: ProductAnalysisRepository
+  repository: GeminiAnalysisRepository
   clock?: () => Date
 }
 

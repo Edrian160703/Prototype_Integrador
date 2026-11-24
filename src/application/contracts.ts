@@ -80,12 +80,6 @@ export interface ReservationManagementApplication {
   cancelarReserva(idReserva: string): Promise<void>
 }
 
-export interface ReservationAdminApplication {
-  getAllReservasForAdmin(): Promise<ReservaDocument[]>
-  updateReservaEstado(idReserva: string, estado: EstadoReserva): Promise<void>
-  deleteReserva(idReserva: string): Promise<void>
-}
-
 export interface ReservationHistoryApplication {
   getReservasByUsuario(idUsuario: string): Promise<ReservaConOferta[]>
 }
