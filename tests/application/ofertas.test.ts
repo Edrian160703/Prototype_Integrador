@@ -53,13 +53,17 @@ function oferta(overrides: Partial<OfertaDocument> = {}): OfertaDocument {
 describe('casos de uso de ofertas', () => {
   it('crea una oferta delegando la persistencia al repositorio', async () => {
     const idGenerator = { next: vi.fn().mockReturnValue('offer-id') }
+    const offerIds = { next: vi.fn().mockReturnValue('offer-id') }
     const repository: OfertaCreator = {
       create: vi.fn().mockResolvedValue('offer-1'),
     }
 
-    await expect(createOferta(repository, { uid: 'user-1', payload }, idGenerator)).resolves.toBe('offer-1')
+    await expect(
+      createOferta(repository, { uid: 'user-1', payload }, idGenerator, offerIds),
+    ).resolves.toBe('offer-1')
     expect(idGenerator.next).toHaveBeenCalledOnce()
-    expect(repository.create).toHaveBeenCalledWith('user-1', payload, 'offer-id')
+    expect(offerIds.next).toHaveBeenCalledWith('Pan del día')
+    expect(repository.create).toHaveBeenCalledWith('user-1', payload, 'offer-id', 'offer-id')
   })
 
   it('crea el producto antes de crear la oferta asociada', async () => {

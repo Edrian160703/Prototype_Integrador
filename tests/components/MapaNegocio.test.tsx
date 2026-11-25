@@ -27,6 +27,9 @@ vi.mock('react-leaflet', () => ({
     <span data-testid="business-marker">{position.join(',')}</span>
   ),
   TileLayer: () => null,
+  useMap: () => ({
+    flyTo: vi.fn(),
+  }),
   useMapEvents: (handlers: {
     click: (event: { latlng: { lat: number; lng: number } }) => void
   }) => {

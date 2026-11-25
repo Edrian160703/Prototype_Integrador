@@ -26,13 +26,14 @@ describe('procesarProducto dependency ports', () => {
       motivoRevision: '',
       estadoRevision: 'aprobado' as const,
       vencido: false,
-      fechaEvaluacion: '2026-11-22',
+      fechaEvaluacion: '2026-11-23',
     }
     const saveAnalysis = vi.fn(async () => 'analysis-id')
     const validateFood = vi.fn(async () => food)
     const analyzeExpiration = vi.fn(async () => expiration)
     const processProduct = createProcesarProducto({
       currentUser: { getUserId: () => 'registered-user' },
+      clock: () => new Date('2026-11-23T04:59:00.000Z'),
       images: {
         validate: () => ({ valid: true }),
         toInlineData: async (file) => ({ mimeType: file.type, data: 'encoded-image' }),
@@ -89,6 +90,7 @@ describe('procesarProducto dependency ports', () => {
     }, new Date('2026-11-23T04:59:00.000Z'))
     const processProduct = createProcesarProducto({
       currentUser: { getUserId: () => 'registered-user' },
+      clock: () => new Date('2026-11-23T04:59:00.000Z'),
       images: {
         validate: () => ({ valid: true }),
         toInlineData: async (file) => ({ mimeType: file.type, data: 'encoded-image' }),

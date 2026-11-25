@@ -51,6 +51,7 @@ describe('oferta form submission', () => {
         precio_original: 12,
         precio_oferta: 8.5,
         cantidad_disponible: 4,
+        imagen_verificacion_url: '',
         estado: 'disponible',
       },
     })

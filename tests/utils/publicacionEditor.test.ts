@@ -66,6 +66,7 @@ describe('publicacionEditor', () => {
         horario_recojo: '17:00 - 19:00',
         fecha_limite: toPublicacionEditValues(oferta).fecha_limite,
         imagen_url: '',
+        imagen_verificacion_url: '',
       },
     })
   })

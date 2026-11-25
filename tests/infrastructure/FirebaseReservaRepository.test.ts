@@ -88,10 +88,12 @@ const cartItem: CartItem = {
 function setup(assertAdmin = vi.fn(async () => undefined)) {
   const ids = ['reservation-1', 'movement-1']
   const idGenerator = { next: () => ids.shift() ?? 'unexpected-id' }
+  const reservationIds = { next: () => 'reservation-1' }
   const repository = new FirebaseReservaRepository(
     {} as Firestore,
     idGenerator,
     { assertAdmin },
+    reservationIds,
   )
   return { repository, assertAdmin }
 }
