@@ -1,4 +1,5 @@
-import { getApps, initializeApp } from 'firebase/app'
+import { getApps, initializeApp, type FirebaseApp } from 'firebase/app'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 import { getAuth } from 'firebase/auth'
 
 function requiredFirebaseEnv(name: string): string {
@@ -11,7 +12,22 @@ function requiredFirebaseEnv(name: string): string {
   return value
 }
 
-function getFirebaseApp() {
+function initAppCheck(app: FirebaseApp) {
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY
+  if (!siteKey) return
+
+  if (import.meta.env.DEV) {
+    // Token de depuración para localhost: se imprime en la consola del navegador y se registra en Firebase.
+    ;(self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN = true
+  }
+
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(siteKey),
+    isTokenAutoRefreshEnabled: true,
+  })
+}
+
+export function getFirebaseApp() {
   const firebaseConfig = {
     apiKey: requiredFirebaseEnv('VITE_FIREBASE_API_KEY'),
     authDomain: requiredFirebaseEnv('VITE_FIREBASE_AUTH_DOMAIN'),
@@ -22,7 +38,11 @@ function getFirebaseApp() {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
   }
 
-  return getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig)
+  if (getApps().length > 0) return getApps()[0]
+
+  const app = initializeApp(firebaseConfig)
+  initAppCheck(app)
+  return app
 }
 
 export function getFirebaseAuth() {
