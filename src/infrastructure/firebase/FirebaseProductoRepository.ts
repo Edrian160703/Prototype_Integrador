@@ -3,7 +3,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  orderBy,
   query,
   serverTimestamp,
   setDoc,
@@ -69,11 +68,7 @@ export class FirebaseProductoRepository implements
   }
 
   async getByComercio(idComercio: string): Promise<ProductoDocument[]> {
-    const productosQuery = query(
-      collection(this.db, 'productos'),
-      where('id_comercio', '==', idComercio),
-      orderBy('createdAt', 'desc'),
-    )
+    const productosQuery = query(collection(this.db, 'productos'), where('id_comercio', '==', idComercio))
     const snapshot = await getDocs(productosQuery)
     return snapshot.docs
       .filter((docSnap) => docSnap.data().archivedAt === undefined)
@@ -104,7 +99,7 @@ export class FirebaseProductoRepository implements
 
   async getAll(): Promise<ProductoDocument[]> {
     await assertFirebaseAdmin()
-    const snapshot = await getDocs(query(collection(this.db, 'productos'), orderBy('createdAt', 'desc')))
+    const snapshot = await getDocs(collection(this.db, 'productos'))
     return snapshot.docs
       .filter((docSnap) => docSnap.data().archivedAt === undefined)
       .map((docSnap) => mapProductoDocument(docSnap.id, docSnap.data()))

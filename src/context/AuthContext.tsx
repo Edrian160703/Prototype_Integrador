@@ -3,7 +3,6 @@ import {
   useAdminClaimQuery,
   useAuthStateSubscription,
   useCurrentUserQuery,
-  useGoogleSignIn,
   useUserProfileQuery,
 } from './ApplicationContext'
 import type { AuthIdentity } from '../ports/authGateway'
@@ -31,7 +30,6 @@ const UserProfileRefreshContext = createContext<UserProfileRefresher | null>(nul
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { getCurrentUser } = useCurrentUserQuery()
   const { subscribeToAuthChanges } = useAuthStateSubscription()
-  const { completeGoogleRedirect } = useGoogleSignIn()
   const { hasAdminClaim } = useAdminClaimQuery()
   const { getUserDocument } = useUserProfileQuery()
   const [user, setUser] = useState<AuthIdentity | null>(null)
@@ -86,16 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     return unsubscribe
   }, [getUserDocument, subscribeToAuthChanges])
-
-  useEffect(() => {
-    void completeGoogleRedirect()
-      .then(async (redirectUser) => {
-        if (redirectUser) setProfile(await getUserDocument(redirectUser.uid))
-      })
-      .catch((error: unknown) => {
-        console.error('No se pudo completar el inicio de sesión con Google.', error)
-      })
-  }, [completeGoogleRedirect, getUserDocument])
 
   return (
     <AuthSessionContext.Provider value={{

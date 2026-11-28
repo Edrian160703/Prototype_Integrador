@@ -80,6 +80,12 @@ export interface ReservationManagementApplication {
   cancelarReserva(idReserva: string): Promise<void>
 }
 
+export interface ReservationAdminApplication {
+  getAllReservasForAdmin(): Promise<ReservaDocument[]>
+  updateReservaEstado(idReserva: string, estado: EstadoReserva): Promise<void>
+  deleteReserva(idReserva: string): Promise<void>
+}
+
 export interface ReservationHistoryApplication {
   getReservasByUsuario(idUsuario: string): Promise<ReservaConOferta[]>
 }
@@ -136,8 +142,7 @@ export interface EmailSignInApplication {
 }
 
 export interface GoogleSignInApplication {
-  loginWithGoogle(): Promise<AuthIdentity | null>
-  completeGoogleRedirect(): Promise<AuthIdentity | null>
+  loginWithGoogle(): Promise<AuthIdentity>
 }
 
 export interface AdminClaimQueryApplication {

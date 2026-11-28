@@ -86,17 +86,6 @@ describe('LoginModal admin claim redirect', () => {
     expect(authMocks.navigate).not.toHaveBeenCalled()
   })
 
-  it('redirects through Google without showing a connection error when the browser navigates', async () => {
-    authMocks.loginWithGoogle.mockResolvedValue(null)
-    render(<LoginModal onClose={authMocks.onClose} />)
-
-    fireEvent.click(screen.getByRole('button', { name: /Continuar con Google/ }))
-
-    await waitFor(() => expect(authMocks.loginWithGoogle).toHaveBeenCalledOnce())
-    expect(screen.queryByRole('alert')).toBeNull()
-    expect(authMocks.onClose).not.toHaveBeenCalled()
-  })
-
   it('does not redirect or close after a network failure while refreshing claims', async () => {
     const error = new Error('network unavailable')
     authMocks.hasAdminClaim.mockRejectedValue(error)

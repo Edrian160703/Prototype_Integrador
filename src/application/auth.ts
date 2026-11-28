@@ -5,28 +5,26 @@ import type {
   IAuthSession,
   IAuthSignIn,
   IAuthSignOut,
-} from "../ports/authGateway";
-import type { IProfileCreator } from "../ports/userProfileRepository";
-import type { InitialUserData, UserRole } from "../types/user";
+} from '../ports/authGateway'
+import type {
+  IProfileCreator,
+} from '../ports/userProfileRepository'
+import type { InitialUserData, UserRole } from '../types/user'
 
-export function getDisplayName(
-  profile: InitialUserData["profile"],
-): string | null {
-  if (profile && "firstName" in profile) {
-    return (
-      [profile.firstName, profile.lastName].filter(Boolean).join(" ") || null
-    );
+export function getDisplayName(profile: InitialUserData['profile']): string | null {
+  if (profile && 'firstName' in profile) {
+    return [profile.firstName, profile.lastName].filter(Boolean).join(' ') || null
   }
-  if (profile && "businessName" in profile) return profile.businessName ?? null;
-  return null;
+  if (profile && 'businessName' in profile) return profile.businessName ?? null
+  return null
 }
 
 async function createInitialUserDocument(
   profiles: IProfileCreator,
   user: AuthIdentity,
-  data: Omit<InitialUserData, "uid" | "email">,
+  data: Omit<InitialUserData, 'uid' | 'email'>,
 ): Promise<void> {
-  await profiles.createIfMissing({ ...user, email: user.email ?? "" }, data);
+  await profiles.createIfMissing({ ...user, email: user.email ?? '' }, data)
 }
 
 export async function registerWithEmail(
@@ -35,73 +33,49 @@ export async function registerWithEmail(
   email: string,
   password: string,
   role: UserRole,
-  profile: InitialUserData["profile"] = {},
+  profile: InitialUserData['profile'] = {},
 ): Promise<AuthIdentity> {
-  const user = await auth.registerWithEmail(
-    email,
-    password,
-    getDisplayName(profile),
-  );
-  await createInitialUserDocument(profiles, user, {
-    role,
-    displayName: getDisplayName(profile),
-    profile,
-  });
-  return user;
+  const user = await auth.registerWithEmail(email, password, getDisplayName(profile))
+  await createInitialUserDocument(profiles, user, { role, displayName: getDisplayName(profile), profile })
+  return user
 }
 
 export async function signInWithGoogle(
   auth: IAuthSignIn,
   profiles: IProfileCreator,
   role: UserRole,
-  profile: InitialUserData["profile"] = {},
+  profile: InitialUserData['profile'] = {},
 ): Promise<AuthIdentity> {
-  const user = await auth.signInWithGoogle();
-  await createInitialUserDocument(profiles, user, { role, profile });
-  return user;
+  const user = await auth.signInWithGoogle()
+  await createInitialUserDocument(profiles, user, { role, profile })
+  return user
 }
 
 export function getCurrentUser(auth: IAuthSession): AuthIdentity | null {
-  return auth.currentUser;
+  return auth.currentUser
 }
 
 export function subscribeToAuthChanges(
   auth: IAuthSession,
   listener: (user: AuthIdentity | null) => void,
 ): () => void {
-  return auth.onAuthStateChanged(listener);
+  return auth.onAuthStateChanged(listener)
 }
 
-export function signInWithEmail(
-  auth: IAuthSignIn,
-  email: string,
-  password: string,
-): Promise<AuthIdentity> {
-  return auth.signInWithEmail(email, password);
+export function signInWithEmail(auth: IAuthSignIn, email: string, password: string): Promise<AuthIdentity> {
+  return auth.signInWithEmail(email, password)
 }
 
 export function hasAdminClaim(auth: IAuthAdminClaimReader): Promise<boolean> {
-  return auth.hasAdminClaim(true);
+  return auth.hasAdminClaim(true)
 }
 
-export async function loginWithGoogle(
-  auth: IAuthSignIn,
-  _profiles: IProfileCreator,
-): Promise<AuthIdentity | null> {
-  await auth.startSignInWithGoogle();
-  return null;
-}
-
-export async function completeGoogleRedirect(
-  auth: IAuthSignIn,
-  profiles: IProfileCreator,
-): Promise<AuthIdentity | null> {
-  const redirectUser = await auth.consumeGoogleRedirect();
-  if (!redirectUser) return null;
-  await createInitialUserDocument(profiles, redirectUser, { role: "consumer" });
-  return redirectUser;
+export async function loginWithGoogle(auth: IAuthSignIn, profiles: IProfileCreator): Promise<AuthIdentity> {
+  const user = await auth.signInWithGoogle()
+  await createInitialUserDocument(profiles, user, { role: 'consumer' })
+  return user
 }
 
 export function signOutUser(auth: IAuthSignOut): Promise<void> {
-  return auth.signOut();
+  return auth.signOut()
 }

@@ -15,16 +15,12 @@ import {
 const INITIAL_VALUES: SignupFormValues = { fullName: '', email: '', password: '' }
 
 interface SignupFormOptions {
-  initialRole?: SignupRole
   onStepCompleted: (onboardingPath: string) => void
 }
 
-export default function useSignupForm({
-  initialRole,
-  onStepCompleted,
-}: SignupFormOptions) {
+export default function useSignupForm({ onStepCompleted }: SignupFormOptions) {
   const { startEmailSignup, startGoogleSignup } = useSignupStart()
-  const [role, setRole] = useState<SignupRole>(initialRole ?? 'consumer')
+  const [role, setRole] = useState<SignupRole>('consumer')
   const [values, setValues] = useState<SignupFormValues>(INITIAL_VALUES)
   const [errors, setErrors] = useState<SignupFormErrors>({})
   const [googleLoading, setGoogleLoading] = useState(false)

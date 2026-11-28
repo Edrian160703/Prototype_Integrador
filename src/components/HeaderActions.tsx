@@ -72,7 +72,8 @@ export default function HeaderActions({
       {!loading && isAdmin && (
         <Link to="/admin" className="btn btn-publish">Dashboard</Link>
       )}
-      <span className="location-pill"> SJL, Lima, Perú</span>
+      <span className="location-pill"> Lima, Perú</span>
+      <button className="icon-btn" aria-label="Favoritos">♡</button>
       {!loading && (
         user ? (
           <UserMenu />

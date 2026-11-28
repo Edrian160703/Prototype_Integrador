@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Auth, User } from 'firebase/auth'
-import { getRedirectResult, signInWithRedirect } from 'firebase/auth'
 import { FirebaseAuthGateway } from '../../src/infrastructure/firebase/FirebaseAuthGateway'
 
 vi.mock('firebase/auth', () => ({
@@ -10,8 +9,6 @@ vi.mock('firebase/auth', () => ({
   onAuthStateChanged: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
   signInWithPopup: vi.fn(),
-  signInWithRedirect: vi.fn(),
-  getRedirectResult: vi.fn(),
   signOut: vi.fn(),
   updateProfile: vi.fn(),
 }))
@@ -19,38 +16,6 @@ vi.mock('firebase/auth', () => ({
 function createGateway(currentUser: User | null): FirebaseAuthGateway {
   return new FirebaseAuthGateway({ currentUser } as unknown as Auth)
 }
-
-describe('FirebaseAuthGateway Google redirect', () => {
-  it('starts Google sign-in with redirect', async () => {
-    vi.mocked(signInWithRedirect).mockResolvedValue(undefined)
-    const gateway = createGateway(null)
-
-    await gateway.startSignInWithGoogle()
-
-    expect(signInWithRedirect).toHaveBeenCalledOnce()
-  })
-
-  it('returns the authenticated identity after a Google redirect', async () => {
-    vi.mocked(getRedirectResult).mockResolvedValue({
-      user: { uid: 'user-1', email: 'ana@example.com', displayName: 'Ana', photoURL: null },
-    } as never)
-    const gateway = createGateway(null)
-
-    await expect(gateway.consumeGoogleRedirect()).resolves.toEqual({
-      uid: 'user-1',
-      email: 'ana@example.com',
-      displayName: 'Ana',
-      photoURL: null,
-    })
-  })
-
-  it('returns null when there is no pending Google redirect', async () => {
-    vi.mocked(getRedirectResult).mockResolvedValue(null)
-    const gateway = createGateway(null)
-
-    await expect(gateway.consumeGoogleRedirect()).resolves.toBeNull()
-  })
-})
 
 describe('FirebaseAuthGateway admin claims', () => {
   it('forces a Firebase ID token refresh and accepts only the boolean admin claim', async () => {

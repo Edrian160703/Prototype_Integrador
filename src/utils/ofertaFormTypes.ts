@@ -8,7 +8,6 @@ export interface OfertaFormValues {
   horario_recojo: string
   fecha_limite: string
   imagen_url: string
-  imagen_verificacion_url?: string
 }
 
 export type FieldErrors = Partial<Record<keyof OfertaFormValues, string>>
@@ -22,6 +21,5 @@ export interface OfertaFormValidationContext {
   fechaAnio: string
   fechaHora: string
   imageMode: OfertaImageMode
-  verificationImageMode: OfertaImageMode
   ahoraLocal: string
 }

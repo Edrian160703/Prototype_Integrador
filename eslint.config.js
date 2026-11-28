@@ -34,10 +34,4 @@ export default defineConfig([
       'react-refresh/only-export-components': 'off',
     },
   },
-  {
-    files: ['api/**/*.ts', 'server/**/*.ts', 'tests/api/**/*.ts'],
-    languageOptions: {
-      globals: globals.node,
-    },
-  },
 ])

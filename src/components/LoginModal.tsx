@@ -62,13 +62,9 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     setAuthError('')
     setGoogleLoading(true)
     try {
-      const identity = await loginWithGoogle()
-      if (!identity) return
-    } catch (error) {
-      console.error('No se pudo iniciar sesión con Google.', error)
-      setAuthError(
-        'No pudimos conectar con Google. Permite las ventanas emergentes y las cookies de Google, luego inténtalo nuevamente.',
-      )
+      await loginWithGoogle()
+    } catch {
+      setAuthError('No pudimos conectar con Google.')
       setGoogleLoading(false)
       return
     }

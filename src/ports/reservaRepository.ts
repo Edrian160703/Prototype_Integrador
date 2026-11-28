@@ -16,6 +16,10 @@ export interface ReservaReader {
   listByUsuario(idUsuario: string): Promise<ReservaDocument[]>
 }
 
+export interface ReservaAdminReader {
+  listAll(): Promise<ReservaDocument[]>
+}
+
 export interface ReservaStateWriter {
   updateEstado(idReserva: string, estado: ReservaDocument['estado_reserva']): Promise<void>
 }

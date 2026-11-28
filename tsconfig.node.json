@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": ["ES2023"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "Bundler",
@@ -9,8 +9,7 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
-    "strict": true,
-    "types": ["node"]
+    "strict": true
   },
-  "include": ["vite.config.ts", "api/**/*.ts", "server/**/*.ts", "tests/api/**/*.ts"]
+  "include": ["vite.config.ts"]
 }

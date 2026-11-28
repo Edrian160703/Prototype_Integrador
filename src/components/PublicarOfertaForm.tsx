@@ -20,8 +20,9 @@ export default function PublicarOfertaForm() {
     imageMode,
     imagePreview,
     imageError,
+    urlInput,
+    imageScanning,
     fileInputRef,
-    labelInputRef,
     descripcionRestante,
     descuentoValido,
     porcentajeDescuento,
@@ -33,7 +34,6 @@ export default function PublicarOfertaForm() {
     handleHorarioFinChange,
     handleFechaChange,
     handleFileChange,
-    handleLabelFileChange,
     handleUrlChange,
     handlePreviewError,
     switchImageMode,
@@ -304,17 +304,9 @@ export default function PublicarOfertaForm() {
             <input
               id="oferta-imagen-file"
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               ref={fileInputRef}
               onChange={handleFileChange}
-            />
-            <label htmlFor="oferta-etiqueta-file">Fotografía de la etiqueta de vencimiento (JPG, PNG o WEBP, máx. 5 MB)</label>
-            <input
-              id="oferta-etiqueta-file"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              ref={labelInputRef}
-              onChange={handleLabelFileChange}
             />
           </div>
         ) : (
@@ -324,7 +316,7 @@ export default function PublicarOfertaForm() {
               id="oferta-imagen-url"
               type="url"
               maxLength={IMAGEN_URL_MAX}
-              value={form.imagen_url}
+              value={urlInput}
               onChange={(event) => handleUrlChange(event.target.value)}
               placeholder="https://misitio.com/imagenes/producto.jpg"
               aria-invalid={Boolean(errors.imagen_url)}
@@ -333,6 +325,11 @@ export default function PublicarOfertaForm() {
           </div>
         )}
 
+        {imageScanning && (
+          <span className="field-hint" role="status" aria-live="polite">
+            Analizando imagen con IA…
+          </span>
+        )}
         {imageError && <span className="field-error">{imageError}</span>}
 
         {imagePreview && (
@@ -355,7 +352,7 @@ export default function PublicarOfertaForm() {
           <button type="button" className="btn btn-outline" onClick={resetForm} disabled={saving}>
             Limpiar formulario
           </button>
-          <button type="submit" className="btn btn-primary btn-publish" disabled={saving}>
+          <button type="submit" className="btn btn-primary btn-publish" disabled={saving || imageScanning}>
             {saving ? 'Publicando...' : 'Publicar oferta'}
           </button>
         </div>

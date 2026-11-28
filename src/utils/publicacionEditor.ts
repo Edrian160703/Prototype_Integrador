@@ -10,7 +10,6 @@ export interface PublicacionEditValues {
   horario_recojo: string
   fecha_limite: string
   imagen_url: string
-  imagen_verificacion_url?: string
 }
 
 export type PublicacionEditResult =
@@ -35,7 +34,6 @@ export function toPublicacionEditValues(oferta: OwnedOferta): PublicacionEditVal
     horario_recojo: data.horario_recojo,
     fecha_limite: toLocalDateTime(data.fecha_limite),
     imagen_url: data.imagen_url ?? '',
-    imagen_verificacion_url: data.imagen_verificacion_url ?? '',
   }
 }
 

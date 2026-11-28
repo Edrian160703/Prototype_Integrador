@@ -47,7 +47,7 @@ export default function useOnboardingSubmission(role: UserRole | null) {
         await updateUserProfile(currentUser.uid, role, profileData)
       }
       await refreshProfile()
-      navigate('/')
+      navigate(role === 'store' ? '/registro-negocio' : '/')
     } catch (submissionError) {
       setError(getErrorMessage(submissionError))
     } finally {

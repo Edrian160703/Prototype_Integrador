@@ -59,19 +59,11 @@ async function enrichOfertas(
   }))
 }
 
-function getCreatedAtValue(date: Date | null | undefined): number {
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return 0
-  return date.getTime()
-}
-
 export async function getOfertas(
   repository: OfertaListReader,
   comercios: ComercioReader,
 ): Promise<OfertaConComercio[]> {
-  const ofertas = await enrichOfertas(await repository.listAll(), comercios)
-  return ofertas.sort(
-    (left, right) => getCreatedAtValue(right.data.createdAt) - getCreatedAtValue(left.data.createdAt),
-  )
+  return enrichOfertas(await repository.listAll(), comercios)
 }
 
 export async function getOfertasVigentes(

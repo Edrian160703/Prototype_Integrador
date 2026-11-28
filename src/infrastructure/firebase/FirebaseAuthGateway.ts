@@ -5,8 +5,6 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signOut,
   updateProfile,
   type User,
@@ -65,15 +63,6 @@ export class FirebaseAuthGateway implements
   async signInWithGoogle(): Promise<AuthIdentity> {
     const { user } = await signInWithPopup(this.auth, new GoogleAuthProvider())
     return toIdentity(user)
-  }
-
-  async startSignInWithGoogle(): Promise<void> {
-    await signInWithRedirect(this.auth, new GoogleAuthProvider())
-  }
-
-  async consumeGoogleRedirect(): Promise<AuthIdentity | null> {
-    const result = await getRedirectResult(this.auth)
-    return result?.user ? toIdentity(result.user) : null
   }
 
   async hasAdminClaim(forceRefresh = false): Promise<boolean> {

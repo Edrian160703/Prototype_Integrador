@@ -12,13 +12,8 @@ export function mapOfertaDocument(data: Record<string, unknown>): OfertaDocument
     precio_oferta: Number(data.precio_oferta),
     cantidad_disponible: Number(data.cantidad_disponible),
     horario_recojo: String(data.horario_recojo ?? ''),
-    estado: String(data.estado ?? '') as OfertaDocument['estado'],
+    estado: String(data.estado ?? ''),
     fecha_limite: toDate(data.fecha_limite),
-    createdAt: data.createdAt === undefined || data.createdAt === null ? undefined : toDate(data.createdAt),
     imagen_url: typeof data.imagen_url === 'string' ? data.imagen_url : null,
-    imagen_verificacion_url:
-      typeof data.imagen_verificacion_url === 'string'
-        ? data.imagen_verificacion_url
-        : null,
   }
 }

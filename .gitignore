@@ -14,9 +14,7 @@ coverage
 *.tsbuildinfo
 .firebase
 .runtimeconfig.json
-.env
-.env.*
-!.env.example
+
 
 # Editor directories and files
 .vscode/*
@@ -30,6 +28,3 @@ coverage
 *.sw?
 
 .github/agents/
-.vercel
-.env*
-docs/

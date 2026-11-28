@@ -44,12 +44,10 @@ export default function usePublicarOfertaForm() {
     imageMode,
     imagePreview,
     imageError,
+    urlInput,
+    scanning: imageScanning,
     fileInputRef,
-    labelInputRef,
-    selectedProductFile,
-    selectedLabelFile,
     handleFileChange,
-    handleLabelFileChange,
     handleUrlChange,
     handlePreviewError,
     switchImageMode,
@@ -71,7 +69,6 @@ export default function usePublicarOfertaForm() {
       fechaAnio,
       fechaHora,
       imageMode,
-      verificationImageMode: 'upload',
       ahoraLocal,
     }
   }
@@ -79,8 +76,6 @@ export default function usePublicarOfertaForm() {
   const submission = useOfertaSubmission({
     getValues: () => form,
     getValidationContext,
-    getSelectedProductFile: () => selectedProductFile,
-    getSelectedLabelFile: () => selectedLabelFile,
     onPublished: resetForm,
   })
 
@@ -123,9 +118,9 @@ export default function usePublicarOfertaForm() {
     imageMode,
     imagePreview,
     imageError,
+    urlInput,
+    imageScanning,
     fileInputRef,
-    labelInputRef,
-    selectedLabelFile,
     descripcionRestante,
     descuentoValido,
     porcentajeDescuento,
@@ -137,7 +132,6 @@ export default function usePublicarOfertaForm() {
     handleHorarioFinChange,
     handleFechaChange,
     handleFileChange,
-    handleLabelFileChange,
     handleUrlChange,
     handlePreviewError,
     switchImageMode,

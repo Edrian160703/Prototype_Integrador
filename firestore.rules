@@ -36,10 +36,7 @@ service cloud.firestore {
     }
 
     function isStoreOwner(uid) {
-      return signedIn()
-        && exists(/databases/$(database)/documents/comercios/$(uid))
-        && get(/databases/$(database)/documents/comercios/$(uid)).data.uid == uid
-        && get(/databases/$(database)/documents/comercios/$(uid)).data.role == 'store';
+      return signedIn() && request.auth.uid == uid;
     }
 
     function validLedgerBase(operationId) {
@@ -476,6 +473,26 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /compras/{purchaseId} {
+      allow read: if isAdmin() || (
+        signedIn() && resource.data.id_usuario == request.auth.uid
+      );
+      allow create: if signedIn()
+        && purchaseId.matches('COMPRA_.+')
+        && request.resource.data.id_compra == purchaseId
+        && request.resource.data.id_usuario == request.auth.uid
+        && request.resource.data.fecha_compra == request.time
+        && request.resource.data.metodo_pago in ['tienda', 'online']
+        && request.resource.data.estado_pago in ['PENDIENTE_PAGO_TIENDA', 'PAGADO']
+        && request.resource.data.total is number
+        && request.resource.data.total >= 0
+        && request.resource.data.ids_reservas is list
+        && request.resource.data.ids_reservas.size() > 0
+        && request.resource.data.items is list
+        && request.resource.data.items.size() == request.resource.data.ids_reservas.size();
+      allow update, delete: if false;
+    }
+
     match /inventario_movimientos/{operationId} {
       allow read: if isAdmin() || (
         signedIn()
@@ -484,22 +501,6 @@ service cloud.firestore {
       );
       allow create: if validLedgerBase(operationId)
         && validInventoryMovement(operationId, request.resource.data);
-      allow update, delete: if false;
-    }
-
-    match /analisis_ia/{analysisId} {
-      allow read: if isAdmin() || (
-        signedIn() && resource.data.usuarioId == request.auth.uid
-      );
-      allow create: if signedIn()
-        && request.resource.data.usuarioId == request.auth.uid
-        && request.resource.data.tipoAnalisis in ['alimento', 'vencimiento']
-        && request.resource.data.rutaFotografia is string
-        && request.resource.data.rutaFotografia.size() > 0
-        && request.resource.data.rutaFotografia.matches('analisis_ia/' + request.auth.uid + '/.*')
-        && request.resource.data.resultado is map
-        && request.resource.data.estadoAnalisis in ['pendiente', 'rechazado', 'requiere_revision']
-        && request.resource.data.fechaCreacion == request.time;
       allow update, delete: if false;
     }
 

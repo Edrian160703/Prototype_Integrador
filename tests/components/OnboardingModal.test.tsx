@@ -28,12 +28,12 @@ vi.mock('../../src/context/AuthContext', () => ({
 }))
 
 vi.mock('../../src/components/MapaNegocio', () => ({
-  default: ({ onSelect }: {
-    onSelect: (location: { latitude: number; longitude: number }) => void
+  default: ({ onSeleccionar }: {
+    onSeleccionar: (latitude: number, longitude: number) => void
   }) => (
     <button
       type="button"
-      onClick={() => onSelect({ latitude: -12.03, longitude: -77.01 })}
+      onClick={() => onSeleccionar(-12.03, -77.01)}
     >
       Seleccionar ubicación de prueba
     </button>

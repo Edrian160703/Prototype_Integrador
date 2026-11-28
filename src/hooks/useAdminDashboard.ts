@@ -4,10 +4,10 @@ import useAdminProducts from './useAdminProducts'
 import useAdminReservations from './useAdminReservations'
 import useAdminOffers from './useAdminOffers'
 
-export type AdminTab = 'usuarios' | 'comercios' | 'productos' | 'reservas' | 'ofertas'
+export type AdminTab = 'resumen' | 'usuarios' | 'comercios' | 'productos' | 'reservas' | 'ofertas'
 
 export default function useAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<AdminTab>('usuarios')
+  const [activeTab, setActiveTab] = useState<AdminTab>('resumen')
   const accounts = useAdminAccounts()
   const products = useAdminProducts()
   const reservations = useAdminReservations()

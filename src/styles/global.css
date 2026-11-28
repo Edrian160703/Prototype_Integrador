@@ -25,28 +25,6 @@
 * {
   box-sizing: border-box;
 }
-
-.logo {
-  height: 60%;
-  padding: px 0px;
-}
-.logo img {
-  height: 100%;
-}
-
-.brand-logo-dark {
-  display: none;
-}
-
-html[data-theme="dark"] .brand-logo-light {
-  display: none;
-}
-
-html[data-theme="dark"] .brand-logo-dark {
-  display: block;
-  filter: brightness(0) invert(1);
-}
-
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
@@ -83,18 +61,6 @@ img {
 .container {
   width: min(1160px, calc(100% - 40px));
   margin: 0 auto;
-}
-
-.unselectable {
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none; /* IE 10 and Edge */
-  user-select: none; /* Standard syntax (Chrome, Firefox, Opera) */
-}
-/* ---------- Errores ---------- */
-.error {
-  align-self: center;
-  align-items: center;
-  display: inline-flex;
 }
 
 /* ---------- botones ---------- */
@@ -182,20 +148,6 @@ img {
   font-weight: 800;
   line-height: 0.95;
   flex-shrink: 0;
-}
-
-.header .logo {
-  width: 180px;
-  height: 57px;
-  overflow: hidden;
-}
-
-.header .logo .brand-logo-light,
-.header .logo .brand-logo-dark {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
 }
 
 .logo-mark {
@@ -307,9 +259,7 @@ img {
   cursor: pointer;
   box-shadow: 0 8px 22px rgba(12, 106, 60, 0.35);
   z-index: 90;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 .cart-fab:hover {
   background: var(--green-dark);
@@ -475,10 +425,7 @@ img {
   white-space: nowrap;
   border: none;
   cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-publish:hover {
@@ -797,14 +744,8 @@ img {
 .offer-card-img {
   width: 100%;
   height: 170px;
-
   object-fit: cover;
   background: var(--cream);
-  transform: scale(1);
-  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.offer-card-img:hover {
-  transform: scale(1.12);
 }
 .offer-card-imgwrap {
   position: relative;
@@ -1192,14 +1133,11 @@ img {
   display: grid;
   grid-template-columns: 1fr 1.05fr;
   min-height: 320px;
-  border-radius: 24px;
+  border-radius: 0;
   overflow: hidden;
 }
 .business-copy {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: clamp(28px, 4vw, 52px);
+  padding: 50px 5px 50px 0;
 }
 .business-copy h1 {
   font-size: 36px;
@@ -1212,9 +1150,9 @@ img {
   max-width: 460px;
 }
 .business-img {
-  background: var(--cream);
+  background: var(--line);
   min-height: 280px;
-  border-radius: 0 24px 24px 0;
+  border-radius: 20px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -1224,8 +1162,6 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.25);
-  transform-origin: left center;
 }
 .free-note {
   color: var(--text-gray);
@@ -1739,31 +1675,26 @@ img {
   padding: 4px 6px;
 }
 .qty-stepper button {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: 0;
   background: var(--green-soft);
   color: var(--green-dark);
-  font-size: 1rem;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   display: grid;
   place-items: center;
-  transition: transform 0.2s ease;
-}
-.qty-stepper button:active {
-  transform: scale(1.5);
 }
 .qty-stepper button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 .qty-stepper span {
-  min-width: 24px;
+  min-width: 18px;
   text-align: center;
   font-weight: 700;
-  font-size: 1.2rem;
 }
 .reserva-exclusiva-footer {
   display: flex;
@@ -2179,13 +2110,11 @@ img {
     grid-template-columns: 1fr;
   }
   .business-img {
-    height: clamp(240px, 56vw, 360px);
-    min-height: 0;
-    margin-bottom: 0;
-    border-radius: 0 0 24px 24px;
+    min-height: 240px;
+    margin-bottom: 20px;
   }
   .business-copy {
-    padding: clamp(24px, 6vw, 40px);
+    padding: 30px 0;
   }
   .step {
     grid-template-columns: 65px 1fr 140px;
@@ -2197,11 +2126,6 @@ img {
   }
   .logo-tagline {
     display: none;
-  }
-
-  .header .logo {
-    width: 150px;
-    height: 48px;
   }
   .header-right {
     gap: 8px;
@@ -2458,7 +2382,7 @@ html[data-theme="dark"] .profile-section {
 
 html[data-theme="dark"] .account-type-badge,
 html[data-theme="dark"] .reserva-exclusiva-price,
-html[data-theme="dark"] .qty-stepper > button {
+html[data-theme="dark"] .qty-stepper > button{
   color: var(--text-gray);
 }
 
@@ -2503,7 +2427,7 @@ html[data-theme="dark"] .how-strip > div {
 
 html[data-theme="dark"] .how-strip > div > strong,
 html[data-theme="dark"] .offer-card-price {
-  color: var(--text-dark);
+  color: var(--text-dark)
 }
 
 html[data-theme="dark"] .step:nth-child(1),
@@ -2754,7 +2678,7 @@ html[data-theme="dark"] .form-section-title {
   }
 
   .business-hero {
-    gap: 0;
+    gap: 24px;
   }
 
   .process-grid {
@@ -2876,11 +2800,6 @@ html[data-theme="dark"] .form-section-title {
 
   .header-right {
     gap: 8px;
-  }
-
-  .header .logo {
-    width: 125px;
-    height: 40px;
   }
 
   .header-right .btn-pending-reservations {

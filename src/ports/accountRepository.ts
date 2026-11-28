@@ -4,6 +4,7 @@ export type AccountStatus = 'activa' | 'suspendida' | 'pendiente'
 
 export interface ManagedAccount {
   id: string
+  uid?: string
   role: UserRole
   displayName: string
   email: string
@@ -12,7 +13,7 @@ export interface ManagedAccount {
   ruc?: string
   address?: string
   status: AccountStatus
-  createdAt: Date
+  createdAt: Date | null
   lastActiveAt: Date
 }
 

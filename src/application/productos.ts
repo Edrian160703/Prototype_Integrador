@@ -48,18 +48,11 @@ export function deleteProducto(repository: ProductoDeleter, idProducto: string):
   return repository.delete(idProducto)
 }
 
-function getTimestampValue(date: Date | null | undefined): number {
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return 0
-  return date.getTime()
-}
-
 export async function getAllProductosForAdmin(
   repository: ProductoAdminReader,
   commerces: ComercioReader,
 ): Promise<ProductoAdminRecord[]> {
-  const products = [...await repository.getAll()].sort(
-    (left, right) => getTimestampValue(right.createdAt) - getTimestampValue(left.createdAt),
-  )
+  const products = await repository.getAll()
   const commerceCache = new Map<string, Promise<Awaited<ReturnType<ComercioReader['getCommerceById']>>>>()
 
   return Promise.all(products.map(async (product) => {

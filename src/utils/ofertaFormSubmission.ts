@@ -38,7 +38,6 @@ export function prepareOfertaSubmission(
       precio_original: Number(values.precio_original),
       precio_oferta: Number(values.precio_oferta),
       cantidad_disponible: Number(values.cantidad_disponible),
-      imagen_verificacion_url: values.imagen_verificacion_url ?? '',
       estado: 'disponible',
     },
   }
