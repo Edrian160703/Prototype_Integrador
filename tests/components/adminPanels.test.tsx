@@ -6,7 +6,10 @@ import AccountsPanel, {
 import ProductsPanel from "../../src/components/admin/ProductsPanel";
 import type { ProductoAdminItem } from "../../src/types/productoAdmin";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 const accounts: ManagedAccount[] = [
   {
@@ -283,5 +286,32 @@ describe("panel de productos", () => {
 
     expect(await screen.findByRole("alert")).toBeTruthy();
     expect(screen.getByText("Pan integral")).toBeTruthy();
+  });
+
+  it("muestra la foto y fecha privada de vencimiento al abrir el detalle ADMIN", async () => {
+    const image = new Blob(["evidence"], { type: "image/png" });
+    const onLoadExpirationEvidence = vi.fn().mockResolvedValue({
+      expirationDate: "2027-05-09",
+      image,
+    });
+    vi.stubGlobal("URL", {
+      createObjectURL: vi.fn().mockReturnValue("blob:admin-evidence"),
+      revokeObjectURL: vi.fn(),
+    });
+    render(
+      <ProductsPanel
+        initialProducts={[products[0]]}
+        onLoadExpirationEvidence={onLoadExpirationEvidence}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText("Ver vencimiento de Pan integral"));
+
+    expect(await screen.findByText("Fecha de vencimiento reconocida por IA:")).toBeTruthy();
+    expect(screen.getByText("2027-05-09")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Evidencia de vencimiento de Pan integral" })
+      .getAttribute("src")).toBe("blob:admin-evidence");
+    expect(onLoadExpirationEvidence).toHaveBeenCalledWith("product-1");
+    fireEvent.click(screen.getByLabelText("Cerrar evidencia"));
   });
 });

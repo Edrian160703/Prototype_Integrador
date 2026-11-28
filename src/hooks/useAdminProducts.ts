@@ -8,7 +8,7 @@ import type { ProductoAdminItem } from '../types/productoAdmin'
 import { toProductoAdminItems } from '../presentation/ProductoPresenter'
 
 export default function useAdminProducts() {
-  const { getAllProductosForAdmin } = useProductAdminQuery()
+  const { getAllProductosForAdmin, getProductExpirationEvidence } = useProductAdminQuery()
   const { deleteProducto, updateProductoEstado } = useProductManagement()
   const [products, setProducts] = useState<ProductoAdminItem[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -38,5 +38,6 @@ export default function useAdminProducts() {
     handleProductStatusChange: (id: string, status: ProductoEstado) =>
       updateProductoEstado(id, status),
     handleProductDelete: (id: string) => deleteProducto(id),
+    handleProductEvidenceRead: (id: string) => getProductExpirationEvidence(id),
   }
 }

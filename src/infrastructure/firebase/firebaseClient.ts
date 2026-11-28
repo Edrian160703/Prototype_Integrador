@@ -65,3 +65,8 @@ export async function getFirebaseFirestore() {
   const { getFirestore } = await import('firebase/firestore')
   return getFirestore(getFirebaseApp())
 }
+
+export async function getFirebaseStorage() {
+  const { getStorage } = await import('firebase/storage')
+  return getStorage(getFirebaseApp())
+}

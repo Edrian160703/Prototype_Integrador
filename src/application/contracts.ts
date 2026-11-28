@@ -1,12 +1,18 @@
 import type { AuthIdentity } from '../ports/authGateway'
 import type { AccountStatus, ManagedAccount } from '../ports/accountRepository'
-import type { CreateOfertaParams, OfertaConComercio, OfertaPayload, OwnedOferta } from '../types/oferta'
+import type {
+  CreateOfertaParams,
+  CreateOfertaPublicationParams,
+  OfertaConComercio,
+  OfertaPayload,
+  OwnedOferta,
+} from '../types/oferta'
 import type { ProductoEstado, ProductoPayload } from '../types/producto'
 import type { InitialUserData, InitialUserProfile, UserDocument, UserRole } from '../types/user'
 import type { CartItem } from '../types/cart'
 import type { CheckoutRequest } from '../types/checkout'
 import type { EstadoReserva, ReservaConOferta, ReservaDocument } from '../types/reserva'
-import type { ProductoAdminRecord } from '../types/productoAdmin'
+import type { ProductExpirationEvidence, ProductoAdminRecord } from '../types/productoAdmin'
 import type { ProductoDocument } from '../types/producto'
 
 export interface ProductCatalogApplication {
@@ -17,6 +23,7 @@ export interface ProductCatalogApplication {
 
 export interface ProductAdminQueryApplication {
   getAllProductosForAdmin(): Promise<ProductoAdminRecord[]>
+  getProductExpirationEvidence(idProducto: string): Promise<ProductExpirationEvidence | null>
 }
 
 export interface ProductManagementApplication {
@@ -47,7 +54,7 @@ export interface OfferCreationApplication {
 }
 
 export interface OfferPublishingApplication {
-  createOfertaConProducto(params: CreateOfertaParams): Promise<string>
+  createOfertaConProducto(params: CreateOfertaPublicationParams): Promise<string>
 }
 
 export interface AccountQueryApplication {

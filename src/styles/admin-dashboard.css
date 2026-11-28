@@ -67,6 +67,61 @@ html[data-theme="dark"] .admin-page {
   font-size: 0.9rem;
 }
 
+.admin-product-evidence-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.admin-product-evidence-dialog {
+  width: min(560px, 100%);
+  max-height: min(80vh, 760px);
+  overflow: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.admin-product-evidence-dialog > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-product-evidence-dialog h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.admin-product-evidence-content {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-product-evidence-content img {
+  display: block;
+  width: 100%;
+  max-height: 52vh;
+  border-radius: 10px;
+  background: var(--admin-bg);
+  object-fit: contain;
+}
+
+.admin-product-evidence-content p {
+  margin: 0;
+  color: var(--admin-ink);
+  overflow-wrap: anywhere;
+}
+
 .admin-tabs {
   display: flex;
   flex-direction: column;

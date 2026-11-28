@@ -24,6 +24,7 @@ export function createFoodBackApplication(): ApplicationServices {
     products: createProductServices({
       products: repositories.products,
       commerces: repositories.commerces,
+      expirationEvidence: repositories.expirationEvidence,
     }),
     offers: createOfferServices({
       offers: repositories.offers,
@@ -31,6 +32,7 @@ export function createFoodBackApplication(): ApplicationServices {
       commerces: repositories.commerces,
       idGenerator,
       offerIds: createReadableIdGenerator(idGenerator, OFFER_ID_PREFIX),
+      publicationStorage: repositories.publicationStorage,
     }),
     accounts: createAccountServices(repositories.accounts),
     reservations: createReservationServices({

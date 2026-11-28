@@ -5,6 +5,22 @@ export interface CreateOfertaParams {
   payload: OfertaPayload
 }
 
+export interface OfertaPublicationImages {
+  food: Blob
+  expirationEvidence: Blob
+  expirationDate: string
+}
+
+export interface CreateOfertaPublicationParams extends CreateOfertaParams {
+  images: OfertaPublicationImages
+}
+
+export interface ProductExpirationEvidenceMetadata {
+  imagePath: string
+  imageId: string
+  expirationDate: string
+}
+
 export interface OwnedOferta {
   id: string
   data: OfertaDocument

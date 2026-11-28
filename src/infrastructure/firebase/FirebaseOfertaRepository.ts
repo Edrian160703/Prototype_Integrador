@@ -20,6 +20,7 @@ import type {
 } from '../../ports/ofertaRepository'
 import type { IdGenerator } from '../../ports/idGenerator'
 import type { OfertaDocument, OfertaPayload } from '../../types/oferta'
+import type { ProductExpirationEvidenceMetadata } from '../../types/oferta'
 import { createCryptoIdGenerator } from '../cryptoIdGenerator'
 import { mapOfertaDocument } from './mapOfertaDocument'
 import {
@@ -29,6 +30,7 @@ import {
   requireManagedInventoryPair,
   validateOfferPayload,
 } from './inventoryLedger'
+import { isValidDateOnly } from '../../utils/dateOnly'
 
 function offerFields(payload: OfertaPayload | Omit<OfertaPayload, 'estado'>, expiry: Date) {
   return {
@@ -54,11 +56,29 @@ export class FirebaseOfertaRepository implements
     private readonly idGenerator: IdGenerator = createCryptoIdGenerator(),
   ) {}
 
-  async create(uid: string, payload: OfertaPayload, productId: string, offerId = productId): Promise<string> {
+  async create(
+    uid: string,
+    payload: OfertaPayload,
+    productId: string,
+    offerId = productId,
+    expirationEvidence?: ProductExpirationEvidenceMetadata,
+  ): Promise<string> {
     const expiry = validateOfferPayload(payload)
     assertPositiveQuantity(payload.cantidad_disponible)
+    if (
+      expirationEvidence &&
+      (!isValidDateOnly(expirationEvidence.expirationDate) ||
+        !/^[A-Za-z0-9_-]+$/.test(expirationEvidence.imageId) ||
+        expirationEvidence.imagePath !== `product-expiry-evidence/${uid}/${expirationEvidence.imageId}`)
+    ) {
+      throw new Error('La evidencia de vencimiento no es válida.')
+    }
+
     const offerRef = doc(collection(this.db, 'ofertas'), offerId)
     const productRef = doc(collection(this.db, 'productos'), productId)
+    const evidenceRef = expirationEvidence
+      ? doc(collection(this.db, 'product_expiration_evidence'), productId)
+      : null
 
     await runTransaction(this.db, async (transaction) => {
       const [offerSnapshot, productSnapshot] = await Promise.all([
@@ -102,6 +122,16 @@ export class FirebaseOfertaRepository implements
         last_inventory_operation_id: operationId,
         updatedAt: serverTimestamp(),
       })
+      if (evidenceRef && expirationEvidence) {
+        transaction.set(evidenceRef, {
+          id_producto: productId,
+          uid,
+          image_path: expirationEvidence.imagePath,
+          image_id: expirationEvidence.imageId,
+          fecha_reconocida_ia: expirationEvidence.expirationDate,
+          createdAt: serverTimestamp(),
+        })
+      }
     })
 
     return offerId

@@ -112,6 +112,11 @@ describe('FirebaseOfertaRepository Spark transactions', () => {
       { ...payload, estado: 'disponible' },
       'product-1',
       'offer-1',
+      {
+        imagePath: 'product-expiry-evidence/store-1/image-1',
+        imageId: 'image-1',
+        expirationDate: '2027-05-09',
+      },
     )).resolves.toBe('offer-1')
 
     expect(firestoreMocks.documents['productos/product-1'].inventory_offer_id).toBe('offer-1')
@@ -123,6 +128,35 @@ describe('FirebaseOfertaRepository Spark transactions', () => {
     })
     expect(firestoreMocks.documents['inventario_movimientos/movement-12345678'])
       .toMatchObject({ tipo: 'oferta_vinculada', uid: 'store-1' })
+    expect(firestoreMocks.documents['product_expiration_evidence/product-1'])
+      .toMatchObject({ fecha_reconocida_ia: '2027-05-09' })
+  })
+
+  it('stores the expiration evidence separately from public product and offer documents', async () => {
+    seedUnlinkedProduct()
+    const repository = setup()
+
+    await repository.create(
+      'store-1',
+      { ...payload, estado: 'disponible' },
+      'product-1',
+      'offer-1',
+      {
+        imagePath: 'product-expiry-evidence/store-1/image-1',
+        imageId: 'image-1',
+        expirationDate: '2027-05-09',
+      },
+    )
+
+    expect(firestoreMocks.documents['product_expiration_evidence/product-1']).toMatchObject({
+      id_producto: 'product-1',
+      uid: 'store-1',
+      image_path: 'product-expiry-evidence/store-1/image-1',
+      image_id: 'image-1',
+      fecha_reconocida_ia: '2027-05-09',
+    })
+    expect(firestoreMocks.documents['ofertas/offer-1']).not.toHaveProperty('fecha_vencimiento')
+    expect(firestoreMocks.documents['productos/product-1']).not.toHaveProperty('fecha_vencimiento')
   })
 
   it('updates offer and product inventory together and archives offers without deleting them', async () => {

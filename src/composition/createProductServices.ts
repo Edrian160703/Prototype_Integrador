@@ -17,6 +17,7 @@ import type {
   ProductoCreator,
   ProductoDeleter,
   ProductoStateWriter,
+  ProductExpirationEvidenceReader,
 } from '../ports/productoRepository'
 import type { ProductoEstado, ProductoPayload } from '../types/producto'
 
@@ -31,11 +32,13 @@ type ProductRepository =
 interface ProductServiceDependencies {
   products: () => Promise<ProductRepository>
   commerces: () => Promise<ComercioReader>
+  expirationEvidence: () => Promise<ProductExpirationEvidenceReader>
 }
 
 export function createProductServices({
   products,
   commerces,
+  expirationEvidence,
 }: ProductServiceDependencies): ProductApplication {
   return {
     createProducto: async (uid: string, payload: ProductoPayload) =>
@@ -52,5 +55,7 @@ export function createProductServices({
       const [productRepository, commerceRepository] = await Promise.all([products(), commerces()])
       return getAllProductosForAdmin(productRepository, commerceRepository)
     },
+    getProductExpirationEvidence: async (idProducto: string) =>
+      (await expirationEvidence()).getForAdmin(idProducto),
   }
 }

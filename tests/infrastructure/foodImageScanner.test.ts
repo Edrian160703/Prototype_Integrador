@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../src/infrastructure/firebase/firebaseClient', () => ({ getFirebaseApp: vi.fn() }))
 
-import { parseFoodScanResponse, rejectionMessage } from '../../src/infrastructure/ai/foodImageScanner'
+import {
+  parseExpirationDateResponse,
+  parseFoodScanResponse,
+  rejectionMessage,
+} from '../../src/infrastructure/ai/foodImageScanner'
 
 describe('parseFoodScanResponse', () => {
   it('acepta comida con confianza suficiente', () => {
@@ -27,7 +31,49 @@ describe('parseFoodScanResponse', () => {
     expect(parseFoodScanResponse('{}').isFood).toBe(false)
   })
 
-  it('arma el mensaje de rechazo con lo detectado', () => {
-    expect(rejectionMessage({ isFood: false, confidence: 1, label: 'auto', reason: '' })).toContain('auto')
+  it('no expone la etiqueta técnica de Gemini en el rechazo', () => {
+    expect(rejectionMessage({ isFood: false, confidence: 1, label: 'auto', reason: '' }))
+      .toBe('La imagen principal debe mostrar claramente un alimento.')
+  })
+})
+
+describe('parseExpirationDateResponse', () => {
+  it('acepta una fecha legible, inequívoca y normalizada', () => {
+    expect(parseExpirationDateResponse(JSON.stringify({
+      is_legible: true,
+      is_unambiguous: true,
+      date_iso: '2027-05-09',
+      confidence: 0.95,
+    }))).toEqual({
+      isLegible: true,
+      isUnambiguous: true,
+      dateISO: '2027-05-09',
+      confidence: 0.95,
+    })
+  })
+
+  it('rechaza resultados ambiguos, de baja confianza o con una fecha imposible', () => {
+    const ambiguous = parseExpirationDateResponse(JSON.stringify({
+      is_legible: true,
+      is_unambiguous: false,
+      date_iso: '2027-05-09',
+      confidence: 0.95,
+    }))
+    const lowConfidence = parseExpirationDateResponse(JSON.stringify({
+      is_legible: true,
+      is_unambiguous: true,
+      date_iso: '2027-05-09',
+      confidence: 0.4,
+    }))
+    const impossibleDate = parseExpirationDateResponse(JSON.stringify({
+      is_legible: true,
+      is_unambiguous: true,
+      date_iso: '2027-02-29',
+      confidence: 0.95,
+    }))
+
+    expect(ambiguous.isUnambiguous).toBe(false)
+    expect(lowConfidence.isLegible).toBe(false)
+    expect(impossibleDate.dateISO).toBeNull()
   })
 })

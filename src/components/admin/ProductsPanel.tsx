@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ConfirmDialog from "./ConfirmDialog";
 import CreationDateFilter from "./CreationDateFilter";
 import { formatCurrency, formatRelative } from "../../utils/adminFormatters";
 import type { ProductoEstado } from "../../types/producto";
-import type { ProductoAdminItem } from "../../types/productoAdmin";
+import type { ProductExpirationEvidence, ProductoAdminItem } from "../../types/productoAdmin";
 import {
   countAdminStatuses,
   filterAdminItems,
@@ -36,11 +36,16 @@ type PendingAction = {
   action: "activar" | "pausar" | "archivar";
 };
 
+type EvidenceDialogState =
+  | { productName: string; status: "loading" | "missing" | "error" }
+  | { productName: string; status: "loaded"; imageUrl: string; expirationDate: string };
+
 interface ProductsPanelProps {
   initialProducts: ProductoAdminItem[];
   onStatusChange: (id: string, status: ProductStatus) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onProductsChange?: (products: ProductoAdminItem[]) => void;
+  onLoadExpirationEvidence?: (id: string) => Promise<ProductExpirationEvidence | null>;
 }
 
 export default function ProductsPanel({
@@ -48,6 +53,7 @@ export default function ProductsPanel({
   onStatusChange,
   onDelete,
   onProductsChange,
+  onLoadExpirationEvidence,
 }: ProductsPanelProps) {
   const [products, setProducts] = useState<ProductoAdminItem[]>(initialProducts);
   const [query, setQuery] = useState("");
@@ -61,6 +67,15 @@ export default function ProductsPanel({
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [loading, setLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [evidenceDialog, setEvidenceDialog] = useState<EvidenceDialogState | null>(null);
+  const evidenceRequestId = useRef(0);
+
+  useEffect(() => {
+    const imageUrl = evidenceDialog?.status === "loaded" ? evidenceDialog.imageUrl : null;
+    return () => {
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+    };
+  }, [evidenceDialog]);
 
   const stores = useMemo(
     () => Array.from(new Set(products.map((p) => p.storeName))).sort(),
@@ -126,6 +141,38 @@ export default function ProductsPanel({
     } finally {
       setLoading(false);
     }
+  }
+
+  async function showExpirationEvidence(product: ProductoAdminItem) {
+    if (!onLoadExpirationEvidence) return;
+    const requestId = ++evidenceRequestId.current;
+    setEvidenceDialog({ productName: product.name, status: "loading" });
+
+    try {
+      const evidence = await onLoadExpirationEvidence(product.id);
+      if (requestId !== evidenceRequestId.current) return;
+      if (!evidence) {
+        setEvidenceDialog({ productName: product.name, status: "missing" });
+        return;
+      }
+
+      setEvidenceDialog({
+        productName: product.name,
+        status: "loaded",
+        imageUrl: URL.createObjectURL(evidence.image),
+        expirationDate: evidence.expirationDate,
+      });
+    } catch (error) {
+      console.error("No se pudo cargar la evidencia privada de vencimiento del producto.", error);
+      if (requestId === evidenceRequestId.current) {
+        setEvidenceDialog({ productName: product.name, status: "error" });
+      }
+    }
+  }
+
+  function closeEvidenceDialog() {
+    evidenceRequestId.current += 1;
+    setEvidenceDialog(null);
   }
 
   return (
@@ -252,6 +299,16 @@ export default function ProductsPanel({
                   </td>
                   <td>
                     <div className="row-actions">
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        title="Ver evidencia de vencimiento"
+                        aria-label={`Ver vencimiento de ${p.name}`}
+                        disabled={!onLoadExpirationEvidence || evidenceDialog?.status === "loading"}
+                        onClick={() => void showExpirationEvidence(p)}
+                      >
+                        📅
+                      </button>
                       {p.status !== "activo" && (
                         <button
                           type="button"
@@ -349,6 +406,52 @@ export default function ProductsPanel({
           onCancel={() => setPending(null)}
           onConfirm={applyAction}
         />
+      )}
+      {evidenceDialog && (
+        <div
+          className="admin-product-evidence-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-product-evidence-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) closeEvidenceDialog();
+          }}
+        >
+          <section className="admin-product-evidence-dialog">
+            <header>
+              <div>
+                <p className="admin-account-detail-kicker">Evidencia privada</p>
+                <h2 id="admin-product-evidence-title">{evidenceDialog.productName}</h2>
+              </div>
+              <button
+                type="button"
+                className="admin-account-detail-close"
+                aria-label="Cerrar evidencia"
+                onClick={closeEvidenceDialog}
+              >
+                ×
+              </button>
+            </header>
+            {evidenceDialog.status === "loading" && <p role="status">Cargando evidencia…</p>}
+            {evidenceDialog.status === "missing" && (
+              <p className="admin-account-detail-empty">No hay evidencia de vencimiento registrada.</p>
+            )}
+            {evidenceDialog.status === "error" && (
+              <p className="admin-error-banner" role="alert">
+                No se pudo cargar la evidencia. Verifica los permisos y vuelve a intentarlo.
+              </p>
+            )}
+            {evidenceDialog.status === "loaded" && (
+              <div className="admin-product-evidence-content">
+                <img src={evidenceDialog.imageUrl} alt={`Evidencia de vencimiento de ${evidenceDialog.productName}`} />
+                <p>
+                  <strong>Fecha de vencimiento reconocida por IA:</strong>{" "}
+                  {evidenceDialog.expirationDate}
+                </p>
+              </div>
+            )}
+          </section>
+        </div>
       )}
     </div>
   );

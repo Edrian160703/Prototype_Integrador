@@ -8,7 +8,7 @@ import type {
 } from './ofertaFormTypes'
 
 export type OfertaSubmissionResult =
-  | { valid: true; payload: OfertaPayload }
+  | { valid: true; payload: OfertaPayload; expirationDate: string }
   | { valid: false; errors: FieldErrors }
 
 export function normalizeOfertaFormValues(values: OfertaFormValues): OfertaFormValues {
@@ -31,10 +31,13 @@ export function prepareOfertaSubmission(
 
   if (Object.keys(errors).length > 0) return { valid: false, errors }
 
+  const { fecha_vencimiento: expirationDate, ...offerValues } = values
+
   return {
     valid: true,
+    expirationDate,
     payload: {
-      ...values,
+      ...offerValues,
       precio_original: Number(values.precio_original),
       precio_oferta: Number(values.precio_oferta),
       cantidad_disponible: Number(values.cantidad_disponible),

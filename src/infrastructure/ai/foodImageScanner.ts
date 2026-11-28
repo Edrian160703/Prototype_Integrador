@@ -1,4 +1,5 @@
 import { getFirebaseApp } from '../firebase/firebaseClient'
+import { isValidDateOnly } from '../../utils/dateOnly'
 
 export interface FoodScanResult {
   isFood: boolean
@@ -9,7 +10,17 @@ export interface FoodScanResult {
 
 export type FoodImageScanner = (image: Blob) => Promise<FoodScanResult>
 
+export interface ExpirationDateScanResult {
+  isLegible: boolean
+  isUnambiguous: boolean
+  dateISO: string | null
+  confidence: number
+}
+
+export type ExpirationDateScanner = (image: Blob) => Promise<ExpirationDateScanResult>
+
 export const FOOD_CONFIDENCE_MIN = 0.6
+export const EXPIRATION_DATE_CONFIDENCE_MIN = 0.8
 const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash'
 
 const PROMPT = `Eres un moderador de imágenes de una app que vende comida en oferta.
@@ -31,6 +42,22 @@ export function parseFoodScanResponse(text: string): FoodScanResult {
     confidence: Number.isFinite(confidence) ? confidence : 0,
     label: typeof raw.label === 'string' ? raw.label : '',
     reason: typeof raw.reason === 'string' ? raw.reason : '',
+  }
+}
+
+export function parseExpirationDateResponse(text: string): ExpirationDateScanResult {
+  const cleaned = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
+  const raw = JSON.parse(cleaned) as Record<string, unknown>
+  const confidence = Number(raw.confidence)
+  const dateValue = typeof raw.date_iso === 'string' ? raw.date_iso : ''
+
+  return {
+    isLegible: raw.is_legible === true
+      && Number.isFinite(confidence)
+      && confidence >= EXPIRATION_DATE_CONFIDENCE_MIN,
+    isUnambiguous: raw.is_unambiguous === true,
+    dateISO: isValidDateOnly(dateValue) ? dateValue : null,
+    confidence: Number.isFinite(confidence) ? confidence : 0,
   }
 }
 
@@ -78,6 +105,48 @@ export const scanFoodImage: FoodImageScanner = async (image) => {
   }
 }
 
+const EXPIRATION_DATE_PROMPT = `Analiza la etiqueta de vencimiento de un alimento.
+Lee únicamente una fecha de vencimiento que sea claramente visible en la imagen.
+No infieras ni inventes una fecha. Si hay varias fechas y no puedes distinguir cuál es
+la de vencimiento, si es ilegible o si el formato admite varias interpretaciones,
+marca is_unambiguous como false y date_iso como una cadena vacía.
+Normaliza una fecha inequívoca al formato YYYY-MM-DD. Responde únicamente con JSON:
+{"is_legible": boolean, "is_unambiguous": boolean, "date_iso": "YYYY-MM-DD" o "",
+"confidence": número entre 0 y 1}.`
+
+export const scanExpirationDate: ExpirationDateScanner = async (image) => {
+  const { getAI, getGenerativeModel, GoogleAIBackend, Schema } = await import('firebase/ai')
+  const model = getGenerativeModel(getAI(getFirebaseApp(), { backend: new GoogleAIBackend() }), {
+    model: GEMINI_MODEL,
+    generationConfig: {
+      temperature: 0,
+      responseMimeType: 'application/json',
+      responseSchema: Schema.object({
+        properties: {
+          is_legible: Schema.boolean(),
+          is_unambiguous: Schema.boolean(),
+          date_iso: Schema.string(),
+          confidence: Schema.number(),
+        },
+      }),
+    },
+  })
+
+  const small = await downscaleImage(image)
+  const data = await blobToBase64(small)
+  const request = [EXPIRATION_DATE_PROMPT, { inlineData: { data, mimeType: small.type } }]
+
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      const result = await model.generateContent(request)
+      return parseExpirationDateResponse(result.response.text())
+    } catch (error) {
+      if (!isTransientAiError(error) || attempt >= RETRY_DELAYS_MS.length) throw error
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]))
+    }
+  }
+}
+
 const RETRY_DELAYS_MS = [1500, 3500]
 
 /** Errores temporales de Gemini: saturación (500/503/504) o límite de uso (429). */
@@ -104,6 +173,6 @@ async function downscaleImage(image: Blob, maxSide = 1024): Promise<Blob> {
 }
 
 export function rejectionMessage(result: FoodScanResult): string {
-  const detail = result.label ? ` Detectamos: ${result.label}.` : ''
-  return `Solo se aceptan imágenes de productos alimenticios.${detail}`
+  void result
+  return 'La imagen principal debe mostrar claramente un alimento.'
 }

@@ -14,6 +14,7 @@ import type {
   OfertaDocument,
   OfertaPayload,
   OwnedOferta,
+  ProductExpirationEvidenceMetadata,
 } from '../types/oferta'
 
 export function createOferta(
@@ -29,8 +30,9 @@ export function createOferta(
 export async function createOfertaConProducto(
   { uid, payload }: CreateOfertaParams,
   productoCreator: ProductoCreator,
-  ofertaCreator: OfertaCreator,
+  ofertaCreator: OfertaCreator & OfertaByIdReader,
   offerIds: NamedIdGenerator,
+  expirationEvidence?: ProductExpirationEvidenceMetadata,
 ): Promise<string> {
   const idProducto = await productoCreator.create(
     {
@@ -44,7 +46,46 @@ export async function createOfertaConProducto(
     },
     uid,
   )
-  return ofertaCreator.create(uid, payload, idProducto, offerIds.next(payload.nombre_producto))
+  const offerId = offerIds.next(payload.nombre_producto)
+  try {
+    return await ofertaCreator.create(
+      uid,
+      payload,
+      idProducto,
+      offerId,
+      expirationEvidence,
+    )
+  } catch (error) {
+    let existingOffer: Awaited<ReturnType<OfertaByIdReader['getById']>>
+    try {
+      existingOffer = await ofertaCreator.getById(offerId)
+    } catch (verificationError) {
+      console.error('[Publicación de oferta] No se pudo confirmar si la transacción llegó a completarse.', verificationError)
+      throw new PublicationCommitUnknownError()
+    }
+
+    if (
+      existingOffer?.data.id_producto === idProducto &&
+      existingOffer.data.id_comercio === uid
+    ) {
+      return offerId
+    }
+
+    try {
+      await productoCreator.rollbackUnlinked(idProducto, uid)
+    } catch (rollbackError) {
+      console.error('[Publicación de oferta] No se pudo archivar el producto sin oferta.', rollbackError)
+      throw new PublicationCommitUnknownError()
+    }
+    throw error
+  }
+}
+
+export class PublicationCommitUnknownError extends Error {
+  constructor() {
+    super('No se pudo confirmar el resultado de la publicación. Las imágenes se conservaron para evitar referencias rotas; vuelve a consultar tus publicaciones antes de reintentar.')
+    this.name = 'PublicationCommitUnknownError'
+  }
 }
 
 async function enrichOfertas(

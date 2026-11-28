@@ -28,6 +28,7 @@ export default function useAdminDashboard() {
     handleStoreDelete: accounts.handleStoreDelete,
     handleProductStatusChange: products.handleProductStatusChange,
     handleProductDelete: products.handleProductDelete,
+    handleProductEvidenceRead: products.handleProductEvidenceRead,
     handleReservationStatusChange: reservations.handleReservationStatusChange,
     handleReservationDelete: reservations.handleReservationDelete,
   }

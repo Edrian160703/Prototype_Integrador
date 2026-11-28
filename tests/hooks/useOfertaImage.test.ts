@@ -37,7 +37,7 @@ describe('useOfertaImage', () => {
 
     await act(() => result.current.handleFileChange(fileEvent(new File(['x'], 'shoe.jpg', { type: 'image/jpeg' }))))
 
-    expect(result.current.imageError).toContain('Solo se aceptan imágenes de productos alimenticios')
+    expect(result.current.imageError).toBe('La imagen principal debe mostrar claramente un alimento.')
     expect(result.current.imagePreview).toBe('')
     expect(onImageChange).toHaveBeenLastCalledWith('')
   })

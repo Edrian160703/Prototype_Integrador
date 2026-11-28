@@ -2,6 +2,7 @@ import type { ProductoDocument, ProductoEstado, ProductoPayload } from '../types
 
 export interface ProductoCreator {
   create(payload: ProductoPayload, uid: string): Promise<string>
+  rollbackUnlinked(idProducto: string, uid: string): Promise<void>
 }
 
 export interface ProductoByCommerceReader {
@@ -22,4 +23,11 @@ export interface ProductoDeleter {
 
 export interface ProductoAdminReader {
   getAll(): Promise<ProductoDocument[]>
+}
+
+export interface ProductExpirationEvidenceReader {
+  getForAdmin(idProducto: string): Promise<{
+    expirationDate: string
+    image: Blob
+  } | null>
 }

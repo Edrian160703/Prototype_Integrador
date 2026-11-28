@@ -1,7 +1,17 @@
-import type { OfertaDocument, OfertaPayload } from '../types/oferta'
+import type {
+  OfertaDocument,
+  OfertaPayload,
+  ProductExpirationEvidenceMetadata,
+} from '../types/oferta'
 
 export interface OfertaCreator {
-  create(uid: string, payload: OfertaPayload, idProducto: string, idOferta?: string): Promise<string>
+  create(
+    uid: string,
+    payload: OfertaPayload,
+    idProducto: string,
+    idOferta?: string,
+    expirationEvidence?: ProductExpirationEvidenceMetadata,
+  ): Promise<string>
 }
 
 export interface OfertaByIdReader {

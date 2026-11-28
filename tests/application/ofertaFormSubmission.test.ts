@@ -15,6 +15,7 @@ const values: OfertaFormValues = {
   cantidad_disponible: '4',
   horario_recojo: ' 17:00 - 19:00 hs ',
   fecha_limite: '2027-04-08T18:00',
+  fecha_vencimiento: '2027-04-10',
   imagen_url: '',
 }
 
@@ -46,14 +47,21 @@ describe('oferta form submission', () => {
 
     expect(result).toEqual({
       valid: true,
+      expirationDate: '2027-04-10',
       payload: {
-        ...normalizeOfertaFormValues(values),
+        nombre_producto: 'Pan del día',
+        id_categoria: 'panaderia',
+        descripcion: 'Pan recién horneado',
         precio_original: 12,
         precio_oferta: 8.5,
         cantidad_disponible: 4,
+        horario_recojo: '17:00 - 19:00 hs',
+        fecha_limite: '2027-04-08T18:00',
+        imagen_url: '',
         estado: 'disponible',
       },
     })
+    expect(result.valid && 'fecha_vencimiento' in result.payload).toBe(false)
   })
 
   it('returns validation errors without creating a payload', () => {
@@ -65,6 +73,24 @@ describe('oferta form submission', () => {
     expect(result.valid).toBe(false)
     if (result.valid) throw new Error('Se esperaba que el formulario fuera inválido.')
     expect(result.errors.precio_oferta).toBe('Debe ser menor al precio original.')
+  })
+
+  it('requires a valid date-only expiration date', () => {
+    const missing = prepareOfertaSubmission(
+      { ...values, fecha_vencimiento: '' },
+      validationContext,
+    )
+    const invalid = prepareOfertaSubmission(
+      { ...values, fecha_vencimiento: '2027-02-29' },
+      validationContext,
+    )
+
+    expect(missing.valid).toBe(false)
+    if (missing.valid) throw new Error('Se esperaba que faltara la fecha de vencimiento.')
+    expect(missing.errors.fecha_vencimiento).toBe('Ingresa la fecha de vencimiento del producto.')
+    expect(invalid.valid).toBe(false)
+    if (invalid.valid) throw new Error('Se esperaba una fecha de vencimiento inválida.')
+    expect(invalid.errors.fecha_vencimiento).toBe('Ingresa una fecha de vencimiento válida.')
   })
 })
 

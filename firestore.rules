@@ -31,6 +31,18 @@ service cloud.firestore {
       return /databases/$(database)/documents/reservas/$(reservationId);
     }
 
+    function productExpirationEvidencePath(productId) {
+      return /databases/$(database)/documents/product_expiration_evidence/$(productId);
+    }
+
+    function validDateOnly(value) {
+      return value is string && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function validPublicationImageId(value) {
+      return value is string && value.matches('^[A-Za-z0-9_-]+$');
+    }
+
     function ledgerPath(operationId) {
       return /databases/$(database)/documents/inventario_movimientos/$(operationId);
     }
@@ -52,6 +64,7 @@ service cloud.firestore {
       let productBefore = get(productPath(movement.id_producto)).data;
       let productAfter = getAfter(productPath(movement.id_producto)).data;
       let offerAfter = getAfter(offerPath(movement.id_oferta)).data;
+      let expirationEvidence = getAfter(productExpirationEvidencePath(movement.id_producto)).data;
       return movement.tipo == 'oferta_vinculada'
         && movement.cantidad == 0
         && movement.stock_producto_antes == movement.stock_producto_despues
@@ -59,6 +72,13 @@ service cloud.firestore {
         && exists(productPath(movement.id_producto))
         && existsAfter(productPath(movement.id_producto))
         && existsAfter(offerPath(movement.id_oferta))
+        && existsAfter(productExpirationEvidencePath(movement.id_producto))
+        && expirationEvidence.id_producto == movement.id_producto
+        && expirationEvidence.uid == movement.uid
+        && validPublicationImageId(expirationEvidence.image_id)
+        && expirationEvidence.image_path
+          == 'product-expiry-evidence/' + movement.uid + '/' + expirationEvidence.image_id
+        && validDateOnly(expirationEvidence.fecha_reconocida_ia)
         && productBefore.inventory_version == 1
         && productBefore.inventory_offer_id == null
         && productAfter.inventory_offer_id == movement.id_oferta
@@ -386,6 +406,13 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['inventory_offer_id', 'last_inventory_operation_id', 'updatedAt'])
             && validProductOfferLink(productId))
+          || (isStoreOwner(resource.data.id_comercio)
+            && resource.data.inventory_offer_id == null
+            && !resource.data.keys().hasAny(['archivedAt'])
+            && request.resource.data.archivedAt == request.time
+            && request.resource.data.updatedAt == request.time
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['archivedAt', 'updatedAt']))
           || (isAdmin()
             && request.resource.data.stock == resource.data.stock
             && request.resource.data.inventory_version == resource.data.inventory_version
@@ -394,6 +421,32 @@ service cloud.firestore {
               .hasAny(['id_producto', 'id_comercio', 'stock', 'inventory_version', 'inventory_offer_id', 'last_inventory_operation_id']))
         );
       allow delete: if false;
+    }
+
+    match /product_expiration_evidence/{productId} {
+      allow read: if isAdmin();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'id_producto', 'uid', 'image_path', 'image_id',
+          'fecha_reconocida_ia', 'createdAt'
+        ])
+        && request.resource.data.id_producto == productId
+        && request.resource.data.uid == request.auth.uid
+        && validPublicationImageId(request.resource.data.image_id)
+        && request.resource.data.image_path is string
+        && request.resource.data.image_path
+          == 'product-expiry-evidence/' + request.auth.uid + '/' + request.resource.data.image_id
+        && validDateOnly(request.resource.data.fecha_reconocida_ia)
+        && request.resource.data.createdAt == request.time
+        && exists(productPath(productId))
+        && get(productPath(productId)).data.id_comercio == request.auth.uid
+        && getAfter(productPath(productId)).data.inventory_offer_id is string
+        && existsAfter(offerPath(getAfter(productPath(productId)).data.inventory_offer_id))
+        && getAfter(offerPath(getAfter(productPath(productId)).data.inventory_offer_id)).data.id_producto
+          == productId
+        && getAfter(offerPath(getAfter(productPath(productId)).data.inventory_offer_id)).data.id_comercio
+          == request.auth.uid;
+      allow update, delete: if false;
     }
 
     match /ofertas/{offerId} {

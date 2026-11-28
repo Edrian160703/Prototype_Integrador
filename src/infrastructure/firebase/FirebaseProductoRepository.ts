@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -65,6 +66,28 @@ export class FirebaseProductoRepository implements
 
     await setDoc(doc(collection(this.db, 'productos'), idProducto), docData)
     return idProducto
+  }
+
+  async rollbackUnlinked(idProducto: string, uid: string): Promise<void> {
+    const productRef = doc(this.db, 'productos', idProducto)
+    await runTransaction(this.db, async (transaction) => {
+      const snapshot = await transaction.get(productRef)
+      if (!snapshot.exists()) return
+
+      const product = snapshot.data()
+      if (
+        product.id_comercio !== uid ||
+        product.inventory_offer_id !== null ||
+        product.archivedAt !== undefined
+      ) {
+        throw new Error('No se puede archivar un producto que ya está vinculado o no pertenece al comercio.')
+      }
+
+      transaction.update(productRef, {
+        archivedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
+    })
   }
 
   async getByComercio(idComercio: string): Promise<ProductoDocument[]> {

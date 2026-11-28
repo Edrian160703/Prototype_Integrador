@@ -115,6 +115,7 @@ function AdminDashboardContent() {
     handleStoreDelete,
     handleProductStatusChange,
     handleProductDelete,
+    handleProductEvidenceRead,
     handleReservationStatusChange,
     handleReservationDelete,
   } = useAdminDashboard();
@@ -295,6 +296,7 @@ function AdminDashboardContent() {
                   initialProducts={snapshot.products}
                   onStatusChange={handleProductStatusChange}
                   onDelete={handleProductDelete}
+                  onLoadExpirationEvidence={handleProductEvidenceRead}
                   onProductsChange={(items) =>
                     setSnapshotOverrides((current) => ({ ...current, products: items }))
                   }

@@ -19,9 +19,15 @@ export default function PublicarOfertaForm() {
     errors,
     imageMode,
     imagePreview,
+    foodImageSelected,
     imageError,
     urlInput,
     imageScanning,
+    expirationImagePreview,
+    expirationImageError,
+    expirationImageAnalyzing,
+    expirationImageValidated,
+    expirationImageInputRef,
     fileInputRef,
     descripcionRestante,
     descuentoValido,
@@ -34,10 +40,12 @@ export default function PublicarOfertaForm() {
     handleHorarioFinChange,
     handleFechaChange,
     handleFileChange,
+    handleExpirationImageChange,
     handleUrlChange,
     handlePreviewError,
     switchImageMode,
     removeImage,
+    removeExpirationImage,
     resetForm,
     handleSubmit,
   } = usePublicarOfertaForm()
@@ -267,6 +275,73 @@ export default function PublicarOfertaForm() {
         </div>
       </section>
 
+      <section className="profile-section" aria-labelledby="oferta-vencimiento-title">
+        <header className="profile-section-head">
+          <span className="profile-section-icon" aria-hidden="true">📅</span>
+          <div>
+            <h2 id="oferta-vencimiento-title">Vencimiento del producto</h2>
+            <p>La fecha y su fotografía son obligatorias y deben coincidir.</p>
+          </div>
+        </header>
+
+        <div className="field">
+          <label htmlFor="oferta-fecha-vencimiento">Fecha de vencimiento del producto</label>
+          <input
+            id="oferta-fecha-vencimiento"
+            type="date"
+            required
+            value={form.fecha_vencimiento}
+            onChange={(event) => updateField('fecha_vencimiento', event.target.value)}
+            aria-invalid={Boolean(errors.fecha_vencimiento)}
+          />
+          {errors.fecha_vencimiento && (
+            <span className="field-error">{errors.fecha_vencimiento}</span>
+          )}
+        </div>
+
+        <div className="field oferta-image-field">
+          <label htmlFor="oferta-evidencia-vencimiento">
+            Fotografía de la etiqueta o evidencia (JPG, PNG o WEBP, máx. 5 MB)
+          </label>
+          <input
+            id="oferta-evidencia-vencimiento"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            capture="environment"
+            ref={expirationImageInputRef}
+            onChange={handleExpirationImageChange}
+          />
+        </div>
+
+        {expirationImageAnalyzing && (
+          <span className="field-hint" role="status" aria-live="polite">
+            Verificando fecha de vencimiento...
+          </span>
+        )}
+        {expirationImageValidated && (
+          <span className="field-hint" role="status" aria-live="polite">
+            Validación completada.
+          </span>
+        )}
+        {expirationImageError && (
+          <span className="field-error" role="alert">{expirationImageError}</span>
+        )}
+
+        {expirationImagePreview && (
+          <div className="oferta-image-preview">
+            <img src={expirationImagePreview} alt="Vista previa de la evidencia de vencimiento" />
+            <button
+              type="button"
+              className="oferta-image-remove"
+              onClick={removeExpirationImage}
+              aria-label="Quitar fotografía de vencimiento"
+            >
+              ×
+            </button>
+          </div>
+        )}
+      </section>
+
       {/* ---------- Imagen ---------- */}
       <section className="profile-section" aria-labelledby="oferta-imagen-title">
         <header className="profile-section-head">
@@ -327,7 +402,7 @@ export default function PublicarOfertaForm() {
 
         {imageScanning && (
           <span className="field-hint" role="status" aria-live="polite">
-            Analizando imagen con IA…
+            Analizando imágenes...
           </span>
         )}
         {imageError && <span className="field-error">{imageError}</span>}
@@ -352,7 +427,18 @@ export default function PublicarOfertaForm() {
           <button type="button" className="btn btn-outline" onClick={resetForm} disabled={saving}>
             Limpiar formulario
           </button>
-          <button type="submit" className="btn btn-primary btn-publish" disabled={saving || imageScanning}>
+          <button
+            type="submit"
+            className="btn btn-primary btn-publish"
+            disabled={
+              saving ||
+              imageScanning ||
+              expirationImageAnalyzing ||
+              !foodImageSelected ||
+              !form.imagen_url ||
+              !expirationImageValidated
+            }
+          >
             {saving ? 'Publicando...' : 'Publicar oferta'}
           </button>
         </div>

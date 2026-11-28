@@ -69,9 +69,11 @@ describe('casos de uso de ofertas', () => {
     const offerIds = { next: vi.fn().mockReturnValue('offer-id') }
     const productoCreator: ProductoCreator = {
       create: vi.fn().mockResolvedValue('product-1'),
+      rollbackUnlinked: vi.fn().mockResolvedValue(undefined),
     }
-    const ofertaCreator: OfertaCreator = {
+    const ofertaCreator: OfertaCreator & OfertaByIdReader = {
       create: vi.fn().mockResolvedValue('offer-1'),
+      getById: vi.fn().mockResolvedValue(null),
     }
 
     await expect(
@@ -92,6 +94,7 @@ describe('casos de uso de ofertas', () => {
       payload,
       'product-1',
       'offer-id',
+      undefined,
     )
     expect(offerIds.next).toHaveBeenCalledOnce()
     expect(offerIds.next).toHaveBeenCalledWith(payload.nombre_producto)
@@ -101,15 +104,53 @@ describe('casos de uso de ofertas', () => {
     const offerIds = { next: vi.fn().mockReturnValue('offer-id') }
     const productoCreator: ProductoCreator = {
       create: vi.fn().mockRejectedValue(new Error('falló el producto')),
+      rollbackUnlinked: vi.fn().mockResolvedValue(undefined),
     }
-    const ofertaCreator: OfertaCreator = {
+    const ofertaCreator: OfertaCreator & OfertaByIdReader = {
       create: vi.fn(),
+      getById: vi.fn().mockResolvedValue(null),
     }
 
     await expect(
       createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, offerIds),
     ).rejects.toThrow('falló el producto')
     expect(ofertaCreator.create).not.toHaveBeenCalled()
+  })
+
+  it('archiva el producto si la transacción de la oferta no llegó a crearse', async () => {
+    const productoCreator: ProductoCreator = {
+      create: vi.fn().mockResolvedValue('product-1'),
+      rollbackUnlinked: vi.fn().mockResolvedValue(undefined),
+    }
+    const ofertaCreator: OfertaCreator & OfertaByIdReader = {
+      create: vi.fn().mockRejectedValue(new Error('falló la oferta')),
+      getById: vi.fn().mockResolvedValue(null),
+    }
+
+    await expect(
+      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, {
+        next: vi.fn().mockReturnValue('offer-id'),
+      }),
+    ).rejects.toThrow('falló la oferta')
+    expect(productoCreator.rollbackUnlinked).toHaveBeenCalledWith('product-1', 'user-1')
+  })
+
+  it('conserva los archivos si no puede confirmar si la transacción se completó', async () => {
+    const productoCreator: ProductoCreator = {
+      create: vi.fn().mockResolvedValue('product-1'),
+      rollbackUnlinked: vi.fn(),
+    }
+    const ofertaCreator: OfertaCreator & OfertaByIdReader = {
+      create: vi.fn().mockRejectedValue(new Error('timeout')),
+      getById: vi.fn().mockRejectedValue(new Error('offline')),
+    }
+
+    await expect(
+      createOfertaConProducto({ uid: 'user-1', payload }, productoCreator, ofertaCreator, {
+        next: vi.fn().mockReturnValue('offer-id'),
+      }),
+    ).rejects.toThrow('No se pudo confirmar el resultado de la publicación')
+    expect(productoCreator.rollbackUnlinked).not.toHaveBeenCalled()
   })
 
   it('enriquece las ofertas y reutiliza la lectura de un comercio repetido', async () => {

@@ -1,4 +1,5 @@
 import { esFechaValida } from './ofertaDate'
+import { isValidDateOnly } from './dateOnly'
 import { isValidDecimal } from './ofertaNumber'
 import type { FieldErrors, OfertaFormValidationContext, OfertaFormValues } from './ofertaFormTypes'
 
@@ -66,6 +67,12 @@ export function validateOfertaForm(
 
   if (context.imageMode === 'url' && values.imagen_url.length > IMAGEN_URL_MAX) {
     nextErrors.imagen_url = `La URL no debe superar los ${IMAGEN_URL_MAX} caracteres.`
+  }
+
+  if (!values.fecha_vencimiento) {
+    nextErrors.fecha_vencimiento = 'Ingresa la fecha de vencimiento del producto.'
+  } else if (!isValidDateOnly(values.fecha_vencimiento)) {
+    nextErrors.fecha_vencimiento = 'Ingresa una fecha de vencimiento válida.'
   }
 
   if (!context.fechaDia || !context.fechaMes || !context.fechaAnio || !context.fechaHora) {

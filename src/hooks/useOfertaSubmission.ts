@@ -2,16 +2,20 @@ import { useState, type FormEvent } from 'react'
 import usePublicarOferta from './usePublicarOferta'
 import type { OfertaFormValidationContext, OfertaFormValues, FieldErrors } from '../utils/ofertaFormTypes'
 import { prepareOfertaSubmission } from '../utils/ofertaFormSubmission'
+import type { OfertaPublicationImages } from '../types/oferta'
+import { sameCalendarDate } from '../utils/dateOnly'
 
 interface OfertaSubmissionOptions {
   getValues: () => OfertaFormValues
   getValidationContext: () => OfertaFormValidationContext
+  getPublicationImages: (expectedDate: string) => OfertaPublicationImages | null
   onPublished: () => void
 }
 
 export default function useOfertaSubmission({
   getValues,
   getValidationContext,
+  getPublicationImages,
   onPublished,
 }: OfertaSubmissionOptions) {
   const { status, statusMessage, saving, clearStatus, showError, publishOferta } = usePublicarOferta()
@@ -27,7 +31,13 @@ export default function useOfertaSubmission({
       return
     }
 
-    await publishOferta(result.payload, onPublished)
+    const images = getPublicationImages(result.expirationDate)
+    if (!images || !sameCalendarDate(images.expirationDate, result.expirationDate)) {
+      showError('Selecciona y valida las imágenes del alimento y de su vencimiento.')
+      return
+    }
+
+    await publishOferta(result.payload, images, onPublished)
   }
 
   return {

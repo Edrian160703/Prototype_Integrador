@@ -49,6 +49,7 @@ describe('casos de uso de productos', () => {
   it('crea el producto a través del puerto de escritura', async () => {
     const repository: ProductoCreator = {
       create: vi.fn().mockResolvedValue('product-1'),
+      rollbackUnlinked: vi.fn().mockResolvedValue(undefined),
     }
 
     await expect(createProducto(repository, { uid: 'user-1', payload })).resolves.toBe('product-1')
@@ -116,6 +117,7 @@ describe('casos de uso de productos', () => {
   it('propaga los errores de persistencia', async () => {
     const repository: ProductoCreator = {
       create: vi.fn().mockRejectedValue(new Error('Firestore no disponible')),
+      rollbackUnlinked: vi.fn().mockResolvedValue(undefined),
     }
 
     await expect(createProducto(repository, { uid: 'user-1', payload }))

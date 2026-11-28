@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthSession, useUserProfile } from '../context/AuthContext'
 import { useOfferPublishing } from '../context/ApplicationContext'
-import type { OfertaPayload } from '../types/oferta'
+import type { OfertaPayload, OfertaPublicationImages } from '../types/oferta'
 
 type SubmitStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -13,6 +13,7 @@ export default function usePublicarOferta() {
   const { profile } = useUserProfile()
   const [status, setStatus] = useState<SubmitStatus>('idle')
   const [statusMessage, setStatusMessage] = useState('')
+  const submissionInFlight = useRef(false)
 
   const clearStatus = () => {
     if (status !== 'idle') setStatus('idle')
@@ -23,17 +24,23 @@ export default function usePublicarOferta() {
     setStatusMessage(message)
   }
 
-  const publishOferta = async (payload: OfertaPayload, onPublished: () => void): Promise<boolean> => {
+  const publishOferta = async (
+    payload: OfertaPayload,
+    images: OfertaPublicationImages,
+    onPublished: () => void,
+  ): Promise<boolean> => {
+    if (submissionInFlight.current) return false
     if (!user || !profile || profile.role !== 'store') {
       showError('Debes iniciar sesión como comercio para publicar una oferta.')
       return false
     }
 
+    submissionInFlight.current = true
     setStatus('saving')
     setStatusMessage('')
 
     try {
-      await createOfertaConProducto({ uid: user.uid, payload })
+      await createOfertaConProducto({ uid: user.uid, payload, images })
       onPublished()
       setStatus('saved')
       setStatusMessage('✓ Tu oferta fue publicada correctamente.')
@@ -42,6 +49,8 @@ export default function usePublicarOferta() {
     } catch (error) {
       showError(error instanceof Error ? error.message : 'No pudimos publicar tu oferta. Inténtalo de nuevo.')
       return false
+    } finally {
+      submissionInFlight.current = false
     }
   }
 

@@ -1,4 +1,4 @@
-import { assertFirebaseAdmin, getFirebaseFirestore } from './firebaseClient'
+import { assertFirebaseAdmin, getFirebaseFirestore, getFirebaseStorage } from './firebaseClient'
 import { createLazyRepository } from '../createLazyRepository'
 import { createCryptoIdGenerator } from '../cryptoIdGenerator'
 import { createReadableIdGenerator } from '../readableIdGenerator'
@@ -70,5 +70,32 @@ export function createFirebaseRepositories(idGenerator: IdGenerator = createCryp
     return new FirebaseUserProfileRepository(db)
   })
 
-  return { products, offers, commerces, reservations, purchases, accounts, userProfiles }
+  const publicationStorage = createLazyRepository(async () => {
+    const [{ FirebaseProductPublicationStorage }, storage] = await Promise.all([
+      import('./FirebaseProductPublicationStorage'),
+      getFirebaseStorage(),
+    ])
+    return new FirebaseProductPublicationStorage(storage, idGenerator)
+  })
+
+  const expirationEvidence = createLazyRepository(async () => {
+    const [{ FirebaseProductExpirationEvidenceReader }, db, storage] = await Promise.all([
+      import('./FirebaseProductExpirationEvidenceReader'),
+      getFirebaseFirestore(),
+      publicationStorage(),
+    ])
+    return new FirebaseProductExpirationEvidenceReader(db, storage, assertFirebaseAdmin)
+  })
+
+  return {
+    products,
+    offers,
+    commerces,
+    reservations,
+    purchases,
+    accounts,
+    userProfiles,
+    publicationStorage,
+    expirationEvidence,
+  }
 }

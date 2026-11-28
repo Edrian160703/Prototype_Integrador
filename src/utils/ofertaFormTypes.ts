@@ -7,6 +7,7 @@ export interface OfertaFormValues {
   cantidad_disponible: string
   horario_recojo: string
   fecha_limite: string
+  fecha_vencimiento: string
   imagen_url: string
 }
 

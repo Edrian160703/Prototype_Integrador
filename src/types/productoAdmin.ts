@@ -16,3 +16,8 @@ export interface ProductoAdminItem {
   createdAt: Date
   updatedAt: Date
 }
+
+export interface ProductExpirationEvidence {
+  expirationDate: string
+  image: Blob
+}

@@ -34,6 +34,7 @@ export default function useOfertaImage(
 ) {
   const [imageMode, setImageMode] = useState<OfertaImageMode>('upload')
   const [imagePreview, setImagePreview] = useState('')
+  const [selectedImage, setSelectedImage] = useState<Blob | null>(null)
   const [imageError, setImageError] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const [scanning, setScanning] = useState(false)
@@ -56,6 +57,7 @@ export default function useOfertaImage(
 
   const rejectImage = (message: string) => {
     setImagePreview('')
+    setSelectedImage(null)
     onImageChange('')
     setImageError(message)
   }
@@ -94,6 +96,7 @@ export default function useOfertaImage(
     const id = requestId.current
     setImageError('')
     setImagePreview('')
+    setSelectedImage(null)
     onImageChange('')
 
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -114,6 +117,7 @@ export default function useOfertaImage(
         return
       }
       setImagePreview(dataUrl)
+      setSelectedImage(file)
       onImageChange(dataUrl)
     } catch {
       setImageError('No se pudo cargar la imagen. Intenta con otro archivo.')
@@ -134,6 +138,7 @@ export default function useOfertaImage(
     if (id !== requestId.current) return
     if (await verifyFood(blob, id)) {
       setImagePreview(url)
+      setSelectedImage(blob)
       onImageChange(url)
     }
   }
@@ -144,6 +149,7 @@ export default function useOfertaImage(
     setUrlInput(value)
     setImageError('')
     setImagePreview('')
+    setSelectedImage(null)
     onImageChange('')
 
     const trimmed = value.trim()
@@ -161,6 +167,7 @@ export default function useOfertaImage(
     setImageMode(mode)
     setImageError('')
     setImagePreview('')
+    setSelectedImage(null)
     setUrlInput('')
     onImageChange('')
     clearSelectedFile()
@@ -169,6 +176,7 @@ export default function useOfertaImage(
   const removeImage = () => {
     cancelPending()
     setImagePreview('')
+    setSelectedImage(null)
     setImageError('')
     setUrlInput('')
     onImageChange('')
@@ -178,6 +186,7 @@ export default function useOfertaImage(
   const resetImage = () => {
     cancelPending()
     setImagePreview('')
+    setSelectedImage(null)
     setImageError('')
     setUrlInput('')
     clearSelectedFile()
@@ -186,13 +195,14 @@ export default function useOfertaImage(
   return {
     imageMode,
     imagePreview,
+    selectedImage,
     imageError,
     urlInput,
     scanning,
     fileInputRef,
     handleFileChange,
     handleUrlChange,
-    handlePreviewError: () => setImageError('No se pudo cargar la vista previa. Verifica el archivo o la URL.'),
+    handlePreviewError: () => rejectImage('No se pudo cargar la vista previa. Verifica el archivo o la URL.'),
     switchImageMode,
     removeImage,
     resetImage,

@@ -8,6 +8,7 @@ import {
   getOfertasByOwner,
   updateOferta,
 } from '../application/ofertas'
+import { PublicationCommitUnknownError } from '../application/ofertas'
 import type { OfferApplication } from '../application/contracts'
 import type { ComercioReader } from '../ports/comercioRepository'
 import type {
@@ -19,7 +20,12 @@ import type {
 } from '../ports/ofertaRepository'
 import type { ProductoCreator } from '../ports/productoRepository'
 import type { IdGenerator, NamedIdGenerator } from '../ports/idGenerator'
-import type { CreateOfertaParams, OfertaPayload } from '../types/oferta'
+import type {
+  CreateOfertaParams,
+  CreateOfertaPublicationParams,
+  OfertaPayload,
+} from '../types/oferta'
+import type { ProductPublicationStorage } from '../ports/productPublicationStorage'
 
 type OfferRepository =
   & OfertaCreator
@@ -34,6 +40,7 @@ interface OfferServiceDependencies {
   commerces: () => Promise<ComercioReader>
   idGenerator: IdGenerator
   offerIds: NamedIdGenerator
+  publicationStorage: () => Promise<ProductPublicationStorage>
 }
 
 export function createOfferServices({
@@ -42,13 +49,43 @@ export function createOfferServices({
   commerces,
   idGenerator,
   offerIds,
+  publicationStorage,
 }: OfferServiceDependencies): OfferApplication {
   return {
     createOferta: async (params: CreateOfertaParams) =>
       createOferta(await offers(), params, idGenerator, offerIds),
-    createOfertaConProducto: async (params: CreateOfertaParams) => {
-      const [productRepository, offerRepository] = await Promise.all([products(), offers()])
-      return createOfertaConProducto(params, productRepository, offerRepository, offerIds)
+    createOfertaConProducto: async (params: CreateOfertaPublicationParams) => {
+      const storage = await publicationStorage()
+      const uploaded = await storage.upload(params.uid, {
+        food: params.images.food,
+        expirationEvidence: params.images.expirationEvidence,
+      })
+
+      try {
+        const [productRepository, offerRepository] = await Promise.all([products(), offers()])
+        return await createOfertaConProducto(
+          {
+            uid: params.uid,
+            payload: { ...params.payload, imagen_url: uploaded.foodImageUrl },
+          },
+          productRepository,
+          offerRepository,
+          offerIds,
+          {
+            imagePath: uploaded.expirationImagePath,
+            imageId: uploaded.expirationImageId,
+            expirationDate: params.images.expirationDate,
+          },
+        )
+      } catch (error) {
+        if (error instanceof PublicationCommitUnknownError) throw error
+        try {
+          await uploaded.cleanup()
+        } catch (cleanupError) {
+          console.error('[Publicación de oferta] No se pudieron limpiar las imágenes tras el fallo.', cleanupError)
+        }
+        throw error
+      }
     },
     getOfertas: async () => {
       const [offerRepository, commerceRepository] = await Promise.all([offers(), commerces()])
